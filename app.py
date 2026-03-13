@@ -3,8 +3,14 @@ from datetime import timedelta
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from database.db_manager import DatabaseManager
-from utils.security import sanitizar_input
+from utils.security import sanitizar_input, formatar_data_sp
+from utils.logic import gerar_cnf, gerar_rgf, gerar_qrcode_base64
+from datetime import datetime
+from models.user import User
+from utils.auth_utils import role_required
+from utils.mfa import validar_totp
 
 load_dotenv()
 
@@ -15,6 +21,14 @@ app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
 csrf = CSRFProtect(app)
 db = DatabaseManager()
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
 
 @app.before_request
 def monitor_session():
@@ -28,6 +42,98 @@ def monitor_session():
 @app.route('/')
 def index():
     return "CGRF 2.0 - Sistema de Governança de Identidades Furry"
+
+@app.route('/test_emit')
+def test_emit():
+    cnf = gerar_cnf()
+    rgf = gerar_rgf()
+    qr = gerar_qrcode_base64(cnf)
+    hoje = datetime.now()
+    exp = hoje.replace(year=hoje.year + 10)
+    
+    data_emissao = formatar_data_sp(hoje)
+    data_expiracao = formatar_data_sp(exp)
+    
+    query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, alinhamento, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    # Placeholder de foto (pixel transparente ou cinza para teste)
+    foto_placeholder = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    params = (cnf, rgf, "Test User", "Fox", "South", "Neutral", "test@example.com", data_emissao, data_expiracao, qr, foto_placeholder)
+    
+    try:
+        db.execute_query(query, params)
+        return render_template('test_qr.html', cnf=cnf, qr=qr)
+    except Exception as e:
+        return f"Erro na emissão: {e}"
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        token = request.form.get('token')
+        
+        user = User.find_by_email(email)
+        if user and user.check_password(password):
+            if user.cargo == 'ADMIN':
+                # Por simplicidade neste MVP, segredo está no env ou hardcoded para teste
+                # Em produção, o segredo do TOTP deve estar no banco por usuário
+                admin_secret = os.getenv('ADMIN_TOTP_SECRET', 'JBSWY3DPEHPK3PXP')
+                if not token or not validar_totp(admin_secret, token):
+                    return "Token MFA Inválido", 401
+            
+            login_user(user)
+            return redirect(url_for('index'))
+        
+        return "Credenciais inválidas", 401
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/perfil/<cnf>')
+def perfil(cnf):
+    cidadao = db.execute_query("SELECT * FROM cidadaos WHERE cnf = ?", (cnf,), fetchone=True)
+    if not cidadao:
+        return "Cidadão não encontrado", 404
+    
+    # Lógica de Censura
+    exibir_tudo = False
+    if current_user.is_authenticated:
+        if current_user.cargo in ['ADMIN', 'ANALISTA']:
+            exibir_tudo = True
+        elif current_user.cnf_vinculado == cnf:
+            exibir_tudo = True
+            
+    # Processar dados censurados
+    dados = dict(cidadao)
+    if not exibir_tudo:
+        if dados['regiao'] != 'DELETADA POR SOLICITAÇÃO':
+            dados['regiao'] = "*** CENSURADO (Acesso Restrito) ***"
+        if dados['alinhamento'] != 'DELETADA POR SOLICITAÇÃO':
+            dados['alinhamento'] = "*** CENSURADO (Acesso Restrito) ***"
+            
+    return render_template('perfil.html', cidadao=dados, exibir_tudo=exibir_tudo)
+
+@app.route('/create_admin')
+def create_admin():
+    from werkzeug.security import generate_password_hash
+    # Rota temporária para criar um administrador inicial
+    pwd = generate_password_hash("admin123")
+    query = "INSERT INTO usuarios_sistema (email, senha_hash, cargo) VALUES (?, ?, ?)"
+    try:
+        db.execute_query(query, ("admin@cgrf.com", pwd, "ADMIN"))
+        return "Admin criado com sucesso! E-mail: admin@cgrf.com | Senha: admin123"
+    except Exception as e:
+        return f"Erro ao criar admin: {e}"
+
+@app.errorhandler(403)
+def access_denied(e):
+    return "Acesso Negado", 403
 
 @app.errorhandler(404)
 def page_not_found(e):

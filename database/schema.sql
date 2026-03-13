@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS cidadaos (
     data_emissao TEXT NOT NULL,
     data_expiracao TEXT NOT NULL,
     is_valido BOOLEAN DEFAULT 1,
-    qrcode_base64 TEXT
+    qrcode_base64 TEXT,
+    foto_base64 TEXT
 );
 
 -- Tabela 2: usuarios_sistema (Controle de Acessos)
