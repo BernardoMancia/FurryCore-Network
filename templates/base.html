@@ -61,6 +61,9 @@
                     {% if current_user.is_authenticated %}
                         {% if current_user.cargo == 'ADMIN' %}
                         <li class="nav-item">
+                            <a class="nav-link text-neon" href="{{ url_for('admin_emitir') }}">Emitir</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-warning" href="{{ url_for('admin_usuarios') }}">Gestão</a>
                         </li>
                         {% endif %}

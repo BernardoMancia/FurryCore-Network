@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Emissão de Documento - CGRF 2.0{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="glass-card">
+            <h2 class="neon-text mb-4 text-center">Emissão de Credencial</h2>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="mb-3">
+                            <label class="form-label small">Nome Social / Identidade</label>
+                            <input type="text" name="nome" class="form-control bg-dark text-white border-secondary" placeholder="Ex: Lucke Solo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">E-mail de Contato</label>
+                            <input type="email" name="email" class="form-control bg-dark text-white border-secondary" placeholder="cliente@example.com" required>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="mb-3 text-center">
+                            <label class="form-label small">Foto de Identidade</label>
+                            <div class="border border-dashed border-secondary rounded p-3 bg-dark-subtle mb-2">
+                                <i class="bi bi-camera fs-1 text-secondary"></i>
+                                <input type="file" name="foto" class="form-control form-control-sm mt-2" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label small">Espécie</label>
+                            <input type="text" name="especie" class="form-control bg-dark text-white border-secondary" placeholder="Ex: Lobo" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label small">Região</label>
+                            <input type="text" name="regiao" class="form-control bg-dark text-white border-secondary" placeholder="Ex: Sul" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label small">Alinhamento</label>
+                            <select name="alinhamento" class="form-select bg-dark text-white border-secondary" required>
+                                <option value="BOM">Bom</option>
+                                <option value="ORDEIRO">Ordeiro</option>
+                                <option value="NEUTRO" selected>Neutro</option>
+                                <option value="CAÓTICO">Caótico</option>
+                                <option value="MAL">Mal</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-neon btn-lg w-100 py-3">Gerar Documento (CNF/RGF)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

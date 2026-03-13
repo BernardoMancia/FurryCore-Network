@@ -179,6 +179,47 @@ def admin_usuarios():
     usuarios = db.execute_query("SELECT * FROM usuarios_sistema", fetchall=True)
     return render_template('admin_usuarios.html', usuarios=usuarios)
 
+@app.route('/admin/emitir', methods=['GET', 'POST'])
+@login_required
+@role_required(['ADMIN'])
+def admin_emitir():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        especie = request.form.get('especie')
+        regiao = request.form.get('regiao')
+        alinhamento = request.form.get('alinhamento')
+        email = request.form.get('email')
+        foto_file = request.files.get('foto')
+        
+        # Gerar Identificadores
+        cnf = gerar_cnf()
+        rgf = gerar_rgf()
+        qr_base64 = gerar_qrcode_base64(cnf)
+        
+        # Processar Foto para Base64
+        foto_base64 = None
+        if foto_file:
+            import base64
+            foto_base64 = base64.b64encode(foto_file.read()).decode('utf-8')
+            
+        # Datas
+        hoje = datetime.now()
+        exp = hoje.replace(year=hoje.year + 10)
+        data_emissao = formatar_data_sp(hoje)
+        data_expiracao = formatar_data_sp(exp)
+        
+        query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, alinhamento, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+        params = (cnf, rgf, nome, especie, regiao, alinhamento, email, data_emissao, data_expiracao, qr_base64, foto_base64)
+        
+        try:
+            db.execute_query(query, params)
+            return redirect(url_for('perfil', cnf=cnf))
+        except Exception as e:
+            return f"Erro ao emitir documento: {e}", 500
+            
+    return render_template('admin_emitir.html')
+
 @app.errorhandler(403)
 def access_denied(e):
     return "Acesso Negado", 403
