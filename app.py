@@ -42,9 +42,16 @@ def monitor_session():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        cnf = request.form.get('cnf')
-        if cnf:
-            return redirect(url_for('perfil', cnf=cnf))
+        query_val = request.form.get('cnf')
+        if query_val:
+            # Tentar buscar por CNF exato ou busca parcial por Nome
+            db = DatabaseManager()
+            res = db.execute_query("SELECT cnf FROM cidadaos WHERE cnf = ? OR nome LIKE ?", (query_val, f"%{query_val}%"), fetchone=True)
+            if res:
+                return redirect(url_for('perfil', cnf=res['cnf']))
+            else:
+                from flask import flash
+                flash("Cidadão não encontrado na base de dados.", "error")
     return render_template('index.html')
 
 @app.route('/test_emit')
@@ -185,19 +192,18 @@ def admin_emitir():
         nome = request.form.get('nome')
         especie = request.form.get('especie')
         regiao = request.form.get('regiao')
-        email = request.form.get('email')
-        foto_file = request.files.get('foto')
+        email = request.form.get('email') # Agora opcional
+        foto_base64_raw = request.form.get('foto_base64') # Recebido do Cropper.js
         
         # Gerar Identificadores
         cnf = gerar_cnf()
         rgf = gerar_rgf()
         qr_base64 = gerar_qrcode_base64(cnf)
         
-        # Processar Foto para Base64
+        # Processar Foto Base64 (recebida via hidden input do Cropper)
         foto_base64 = None
-        if foto_file:
-            import base64
-            foto_base64 = base64.b64encode(foto_file.read()).decode('utf-8')
+        if foto_base64_raw and "," in foto_base64_raw:
+            foto_base64 = foto_base64_raw.split(",")[1]
             
         # Datas
         hoje = datetime.now()
@@ -216,6 +222,13 @@ def admin_emitir():
             return f"Erro ao emitir documento: {e}", 500
             
     return render_template('admin_emitir.html')
+
+@app.route('/admin/registros')
+@login_required
+@role_required(['ADMIN', 'ANALISTA'])
+def admin_registros():
+    registros = db.execute_query("SELECT * FROM cidadaos ORDER BY id DESC", fetchall=True)
+    return render_template('admin_registros.html', registros=registros)
 
 @app.errorhandler(403)
 def access_denied(e):

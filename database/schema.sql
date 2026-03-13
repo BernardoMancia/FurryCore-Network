@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS cidadaos (
     nome TEXT NOT NULL,
     especie TEXT NOT NULL,
     regiao TEXT NOT NULL,
-    email TEXT NOT NULL,
+    email TEXT,
     data_emissao TEXT NOT NULL,
     data_expiracao TEXT NOT NULL,
     is_valido BOOLEAN DEFAULT 1,
