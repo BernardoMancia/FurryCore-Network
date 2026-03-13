@@ -37,37 +37,49 @@ def send_transactional_email(to_email, subject, html_content):
 
 def send_welcome_email(user_data):
     """
-    Envia o e-mail de boas-vindas com instruções de MFA
+    Envia o e-mail de boas-vindas com instruções detalhadas de ativação
     """
     if not user_data.get('email'):
         return False
         
-    subject = "📜 Registro Confirmado - CGRF 2.0 / Portal de Identidade"
+    subject = "🔑 Ative sua Identidade Digital - CGRF 2.0"
     
-    # Gerar link de MFA (exemplo: rota de perfil que pede login)
-    login_url = "http://127.0.0.1:6969/login"
+    login_url = "http://127.0.0.1:6969/login" # Ajustar para IP da VPS no deploy final
     
     html = f"""
-    <div style="background-color: #0a0b10; color: #fff; padding: 40px; font-family: sans-serif; border: 1px solid #00f2ff; border-radius: 10px;">
-        <h1 style="color: #00f2ff; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">Saudações, {user_data['nome']}!</h1>
-        <p style="font-size: 16px;">Seu registro no <b>CGRF 2.0</b> foi emitido e confirmado com sucesso.</p>
+    <div style="background-color: #0a0b10; color: #fff; padding: 40px; font-family: sans-serif; border: 1px solid #00f2ff; border-radius: 10px; max-width: 600px; margin: auto;">
+        <h1 style="color: #00f2ff; text-align: center; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">Seja Bem-vindo(a), {user_data['nome']}!</h1>
+        <p style="font-size: 16px; text-align: center;">Sua credencial oficial <b>CGRF 2.0</b> foi emitida e sua conta de acesso foi criada.</p>
         
-        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin: 25px 0;">
-            <p><b>CNF Gerado:</b> {user_data['cnf']}</p>
-            <p><b>RGF:</b> {user_data['rgf']}</p>
+        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #00f2ff;">
+            <p style="margin: 5px 0;"><b>CNF:</b> {user_data['cnf']}</p>
+            <p style="margin: 5px 0;"><b>RGF:</b> {user_data['rgf']}</p>
+            <p style="margin: 5px 0; color: #ffca2c;"><b>Senha Temporária:</b> <code style="background: #222; padding: 2px 5px;">{user_data.get('temp_pass', 'Verificar com Admin')}</code></p>
         </div>
 
-        <h3 style="color: #00f2ff;">🔒 Instruções de Segurança (MFA)</h3>
-        <p>Para sua proteção total sob as normas de Governança Digital, recomendamos ativar a Autenticação de Dois Fatores (MFA):</p>
-        <ol>
-            <li>Acesse o portal via link abaixo.</li>
-            <li>Faça login com sua conta administrativa ou pessoal.</li>
-            <li>No seu perfil, escaneie o código QR de segurança.</li>
-        </ol>
-
-        <a href="{login_url}" style="display: inline-block; padding: 12px 25px; background-color: transparent; border: 1px solid #00f2ff; color: #00f2ff; text-decoration: none; border-radius: 5px; margin-top: 20px;">ACESSAR MEU PORTAL</a>
+        <h3 style="color: #00f2ff; border-bottom: 1px solid #333; padding-bottom: 10px;">🛡️ Guia de Ativação Obrigatória</h3>
+        <p>Para ativar sua identidade e garantir sua segurança, siga exatamente estes passos:</p>
         
-        <p style="margin-top: 40px; color: #666; font-size: 12px;">Este é um e-mail automático. Não responda.</p>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 10px 0; vertical-align: top;"><b style="color: #00f2ff;">1. PRIMEIRA SENHA:</b></td>
+                <td style="padding: 10px 0;">Acesse o portal e use seu e-mail e a senha temporária acima.</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px 0; vertical-align: top;"><b style="color: #00f2ff;">2. RESET DE SENHA:</b></td>
+                <td style="padding: 10px 0;">O sistema solicitará imediatamente que você crie uma nova senha forte e pessoal.</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px 0; vertical-align: top;"><b style="color: #00f2ff;">3. ATIVAÇÃO MFA:</b></td>
+                <td style="padding: 10px 0;">Após trocar a senha, você será levado para a tela de Segurança. Escaneie o código QR com o Google Authenticator ou similar.</td>
+            </tr>
+        </table>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{login_url}" style="display: inline-block; padding: 15px 30px; background: #00f2ff; color: #000; font-weight: bold; text-decoration: none; border-radius: 5px; box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);">ATIVAR MINHA CONTA AGORA</a>
+        </div>
+        
+        <p style="margin-top: 40px; color: #888; font-size: 12px; text-align: center;">🛡️ CGRF 2.0 - Governança e Transparência Furry. <br> Este link expira em 24h.</p>
     </div>
     """
     

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="glass-card text-center">
+            <h2 class="neon-text mb-4">Ativação de Conta</h2>
+            <p class="text-secondary mb-4">Sua conta foi criada automaticamente. Para garantir a segurança dos seus dados, você precisa definir uma nova senha pessoal agora.</p>
+            
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3 text-start">
+                    <label class="form-label small">Nova Senha</label>
+                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required minlength="8">
+                </div>
+                <div class="mb-4 text-start">
+                    <label class="form-label small">Confirmar Nova Senha</label>
+                    <input type="password" name="confirm_password" class="form-control bg-dark text-white border-secondary" required minlength="8">
+                </div>
+                
+                <button type="submit" class="btn btn-neon w-100 py-3">Redefinir Senha e Continuar</button>
+            </form>
+            
+            <div class="mt-4 p-3 border border-warning rounded">
+                <p class="text-warning small mb-0"><i class="bi bi-shield-lock"></i> Após resetar a senha, você será levado para ativar o MFA obrigatoriamente.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

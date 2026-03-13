@@ -44,6 +44,7 @@
                             <th>Cargo</th>
                             <th>CNF</th>
                             <th>MFA</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -63,7 +64,50 @@
                                 <span class="text-secondary small">Inativo</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                {% if u.id != current_user.id %}
+                                <a href="{{ url_for('admin_usuario_excluir', user_id=u.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Confirmar exclusão?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </td>
                         </tr>
+
+                        <!-- Modal de Edição -->
+                        <div class="modal fade" id="editUserModal{{ u.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <form action="{{ url_for('admin_usuario_editar', user_id=u.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="modal-content bg-dark text-white border-secondary">
+                                        <div class="modal-header border-secondary">
+                                            <h5 class="modal-title neon-text">Editar Usuário: {{ u.email }}</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label small">Cargo</label>
+                                                <select name="cargo" class="form-select bg-dark text-white border-secondary">
+                                                    <option value="ADMIN" {{ 'selected' if u.cargo == 'ADMIN' }}>Administrador</option>
+                                                    <option value="ANALISTA" {{ 'selected' if u.cargo == 'ANALISTA' }}>Analista</option>
+                                                    <option value="USUARIO" {{ 'selected' if u.cargo == 'USUARIO' }}>Usuário</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small">CNF Vinculado</label>
+                                                <input type="text" name="cnf" class="form-control bg-dark text-white border-secondary" value="{{ u.cnf_vinculado or '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-secondary">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-neon">Salvar</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                         {% endfor %}
                     </tbody>
                 </table>

@@ -218,22 +218,14 @@ def admin_emitir():
         email = request.form.get('email') # Agora opcional
         foto_base64_raw = request.form.get('foto_base64') # Recebido do Cropper.js
         
-        # Gerar Identificadores
-        cnf = gerar_cnf()
-        rgf = gerar_rgf()
-        qr_base64 = gerar_qrcode_base64(cnf)
-        
-        # Processar Foto Base64 (recebida via hidden input do Cropper)
-        foto_base64 = None
-        if foto_base64_raw and "," in foto_base64_raw:
-            foto_base64 = foto_base64_raw.split(",")[1]
-            
-        # Datas
-        hoje = datetime.now()
-        exp = hoje.replace(year=hoje.year + 10)
-        data_emissao = formatar_data_sp(hoje)
-        data_expiracao = formatar_data_sp(exp)
-        
+        # 1. Verificar Duplicidade (Nome Completo ou E-mail)
+        check_query = "SELECT id FROM cidadaos WHERE (nome = ? AND especie = ?) OR (email IS NOT NULL AND email = ?)"
+        duplicate = db.execute_query(check_query, (nome, especie, email), fetchone=True)
+        if duplicate:
+            from flask import flash
+            flash("Erro: Já existe um cidadão registrado com este Nome/Espécie ou E-mail.", "error")
+            return redirect(url_for('admin_emitir'))
+
         query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         params = (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qr_base64, foto_base64)
@@ -241,13 +233,26 @@ def admin_emitir():
         try:
             db.execute_query(query, params)
             
-            # Disparar E-mail (Fase 5) - Não trava o fluxo se falhar (silencioso por enquanto)
+            # 2. Criar conta automática em estado PENDENTE
             if email:
+                from werkzeug.security import generate_password_hash
+                import secrets
+                # Senha temporária aleatória (será resetada no primeiro acesso)
+                temp_pass = secrets.token_urlsafe(12)
+                pwd_hash = generate_password_hash(temp_pass)
+                
+                db.execute_query(
+                    "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
+                    (email, pwd_hash, 'USUARIO', cnf, 'PENDENTE')
+                )
+
+                # 3. Disparar E-mail Detalhado (Fase 7)
                 user_data = {
                     'nome': nome,
                     'cnf': cnf,
                     'rgf': rgf,
-                    'email': email
+                    'email': email,
+                    'temp_pass': temp_pass
                 }
                 send_welcome_email(user_data)
                 
@@ -256,6 +261,33 @@ def admin_emitir():
             return f"Erro ao emitir documento: {e}", 500
             
     return render_template('admin_emitir.html')
+
+@app.route('/ativar-conta', methods=['GET', 'POST'])
+@login_required
+def ativar_conta():
+    if current_user.status != 'PENDENTE':
+        return redirect(url_for('index'))
+        
+    if request.method == 'POST':
+        nova_senha = request.form.get('password')
+        conf_senha = request.form.get('confirm_password')
+        
+        if nova_senha != conf_senha:
+            from flask import flash
+            flash("As senhas não coincidem.", "error")
+            return render_template('ativar_conta.html')
+            
+        # 1. Atualizar Senha e Ativar Status
+        from werkzeug.security import generate_password_hash
+        pwd_hash = generate_password_hash(nova_senha)
+        db.execute_query("UPDATE usuarios_sistema SET senha_hash = ?, status = 'ATIVO' WHERE id = ?", (pwd_hash, current_user.id))
+        
+        # 2. Forçar Configuração de MFA (Redirecionar para perfil onde tem o botão de gerar QR)
+        from flask import flash
+        flash("Senha atualizada! Agora, ative seu MFA para segurança total.", "success")
+        return redirect(url_for('perfil', cnf=current_user.cnf_vinculado))
+        
+    return render_template('ativar_conta.html')
 
 @app.route('/admin/registros')
 @login_required
