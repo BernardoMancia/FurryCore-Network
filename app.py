@@ -184,6 +184,29 @@ def admin_usuarios():
     usuarios = db.execute_query("SELECT * FROM usuarios_sistema", fetchall=True)
     return render_template('admin_usuarios.html', usuarios=usuarios)
 
+@app.route('/admin/usuario/editar/<int:user_id>', methods=['POST'])
+@login_required
+@role_required(['ADMIN'])
+def admin_usuario_editar(user_id):
+    cargo = request.form.get('cargo')
+    cnf = request.form.get('cnf')
+    
+    query = "UPDATE usuarios_sistema SET cargo = ?, cnf_vinculado = ? WHERE id = ?"
+    db.execute_query(query, (cargo, cnf or None, user_id))
+    from flask import flash
+    flash("Configurações do usuário atualizadas com sucesso.", "success")
+    return redirect(url_for('admin_usuarios'))
+
+@app.route('/admin/usuario/excluir/<int:user_id>')
+@login_required
+@role_required(['ADMIN'])
+def admin_usuario_excluir(user_id):
+    # Soft delete nos logs (is_uninstalled ou similar), mas aqui deletamos o acesso
+    db.execute_query("DELETE FROM usuarios_sistema WHERE id = ?", (user_id,))
+    from flask import flash
+    flash("Usuário removido do sistema.", "warning")
+    return redirect(url_for('admin_usuarios'))
+
 @app.route('/admin/emitir', methods=['GET', 'POST'])
 @login_required
 @role_required(['ADMIN'])
@@ -217,6 +240,17 @@ def admin_emitir():
         
         try:
             db.execute_query(query, params)
+            
+            # Disparar E-mail (Fase 5) - Não trava o fluxo se falhar (silencioso por enquanto)
+            if email:
+                user_data = {
+                    'nome': nome,
+                    'cnf': cnf,
+                    'rgf': rgf,
+                    'email': email
+                }
+                send_welcome_email(user_data)
+                
             return redirect(url_for('perfil', cnf=cnf))
         except Exception as e:
             return f"Erro ao emitir documento: {e}", 500

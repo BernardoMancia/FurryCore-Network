@@ -91,6 +91,9 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
     let cropper;
@@ -98,77 +101,69 @@
     const imageToCrop = document.getElementById('image-to-crop');
     const imagePreview = document.getElementById('image-preview');
     const placeholderIcon = document.getElementById('placeholder-icon');
-    const cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+    let cropperModal;
     const btnCrop = document.getElementById('btn-crop');
     const btnSubmit = document.getElementById('btn-submit');
     const fotoBase64 = document.getElementById('foto_base64');
     const form = document.getElementById('emitir-form');
 
-    fotoInput.addEventListener('change', function(e) {
-        const files = e.target.files;
-        if (files && files.length > 0) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                // Resetar o src para garantir que o Cropper recarregue se for a mesma imagem
-                imageToCrop.src = event.target.result;
-                cropperModal.show();
-                // Limpa o input para permitir selecionar a mesma imagem novamente se necessário
-                fotoInput.value = "";
-            };
-            reader.readAsDataURL(files[0]);
-        }
-    });
-
-    // Permitir clicar na prévia para editar novamente
-    imagePreview.parentElement.addEventListener('click', function() {
-        if (imagePreview.src && imagePreview.src !== window.location.href) {
-            imageToCrop.src = imagePreview.src;
-            cropperModal.show();
-        } else {
-            fotoInput.click();
-        }
-    });
-
-    document.getElementById('cropperModal').addEventListener('shown.bs.modal', function() {
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(imageToCrop, {
-            aspectRatio: 1,
-            viewMode: 1,
-            dragMode: 'move',
-            autoCropArea: 1,
-            restore: false,
-            guides: true,
-            center: true,
-            highlight: false,
-            cropBoxMovable: true,
-            cropBoxResizable: true,
-            toggleDragModeOnDblclick: false,
+    document.addEventListener('DOMContentLoaded', function() {
+        cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+        
+        fotoInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imageToCrop.src = event.target.result;
+                    cropperModal.show();
+                    fotoInput.value = "";
+                };
+                reader.readAsDataURL(files[0]);
+            }
         });
-    });
 
-    document.getElementById('cropperModal').addEventListener('hidden.bs.modal', function() {
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
-        }
-    });
+        // Permitir clicar na prévia para editar novamente
+        imagePreview.parentElement.addEventListener('click', function() {
+            if (imagePreview.src && imagePreview.src.startsWith('data:')) {
+                imageToCrop.src = imagePreview.src;
+                cropperModal.show();
+            } else {
+                fotoInput.click();
+            }
+        });
 
-    btnCrop.addEventListener('click', function() {
-        const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
-        const base64 = canvas.toDataURL('image/png');
-        fotoBase64.value = base64;
-        imagePreview.src = base64;
-        imagePreview.style.display = 'block';
-        placeholderIcon.style.display = 'none';
-        cropperModal.hide();
-    });
+        document.getElementById('cropperModal').addEventListener('shown.bs.modal', function() {
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1
+            });
+        });
 
-    btnSubmit.addEventListener('click', function() {
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-        form.submit();
+        btnCrop.addEventListener('click', function() {
+            const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+            const base64 = canvas.toDataURL('image/png');
+            fotoBase64.value = base64;
+            imagePreview.src = base64;
+            imagePreview.style.display = 'block';
+            placeholderIcon.style.display = 'none';
+            cropperModal.hide();
+        });
+
+        btnSubmit.addEventListener('click', function() {
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            if (!fotoBase64.value) {
+                alert("Por favor, selecione e ajuste uma foto primeiro.");
+                return;
+            }
+            form.submit();
+        });
     });
 </script>
 {% endblock %}
