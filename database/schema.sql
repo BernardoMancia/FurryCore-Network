@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS usuarios_sistema (
     senha_hash TEXT NOT NULL,
     cargo TEXT NOT NULL CHECK (cargo IN ('ADMIN', 'ANALISTA', 'USUARIO')),
     token_recuperacao TEXT,
+    totp_secret TEXT,
     FOREIGN KEY (cnf_vinculado) REFERENCES cidadaos(cnf) ON DELETE SET NULL
 );
 

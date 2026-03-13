@@ -39,9 +39,13 @@ def monitor_session():
             request.form = request.form.copy()
             request.form[key] = sanitizar_input(request.form[key])
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return "CGRF 2.0 - Sistema de Governança de Identidades Furry"
+    if request.method == 'POST':
+        cnf = request.form.get('cnf')
+        if cnf:
+            return redirect(url_for('perfil', cnf=cnf))
+    return render_template('index.html')
 
 @app.route('/test_emit')
 def test_emit():
@@ -77,12 +81,11 @@ def login():
             # Salva ID do usuário na sessão temporária para o próximo passo
             session['pending_user_id'] = user.id
             
-            # Verifica se o usuário tem MFA (admins por padrão, ou se tiver segredo no banco)
-            # Para o MVP: Admins sempre exigem MFA se cadastrado (simulado via ENV aqui)
-            if user.cargo == 'ADMIN':
+            # Só exige MFA se o segredo estiver cadastrado para este usuário
+            if user.totp_secret:
                 return redirect(url_for('login_mfa'))
             
-            # Sem MFA, login direto
+            # Sem MFA cadastrada, login direto
             login_user(user)
             session.pop('pending_user_id', None)
             return redirect(url_for('index'))
@@ -101,9 +104,8 @@ def login_mfa():
         token = request.form.get('token')
         user = User.get(user_id)
         
-        # Simulação de segredo (em produção busca do banco)
-        admin_secret = os.getenv('ADMIN_TOTP_SECRET', 'JBSWY3DPEHPK3PXP')
-        if validar_totp(admin_secret, token):
+        # Valida contra o segredo salvo no banco para este usuário
+        if user and user.totp_secret and validar_totp(user.totp_secret, token):
             login_user(user)
             session.pop('pending_user_id', None)
             return redirect(url_for('index'))
@@ -153,6 +155,29 @@ def create_admin():
         return "Admin criado com sucesso! E-mail: admin@cgrf.com | Senha: admin123"
     except Exception as e:
         return f"Erro ao criar admin: {e}"
+
+@app.route('/admin/usuarios', methods=['GET', 'POST'])
+@login_required
+@role_required(['ADMIN'])
+def admin_usuarios():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        cargo = request.form.get('cargo')
+        cnf = request.form.get('cnf')
+        
+        from werkzeug.security import generate_password_hash
+        pwd_hash = generate_password_hash(password)
+        
+        query = "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado) VALUES (?, ?, ?, ?)"
+        try:
+            db.execute_query(query, (email, pwd_hash, cargo, cnf or None))
+            return redirect(url_for('admin_usuarios'))
+        except Exception as e:
+            return f"Erro ao criar usuário: {e}", 400
+            
+    usuarios = db.execute_query("SELECT * FROM usuarios_sistema", fetchall=True)
+    return render_template('admin_usuarios.html', usuarios=usuarios)
 
 @app.errorhandler(403)
 def access_denied(e):

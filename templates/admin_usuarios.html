@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Usuários - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="glass-card">
+            <h4 class="neon-text mb-4">Novo Usuário</h4>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label small">E-mail</label>
+                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Senha</label>
+                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Cargo</label>
+                    <select name="cargo" class="form-select bg-dark text-white border-secondary">
+                        <option value="USUARIO">Usuário</option>
+                        <option value="ANALISTA">Analista</option>
+                        <option value="ADMIN">Administrador</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small">CNF Vinculado (Opcional)</label>
+                    <input type="text" name="cnf" class="form-control bg-dark text-white border-secondary" placeholder="000.00.0000-XX">
+                </div>
+                <button type="submit" class="btn btn-neon w-100">Criar Usuário</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="glass-card">
+            <h4 class="neon-text mb-4">Usuários Cadastrados</h4>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover border-secondary">
+                    <thead>
+                        <tr>
+                            <th>E-mail</th>
+                            <th>Cargo</th>
+                            <th>CNF</th>
+                            <th>MFA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td>{{ u.email }}</td>
+                            <td>
+                                <span class="badge {% if u.cargo == 'ADMIN' %}bg-danger{% elif u.cargo == 'ANALISTA' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                                    {{ u.cargo }}
+                                </span>
+                            </td>
+                            <td>{{ u.cnf_vinculado or '-' }}</td>
+                            <td>
+                                {% if u.totp_secret %}
+                                <span class="text-success small">Ativo</span>
+                                {% else %}
+                                <span class="text-secondary small">Inativo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

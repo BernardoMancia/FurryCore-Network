@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Início - CGRF 2.0{% endblock %}
+
+{% block content %}
+<div class="row min-vh-75 align-items-center justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 neon-text fw-bold mb-2">CGRF 2.0</h1>
+        <p class="text-secondary fs-5 mb-5">Portal de Transparência e Governança de Identidades</p>
+        
+        <div class="glass-card p-4 mb-5">
+            <h4 class="mb-4 small text-uppercase tracking-wider text-secondary">Consulta Pública de Registro</h4>
+            <form method="POST" class="row g-2 justify-content-center">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="col-md-8">
+                    <input type="text" name="cnf" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Digite o CNF (Ex: 000.00.0000-XX)" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-neon btn-lg w-100">Consultar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="mt-4">
+            <p class="text-secondary small">Possui uma credencial administrativa ou pessoal?</p>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-secondary px-4">Acessar Painel do Cidadão</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
