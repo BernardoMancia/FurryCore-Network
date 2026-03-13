@@ -2,7 +2,8 @@
 
 -- Tabela 1: cidadaos (O Cofre de Identidades)
 CREATE TABLE IF NOT EXISTS cidadaos (
-    cnf TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cnf TEXT UNIQUE NOT NULL,
     rgf TEXT UNIQUE NOT NULL,
     nome TEXT NOT NULL,
     especie TEXT NOT NULL,
