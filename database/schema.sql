@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS cidadaos (
     nome TEXT NOT NULL,
     especie TEXT NOT NULL,
     regiao TEXT NOT NULL,
-    alinhamento TEXT NOT NULL,
     email TEXT NOT NULL,
     data_emissao TEXT NOT NULL,
     data_expiracao TEXT NOT NULL,

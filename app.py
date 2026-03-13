@@ -58,11 +58,11 @@ def test_emit():
     data_emissao = formatar_data_sp(hoje)
     data_expiracao = formatar_data_sp(exp)
     
-    query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, alinhamento, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
     # Exemplo de foto base64 (pixel transparente)
     foto_teste = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-    params = (cnf, rgf, "Test User", "Fox", "South", "Neutral", "test@example.com", data_emissao, data_expiracao, qr, foto_teste)
+    params = (cnf, rgf, "Test User", "Fox", "South", "test@example.com", data_emissao, data_expiracao, qr, foto_teste)
     
     try:
         db.execute_query(query, params)
@@ -139,8 +139,6 @@ def perfil(cnf):
     if not exibir_tudo:
         if dados['regiao'] != 'DELETADA POR SOLICITAÇÃO':
             dados['regiao'] = "Logue para mais detalhes"
-        if dados['alinhamento'] != 'DELETADA POR SOLICITAÇÃO':
-            dados['alinhamento'] = "Logue para mais detalhes"
             
     return render_template('perfil.html', cidadao=dados, exibir_tudo=exibir_tudo)
 
@@ -187,7 +185,6 @@ def admin_emitir():
         nome = request.form.get('nome')
         especie = request.form.get('especie')
         regiao = request.form.get('regiao')
-        alinhamento = request.form.get('alinhamento')
         email = request.form.get('email')
         foto_file = request.files.get('foto')
         
@@ -208,9 +205,9 @@ def admin_emitir():
         data_emissao = formatar_data_sp(hoje)
         data_expiracao = formatar_data_sp(exp)
         
-        query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, alinhamento, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        params = (cnf, rgf, nome, especie, regiao, alinhamento, email, data_emissao, data_expiracao, qr_base64, foto_base64)
+        query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+        params = (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qr_base64, foto_base64)
         
         try:
             db.execute_query(query, params)
