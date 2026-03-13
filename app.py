@@ -56,9 +56,9 @@ def test_emit():
     
     query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, alinhamento, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-    # Placeholder de foto (pixel transparente ou cinza para teste)
-    foto_placeholder = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-    params = (cnf, rgf, "Test User", "Fox", "South", "Neutral", "test@example.com", data_emissao, data_expiracao, qr, foto_placeholder)
+    # Exemplo de foto base64 (pixel transparente)
+    foto_teste = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    params = (cnf, rgf, "Test User", "Fox", "South", "Neutral", "test@example.com", data_emissao, data_expiracao, qr, foto_teste)
     
     try:
         db.execute_query(query, params)
@@ -71,23 +71,46 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        token = request.form.get('token')
         
         user = User.find_by_email(email)
         if user and user.check_password(password):
-            if user.cargo == 'ADMIN':
-                # Por simplicidade neste MVP, segredo está no env ou hardcoded para teste
-                # Em produção, o segredo do TOTP deve estar no banco por usuário
-                admin_secret = os.getenv('ADMIN_TOTP_SECRET', 'JBSWY3DPEHPK3PXP')
-                if not token or not validar_totp(admin_secret, token):
-                    return "Token MFA Inválido", 401
+            # Salva ID do usuário na sessão temporária para o próximo passo
+            session['pending_user_id'] = user.id
             
+            # Verifica se o usuário tem MFA (admins por padrão, ou se tiver segredo no banco)
+            # Para o MVP: Admins sempre exigem MFA se cadastrado (simulado via ENV aqui)
+            if user.cargo == 'ADMIN':
+                return redirect(url_for('login_mfa'))
+            
+            # Sem MFA, login direto
             login_user(user)
+            session.pop('pending_user_id', None)
             return redirect(url_for('index'))
         
         return "Credenciais inválidas", 401
     
     return render_template('login.html')
+
+@app.route('/login/mfa', methods=['GET', 'POST'])
+def login_mfa():
+    user_id = session.get('pending_user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+        
+    if request.method == 'POST':
+        token = request.form.get('token')
+        user = User.get(user_id)
+        
+        # Simulação de segredo (em produção busca do banco)
+        admin_secret = os.getenv('ADMIN_TOTP_SECRET', 'JBSWY3DPEHPK3PXP')
+        if validar_totp(admin_secret, token):
+            login_user(user)
+            session.pop('pending_user_id', None)
+            return redirect(url_for('index'))
+        
+        return "Token MFA Inválido", 401
+        
+    return render_template('login_mfa.html')
 
 @app.route('/logout')
 @login_required
@@ -113,9 +136,9 @@ def perfil(cnf):
     dados = dict(cidadao)
     if not exibir_tudo:
         if dados['regiao'] != 'DELETADA POR SOLICITAÇÃO':
-            dados['regiao'] = "*** CENSURADO (Acesso Restrito) ***"
+            dados['regiao'] = "Logue para mais detalhes"
         if dados['alinhamento'] != 'DELETADA POR SOLICITAÇÃO':
-            dados['alinhamento'] = "*** CENSURADO (Acesso Restrito) ***"
+            dados['alinhamento'] = "Logue para mais detalhes"
             
     return render_template('perfil.html', cidadao=dados, exibir_tudo=exibir_tudo)
 
