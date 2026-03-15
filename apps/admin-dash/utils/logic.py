@@ -105,21 +105,50 @@ def create_pre_account_social(email, display_name):
 
 def send_welcome_email(user_data):
     if not user_data.get('email'):
-        return False
-    subject = "🔑 Ative sua Identidade Digital - FurryCore Network"
-    login_url = "https://arwolf.com.br" # Dashboard centralizado
+        return False, "E-mail não fornecido."
+    
+    subject = "🐾 Ative sua Identidade Digital - FurryCore Network"
+    portal_url = "https://cgrf.com.br"
+    social_url = "https://pawsteps.social"
+    
     html = f"""
-    <div style="background-color: #0a0b10; color: #fff; padding: 40px; font-family: sans-serif; border: 1px solid #00f2ff; border-radius: 10px; max-width: 600px; margin: auto;">
-        <h1 style="color: #00f2ff; text-align: center;">Seja Bem-vindo(a) à FurryCore!</h1>
-        <p style="text-align: center;">Sua credencial <b>CGRF</b> foi emitida com sucesso.</p>
-        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #00f2ff;">
-            <p><b>CNF:</b> {user_data['cnf']}</p>
-            <p><b>RGF:</b> {user_data['rgf']}</p>
-            <p style="color: #ffca2c;"><b>Senha Temporária:</b> {user_data.get('temp_pass', 'Verificar com Admin')}</p>
+    <div style="background-color: #0a0b10; color: #ffffff; padding: 40px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #00f2ff; border-radius: 12px; max-width: 600px; margin: auto;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #00f2ff; margin-bottom: 5px;">Seja Bem-vindo(a)!</h1>
+            <p style="color: #00f2ff; font-size: 1.1em; opacity: 0.8;">Sua Identidade Digital CGRF foi emitida.</p>
         </div>
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="{login_url}" style="padding: 15px 30px; background: #00f2ff; color: #000; font-weight: bold; text-decoration: none; border-radius: 5px;">ACESSAR PAINEL</a>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #00f2ff;">
+            <h3 style="color: #00f2ff; margin-top: 0;">📋 Suas Credenciais</h3>
+            <p style="margin: 10px 0;"><b>CNF:</b> <code style="background: #1a1b22; padding: 3px 6px; border-radius: 4px;">{user_data['cnf']}</code></p>
+            <p style="margin: 10px 0;"><b>RGF:</b> {user_data['rgf']}</p>
+            <p style="margin: 10px 0; color: #ffca2c;"><b>Senha Temporária:</b> <code style="background: #1a1b22; padding: 3px 6px; border-radius: 4px; color: #ffca2c;">{user_data.get('temp_pass', 'Verificar com Administrador')}</code></p>
+            <p style="font-size: 0.85em; color: #aaa; margin-top: 15px;"><i>* Por segurança, altere sua senha imediatamente no primeiro acesso.</i></p>
         </div>
+
+        <div style="margin-bottom: 30px;">
+            <h3 style="color: #00f2ff;">🌐 Ecossistema FurryCore</h3>
+            <p style="line-height: 1.6;">Sua conta é unificada em toda a nossa rede:</p>
+            <ul style="line-height: 1.8;">
+                <li><b>Portal CGRF:</b> Gerencie sua identidade e documentos.</li>
+                <li><b>Rede Social PawSteps:</b> Sua conta já foi pré-criada! Basta acessar com o mesmo e-mail e sua nova senha após alterá-la.</li>
+            </ul>
+        </div>
+
+        <div style="background: rgba(0, 242, 255, 0.05); padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px dashed #00f2ff;">
+            <h3 style="color: #00f2ff; margin-top: 0;">🛡️ Segurança Extra (MFA)</h3>
+            <p style="font-size: 0.9em; line-height: 1.5; margin-bottom: 0;">
+                Recomendamos ativar o <b>MFA (Autenticação de Dois Fatores)</b> nas configurações do seu perfil no Portal CGRF para garantir a proteção máxima da sua identidade.
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="{portal_url}" style="display: inline-block; padding: 16px 40px; background: #00f2ff; color: #000000; font-weight: bold; text-decoration: none; border-radius: 6px; text-transform: uppercase; letter-spacing: 1px;">ATIVAR MINHA CONTA</a>
+        </div>
+        
+        <p style="text-align: center; font-size: 0.8em; color: #555; margin-top: 40px;">
+            FurryCore Network - O Cofre de Identidades da Prowl.
+        </p>
     </div>
     """
     return send_transactional_email(user_data['email'], subject, html)
