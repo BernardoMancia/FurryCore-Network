@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGRF | Emitir Carteira</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #06070a; color: #fff; padding: 40px; }
+        .cyber-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 30px; }
+        .btn-neon { border: 1px solid #00f2ff; color: #00f2ff; transition: 0.3s; }
+        .btn-neon:hover { background: #00f2ff; color: #000; box-shadow: 0 0 15px #00f2ff; }
+        #preview-foto { width: 150px; height: 150px; border: 2px dashed #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; }
+        #preview-foto img { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2 class="fw-bold"><i class="bi bi-card-heading text-info"></i> Nova Emissão Digital</h2>
+            <a href="/cgrf/records" class="btn btn-outline-secondary">Lista de Registros</a>
+        </div>
+
+        <div class="cyber-card">
+            <form action="/cgrf/emit" method="POST">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <label class="form-label small d-block">Foto Oficial</label>
+                        <div id="preview-foto" class="mx-auto mb-3">
+                            <i class="bi bi-person-bounding-box display-4 text-white-50"></i>
+                        </div>
+                        <input type="file" id="foto-input" class="form-control form-control-sm bg-black text-white border-secondary mb-2" accept="image/*">
+                        <input type="hidden" name="foto_base64" id="foto_base64">
+                    </div>
+                    
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Nome Completo / Persona</label>
+                                <input type="text" name="nome" class="form-control bg-black text-white border-secondary" required placeholder="Ex: Arwolf">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Espécie</label>
+                                <input type="text" name="especie" class="form-control bg-black text-white border-secondary" required placeholder="Ex: Lobo Cinzento">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Região / Estado</label>
+                                <input type="text" name="regiao" class="form-control bg-black text-white border-secondary" required placeholder="Ex: São Paulo, Brasil">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">E-mail para Envio da Credencial</label>
+                                <input type="email" name="email" class="form-control bg-black text-white border-secondary" required placeholder="usuario@gmail.com">
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info border-info bg-dark small mt-3">
+                            <i class="bi bi-info-circle"></i> Ao emitir, o sistema gerará automaticamente o CNF, RGF e um QRCode criptografado, além de enviar as instruções de acesso ao e-mail informado.
+                        </div>
+                        
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-neon btn-lg px-5">AUTORIZAR EMISSÃO</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('foto-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function() {
+                const preview = document.getElementById('preview-foto');
+                preview.innerHTML = `<img src="${reader.result}">`;
+                document.getElementById('foto_base64').value = reader.result;
+            }
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>

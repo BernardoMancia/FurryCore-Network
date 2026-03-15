@@ -240,5 +240,106 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# --- GESTÃO CGRF (CONSOLIDADA) ---
+
+@app.route('/cgrf/users', methods=['GET', 'POST'])
+@login_required
+def cgrf_manage_users():
+    db_path = DB_PATHS['cgrf']
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = generate_password_hash(request.form.get('password'))
+        cargo = request.form.get('cargo')
+        cnf = request.form.get('cnf')
+        try:
+            conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado) VALUES (?, ?, ?, ?)", (email, password, cargo, cnf or None))
+            conn.commit()
+            flash(f"Usuário {email} criado no CGRF.", "success")
+        except Exception as e:
+            flash(f"Erro ao criar usuário: {e}", "danger")
+            
+    usuarios = conn.execute("SELECT * FROM usuarios_sistema").fetchall()
+    conn.close()
+    return render_template('cgrf_users.html', usuarios=usuarios)
+
+@app.route('/cgrf/emit', methods=['GET', 'POST'])
+@login_required
+def cgrf_emit_wallet():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        especie = request.form.get('especie')
+        regiao = request.form.get('regiao')
+        email = request.form.get('email')
+        foto_base64_raw = request.form.get('foto_base64')
+        
+        cnf = gerar_cnf()
+        rgf = gerar_rgf()
+        qr_base64 = gerar_qrcode_base64(cnf)
+        
+        foto_base64 = None
+        if foto_base64_raw and "," in foto_base64_raw:
+            foto_base64 = foto_base64_raw.split(",")[1]
+            
+        hoje = datetime.now()
+        exp = hoje.replace(year=hoje.year + 10)
+        
+        db_path = DB_PATHS['cgrf']
+        conn = sqlite3.connect(db_path)
+        try:
+            conn.execute("""INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+                           (cnf, rgf, nome, especie, regiao, email, hoje.strftime("%d/%m/%Y"), exp.strftime("%d/%m/%Y"), qr_base64, foto_base64))
+            
+            # Criar conta automática
+            if email:
+                temp_pass = secrets.token_urlsafe(12)
+                pwd_hash = generate_password_hash(temp_pass)
+                conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
+                             (email, pwd_hash, 'USUARIO', cnf, 'PENDENTE'))
+                
+                # Mock do welcome email (requer app context se for usar current_app)
+                user_data = {'nome': nome, 'cnf': cnf, 'rgf': rgf, 'email': email, 'temp_pass': temp_pass}
+                send_welcome_email(user_data)
+                
+            conn.commit()
+            flash(f"Carteira de {nome} emitida com sucesso! CNF: {cnf}", "success")
+        except Exception as e:
+            flash(f"Erro na emissão: {e}", "danger")
+        finally:
+            conn.close()
+        return redirect(url_for('cgrf_manage_records'))
+        
+    return render_template('cgrf_emitir.html')
+
+@app.route('/cgrf/records')
+@login_required
+def cgrf_manage_records():
+    db_path = DB_PATHS['cgrf']
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    registros = conn.execute("SELECT * FROM cidadaos WHERE is_valido = 1 ORDER BY id DESC").fetchall()
+    conn.close()
+    return render_template('cgrf_registros.html', registros=registros)
+
+@app.route('/cgrf/privacy')
+@login_required
+def cgrf_manage_privacy():
+    db_path = DB_PATHS['cgrf']
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    query = """
+    SELECT s.*, c.nome as nome_cidadao 
+    FROM solicitacoes_privacidade s
+    JOIN cidadaos c ON s.cnf_solicitante = c.cnf
+    WHERE s.status = 'PENDENTE'
+    ORDER BY s.data_solicitacao ASC
+    """
+    solicitacoes = conn.execute(query).fetchall()
+    conn.close()
+    return render_template('cgrf_privacidade.html', solicitacoes=solicitacoes)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=29999, debug=True)

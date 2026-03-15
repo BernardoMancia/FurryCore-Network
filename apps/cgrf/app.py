@@ -276,27 +276,25 @@ def create_admin():
 @login_required
 @role_required(['ADMIN'])
 def admin_usuarios():
-    """
-    Gestão de contas administrativas e cargos.
-    """
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        cargo = request.form.get('cargo')
-        cnf = request.form.get('cnf')
-        
-        pwd_hash = generate_password_hash(password)
-        
-        query = "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado) VALUES (?, ?, ?, ?)"
-        try:
-            db.execute_query(query, (email, pwd_hash, cargo, cnf or None))
-            flash(f"Usuário {email} cadastrado com sucesso.", "success")
-            return redirect(url_for('admin_usuarios'))
-        except Exception as e:
-            flash(f"Erro ao cadastrar: {email} já existe ou dados inválidos.", "error")
-            
-    usuarios = db.execute_query("SELECT * FROM usuarios_sistema", fetchall=True)
-    return render_template('admin_usuarios.html', usuarios=usuarios)
+    return redirect("https://arwolf.com.br/cgrf/users")
+
+@app.route('/admin/emitir', methods=['GET', 'POST'])
+@login_required
+@role_required(['ADMIN'])
+def admin_emitir():
+    return redirect("https://arwolf.com.br/cgrf/emit")
+
+@app.route('/admin/registros')
+@login_required
+@role_required(['ADMIN', 'ANALISTA'])
+def admin_registros():
+    return redirect("https://arwolf.com.br/cgrf/records")
+
+@app.route('/admin/privacidade')
+@login_required
+@role_required(['ADMIN'])
+def admin_privacidade():
+    return redirect("https://arwolf.com.br/cgrf/privacy")
 
 @app.route('/admin/usuario/editar/<int:user_id>', methods=['POST'])
 @login_required
