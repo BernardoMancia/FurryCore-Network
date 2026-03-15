@@ -10,7 +10,7 @@ class DatabaseManager:
             cls._instance = super(DatabaseManager, cls).__new__(cls)
             # Caminho absoluto baseado no local do script
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            cls._instance.db_path = os.getenv("DB_PATH", os.path.join(base_dir, "base_cgrf.db"))
+            cls._instance.db_path = os.getenv("DB_PATH", os.path.join(base_dir, "database", "base_cgrf.db"))
             cls._instance._init_db()
         return cls._instance
 

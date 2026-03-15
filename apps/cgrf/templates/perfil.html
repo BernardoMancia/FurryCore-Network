@@ -45,12 +45,24 @@
                 </div>
                 <div class="col-md-6">
                     <div class="d-flex justify-content-between">
-                        <label class="text-secondary small">Região</label>
+                        <label class="text-secondary small">Região / Estado</label>
                         {% if 'regiao' in sob_revisao %}
                         <span class="badge bg-warning text-dark x-small">SOB REVISÃO (LGPD)</span>
                         {% endif %}
                     </div>
                     <p class="fs-5">{{ cidadao.regiao }}</p>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between">
+                        <label class="text-secondary small">Cidade</label>
+                    </div>
+                    <p class="fs-5">{{ cidadao.cidade or '-' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between">
+                        <label class="text-secondary small">Idiomas</label>
+                    </div>
+                    <p class="fs-5">{{ cidadao.idiomas or 'Não Informado' }}</p>
                 </div>
                 <div class="col-md-6">
                     <label class="text-secondary small">Status do Registro</label>

@@ -11,7 +11,7 @@ app.secret_key = os.getenv('ADMIN_SECRET_KEY', 'cyber-furry-admin-9999')
 
 # Configurações de Caminhos (Mapeados via Docker Volumes)
 DB_PATHS = {
-    'cgrf': '/app/shared_data/cgrf/base_cgrf.db',
+    'cgrf': '/app/shared_data/cgrf/database/base_cgrf.db',
     'pawsteps': '/app/shared_data/pawsteps/pawsteps.db',
     'shop': '/app/shared_data/shop/shop.db'
 }
