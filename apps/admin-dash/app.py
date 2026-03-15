@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+import secrets
+from utils.logic import gerar_cnf, gerar_rgf, gerar_qrcode_base64, send_welcome_email
 
 app = Flask(__name__)
 app.secret_key = os.getenv('ADMIN_SECRET_KEY', 'cyber-furry-admin-9999')
