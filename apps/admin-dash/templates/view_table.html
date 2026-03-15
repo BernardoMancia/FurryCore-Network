@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela: {{ table }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #06070a; color: white; padding: 20px; }
+        .cyber-table { color: #ccc; border: 1px solid #333; }
+        .cyber-table th { background: #111; border-color: #333; }
+        .cyber-table td { border-color: #222; background: rgba(255,255,255,0.01); }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/database/{{ app_name }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+            <h3 class="fw-bold">{{ app_name|upper }} > {{ table }}</h3>
+            <button class="btn btn-success btn-sm"><i class="bi bi-plus-lg"></i> Novo Registro</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table cyber-table table-sm small">
+                <thead>
+                    <tr>
+                        {% for col in columns %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        {% for col in columns %}
+                        <td>{{ row[col] }}</td>
+                        {% endfor %}
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-primary btn-sm py-0" title="Editar"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-danger btn-sm py-0" title="Excluir"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

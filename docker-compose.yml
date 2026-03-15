@@ -63,6 +63,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
+      - ./nginx_logs:/var/log/nginx
     depends_on:
       - landing
       - pawsteps
@@ -83,6 +84,26 @@ services:
       - ZBX_HOSTNAME=SRV-AUTOMACAO
     networks:
       - furry_net
+
+  # Admin Dashboard - Central de Controle
+  admin-dash:
+    build:
+      context: .
+      dockerfile: ./apps/admin-dash/Dockerfile
+    container_name: furry_admin
+    restart: always
+    ports:
+      - "29999:29999"
+    volumes:
+      - ./apps/admin-dash/database:/app/database
+      - ./nginx_logs:/app/shared_logs # Logs do Nginx para monitoramento
+      - ./apps/cgrf:/app/shared_data/cgrf # DB CGRF
+      - ./apps/pawsteps/database:/app/shared_data/pawsteps # DB PawSteps
+      - ./apps/shop/database:/app/shared_data/shop # DB Shop
+    networks:
+      - furry_net
+    depends_on:
+      - nginx
 
 networks:
   furry_net:

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | FurryCore Network</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --accent: #00f2ff;
+            --bg: #06070a;
+            --glass: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.08);
+        }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            background: rgba(10, 11, 15, 0.95);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            z-index: 1000;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.6);
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 5px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: var(--glass);
+            color: var(--accent);
+            box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.05);
+        }
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            height: 100%;
+        }
+        .neon-glow { text-shadow: 0 0 10px var(--accent); color: var(--accent); }
+        .cyber-table { color: #ccc; border-collapse: separate; border-spacing: 0 8px; }
+        .cyber-table thead th { border: none; font-weight: 600; color: #555; text-transform: uppercase; font-size: 0.75rem; padding: 12px; }
+        .cyber-table tbody tr { background: rgba(255,255,255,0.02); transition: 0.3s; }
+        .cyber-table tbody tr:hover { background: rgba(255,255,255,0.05); }
+        .cyber-table td { padding: 16px; border: none; }
+        .cyber-table td:first-child { border-radius: 12px 0 0 12px; }
+        .cyber-table td:last-child { border-radius: 0 12px 12px 0; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h4 class="fw-bold mb-5 neon-glow" style="font-family: 'Outfit';">FurryCore <span class="text-white">Admin</span></h4>
+        
+        <nav>
+            <a href="/" class="nav-link active"><i class="bi bi-speedometer2"></i> Visão Geral</a>
+            <div class="text-white-50 small mt-4 mb-2 px-3">APLICAÇÕES</div>
+            <a href="/database/cgrf" class="nav-link"><i class="bi bi-shield-check"></i> CGRF Portal</a>
+            <a href="/database/pawsteps" class="nav-link"><i class="bi bi-chat-heart"></i> PawSteps Social</a>
+            <a href="/database/shop" class="nav-link"><i class="bi bi-bag-check"></i> FurryCore Shop</a>
+            
+            <div class="text-white-50 small mt-4 mb-2 px-3">SEGURANÇA</div>
+            <a href="#" class="nav-link"><i class="bi bi-shield-lock"></i> Logs de Invasão</a>
+            <a href="#" class="nav-link"><i class="bi bi-people"></i> Gerenciar Admins</a>
+        </nav>
+        
+        <div class="position-absolute bottom-0 start-0 w-100 p-4">
+            <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-dark border border-secondary">
+                <div class="rounded-circle bg-info" style="width: 32px; height: 32px;"></div>
+                <div class="overflow-hidden">
+                    <div class="small fw-bold text-truncate">{{ current_user.username }}</div>
+                    <a href="/logout" class="text-danger x-small text-decoration-none" style="font-size: 0.7rem;">Desconectar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 class="fw-bold">Visão Geral</h1>
+                <p class="text-white-50">Status do ecossistema e monitoramento em tempo real.</p>
+            </div>
+            <div class="text-end">
+                <div class="small text-white-50" id="current-time"></div>
+                <div class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">Sistema Operacional</div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="text-white-50 small mb-2">Total de Requisições (500)</div>
+                    <h2 class="fw-bold neon-glow" id="total-req">-</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="text-white-50 small mb-2">Acessos OK (200)</div>
+                    <h2 class="fw-bold text-info" id="status-200">-</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="text-white-50 small mb-2">Páginas Não Enc. (404)</div>
+                    <h2 class="fw-bold text-warning" id="status-404">-</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="text-white-50 small mb-2">Erros de Sistema (500)</div>
+                    <h2 class="fw-bold text-danger" id="status-500">-</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="stat-card">
+                    <h5 class="fw-bold mb-4">Alertas de Segurança</h5>
+                    <div id="security-alerts" class="small">
+                        <p class="text-white-50">Carregando auditoria...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h5 class="fw-bold mb-4">Network Health</h5>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span>CPU Usage</span>
+                        <span class="text-info">12%</span>
+                    </div>
+                    <div class="progress bg-dark mb-4" style="height: 6px;">
+                        <div class="progress-bar bg-info" style="width: 12%"></div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span>Memory</span>
+                        <span class="text-purple" style="color: var(--accent-purple);">45%</span>
+                    </div>
+                    <div class="progress bg-dark" style="height: 6px;">
+                        <div class="progress-bar" style="width: 45%; background: #bc13fe;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateStats() {
+            fetch('/api/stats')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('total-req').innerText = data.total_requests;
+                    document.getElementById('status-200').innerText = data.status_200;
+                    document.getElementById('status-404').innerText = data.status_404;
+                    document.getElementById('status-500').innerText = data.status_500;
+                    
+                    const alertsDiv = document.getElementById('security-alerts');
+                    if (data.security_alerts.length > 0) {
+                        alertsDiv.innerHTML = data.security_alerts.map(a => `<div class="mb-2 p-2 rounded bg-danger-subtle text-danger border border-danger-subtle">${a}</div>`).join('');
+                    } else {
+                        alertsDiv.innerHTML = '<p class="text-success small"><i class="bi bi-check-circle"></i> Nenhum incidente detectado nas últimas requisições.</p>';
+                    }
+                });
+        }
+        setInterval(updateStats, 5000);
+        updateStats();
+
+        function updateClock() {
+            document.getElementById('current-time').innerText = new Date().toLocaleString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
