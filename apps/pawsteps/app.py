@@ -678,4 +678,4 @@ def set_language(lang):
     return redirect(request.referrer or url_for('index'))
 
 if __name__ == '__main__':
-    app.run(port=20001, debug=True)
+    app.run(host='0.0.0.0', port=20001, debug=True)
