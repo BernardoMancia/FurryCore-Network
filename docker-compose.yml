@@ -3,7 +3,9 @@ version: '3.8'
 services:
   # Landing Page - furrycore.com.br
   landing:
-    build: ./apps/landing
+    build:
+      context: .
+      dockerfile: ./apps/landing/Dockerfile
     container_name: furry_landing
     restart: always
     expose:
@@ -13,7 +15,9 @@ services:
 
   # Rede Social - pawsteps.social
   pawsteps:
-    build: ./apps/pawsteps
+    build:
+      context: .
+      dockerfile: ./apps/pawsteps/Dockerfile
     container_name: furry_pawsteps
     restart: always
     expose:
@@ -26,7 +30,9 @@ services:
 
   # Portal CGRF - cgrf.com.br
   cgrf:
-    build: ./apps/cgrf
+    build:
+      context: .
+      dockerfile: ./apps/cgrf/Dockerfile
     container_name: furry_cgrf
     restart: always
     expose:
@@ -38,7 +44,9 @@ services:
 
   # Loja - furrycore.com.br/shop
   shop:
-    build: ./apps/shop
+    build:
+      context: .
+      dockerfile: ./apps/shop/Dockerfile
     container_name: furry_shop
     restart: always
     expose:
