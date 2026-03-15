@@ -31,7 +31,8 @@ fi
 
 # 3. Rodar Migrações de Banco (Garantir que as colunas novas existam)
 echo "🗄️ Verificando integridade das tabelas..."
-python3 tmp_migrate_db_v3.py || echo "⚠️ Alerta: Falha na migração do banco. Verifique permissões."
+python3 tmp_migrate_db_v3.py || echo "⚠️ Alerta: Falha na migração v3."
+python3 tmp_migrate_db_v4.py || echo "⚠️ Alerta: Falha na migração v4."
 
 # 4. Permissões Progressivas
 echo "🔐 Ajustando permissões de acesso..."

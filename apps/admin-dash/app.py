@@ -257,7 +257,7 @@ def cgrf_manage_users():
         cargo = request.form.get('cargo')
         cnf = request.form.get('cnf')
         try:
-            conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado) VALUES (?, ?, ?, ?)", (email, password, cargo, cnf or None))
+            conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, 'ATIVO')", (email, password, cargo, cnf or None))
             conn.commit()
             flash(f"Usuário {email} criado no CGRF.", "success")
         except Exception as e:
@@ -303,7 +303,7 @@ def cgrf_emit_wallet():
             if email:
                 temp_pass = secrets.token_urlsafe(12)
                 pwd_hash = generate_password_hash(temp_pass)
-                conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
+                conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, 'PENDENTE')",
                              (email, pwd_hash, 'USUARIO', cnf, 'PENDENTE'))
                 
                 # Mock do welcome email (requer app context se for usar current_app)
