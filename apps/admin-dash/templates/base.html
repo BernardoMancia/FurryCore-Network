@@ -198,18 +198,57 @@
     </div>
 
     <div class="main-content">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} cyber-card mb-4 border-{{ category }} py-2">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <!-- Floating Notifications (Toasts) -->
+        <div class="toast-container position-fixed top-0 end-0 p-4" style="z-index: 9999;">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="toast show cyber-card mb-3 border-{{ category if category != 'message' else 'info' }}" 
+                             role="alert" aria-live="assertive" aria-atomic="true" 
+                             style="min-width: 300px; background: rgba(10, 11, 15, 0.95) !important;">
+                            <div class="toast-header bg-transparent border-0 text-white-50 small d-flex justify-content-between">
+                                <strong class="me-auto text-uppercase letter-spacing-1">
+                                    <i class="bi bi-shield-lock-fill {% if category == 'success' %}neon-green{% elif category == 'danger' %}neon-red{% else %}text-info{% endif %} me-2"></i>
+                                    Sistema FurryCore
+                                </strong>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <div class="toast-body py-3 fw-bold">
+                                {{ message }}
+                            </div>
+                            <div class="progress" style="height: 2px; border-radius: 0;">
+                                <div class="progress-bar {% if category == 'success' %}bg-success{% elif category == 'danger' %}bg-danger{% else %}bg-info{% endif %}" 
+                                     id="toast-progress-{{ loop.index }}" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
 
         {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-dismiss toasts and animate progress bar
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach((toast, index) => {
+                const progress = toast.querySelector('.progress-bar');
+                let width = 100;
+                const interval = setInterval(() => {
+                    width -= 1;
+                    if (progress) progress.style.width = width + '%';
+                    if (width <= 0) {
+                        clearInterval(interval);
+                        const bsToast = new bootstrap.Toast(toast);
+                        bsToast.hide();
+                    }
+                }, 50); // 5 seconds (100 * 50ms)
+            });
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -459,9 +459,11 @@ def generic_delete(app_name, table_name, row_id):
     db_path = DB_PATHS[app_name]
     conn = sqlite3.connect(db_path)
     try:
-        # Tenta identificar coluna de soft delete
+        # Tenta identificar o nome da chave primária
         cursor = conn.execute(f"PRAGMA table_info({table_name})")
-        columns = [c[1] for c in cursor.fetchall()]
+        columns_info = cursor.fetchall()
+        columns = [c[1] for c in columns_info]
+        pk_col = next((c[1] for c in columns_info if c[5] == 1), 'id') # c[5] é o flag pk
         
         soft_delete_col = None
         for col in ['is_valido', 'status', 'ativo', 'active', 'is_uninstalled']:
@@ -472,14 +474,10 @@ def generic_delete(app_name, table_name, row_id):
         if soft_delete_col:
             val = 0 if soft_delete_col in ['is_valido', 'ativo', 'active'] else 'INATIVO'
             if soft_delete_col == 'is_uninstalled': val = 1
-            conn.execute(f"UPDATE {table_name} SET {soft_delete_col} = ? WHERE id = ?", (val, row_id))
-            flash(f"Registro {row_id} inativado (Soft Delete).", "success")
+            conn.execute(f"UPDATE {table_name} SET {soft_delete_col} = ? WHERE {pk_col} = ?", (val, row_id))
+            flash(f"Registro inativado via Soft Delete (Tabela: {table_name}).", "success")
         else:
-            # Se não houver coluna de soft delete, usamos um delete real (apesar da regra, 
-            # se não tem suporte no schema, não há muito o que fazer sem alterar o schema)
-            # Mas vamos seguir a regra e negar se não houver suporte? 
-            # Melhor avisar.
-            flash(f"Tabela {table_name} não suporta Soft Delete. Falha na operação de segurança.", "warning")
+            flash(f"A tabela {table_name} não possui suporte para Soft Delete. Operação negada por segurança.", "warning")
             
         conn.commit()
     except Exception as e:

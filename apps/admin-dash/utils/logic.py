@@ -54,19 +54,23 @@ def send_transactional_email(to_email, subject, html_content):
     try:
         # SMTP_SSL se for porta 465
         if smtp_port == 465:
-            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=10)
         else:
-            server = smtplib.SMTP(smtp_server, smtp_port)
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
             server.starttls()
             
         server.login(smtp_user, smtp_password)
         server.send_message(msg)
         server.quit()
-        print(f"[SMTP SUCCESS] E-mail enviado para {to_email}")
+        print(f"✅ [SMTP SUCCESS] E-mail enviado para {to_email}")
         return True
+    except smtplib.SMTPAuthenticationError:
+        print(f"❌ [SMTP AUTH ERROR] Falha de login para {smtp_user}. Verifique se a senha de app está correta.")
+    except smtplib.SMTPConnectError:
+        print(f"❌ [SMTP CONN ERROR] Não foi possível conectar ao servidor {smtp_server}:{smtp_port}.")
     except Exception as e:
-        print(f"[SMTP ERROR] Falha ao enviar para {to_email}: {e}")
-        return False
+        print(f"❌ [SMTP EXCEPTION] Erro inesperado ao enviar para {to_email}: {e}")
+    return False
 
 def create_pre_account_social(email, display_name):
     # O path do banco social é mapeado no docker-compose
