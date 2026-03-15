@@ -105,7 +105,7 @@ def change_password():
 def index():
     if current_user.must_change:
         return redirect(url_for('change_password'))
-    return render_template('index.html')
+    return render_template('index.html', active_page='index')
 
 # --- Monitoramento ---
 @app.route('/api/stats')
@@ -349,7 +349,117 @@ def cgrf_manage_privacy():
     """
     solicitacoes = conn.execute(query).fetchall()
     conn.close()
-    return render_template('cgrf_privacidade.html', solicitacoes=solicitacoes)
+    return render_template('cgrf_privacidade.html', solicitacoes=solicitacoes, active_page='cgrf_privacy')
+
+@app.route('/cgrf/delete/<cnf>')
+@login_required
+def cgrf_delete_record(cnf):
+    db_path = DB_PATHS['cgrf']
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute("UPDATE cidadaos SET is_valido = 0 WHERE cnf = ?", (cnf,))
+        conn.commit()
+        flash(f"Registro {cnf} inativado com sucesso.", "success")
+    except Exception as e:
+        flash(f"Erro ao inativar registro: {e}", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for('cgrf_manage_records'))
+
+@app.route('/cgrf/resend_email/<cnf>')
+@login_required
+def cgrf_resend_email(cnf):
+    db_path = DB_PATHS['cgrf']
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    reg = conn.execute("SELECT * FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
+    conn.close()
+    
+    if reg and reg['email']:
+        # Tenta reenviar usando a lógica do welcome email
+        # No Dashboard não temos a senha temporária original, então enviamos apenas informando sucesso da emissão
+        user_data = {
+            'nome': reg['nome'],
+            'cnf': reg['cnf'],
+            'rgf': reg['rgf'],
+            'email': reg['email'],
+            'temp_pass': 'Consulte sua senha anterior'
+        }
+        if send_welcome_email(user_data):
+            flash(f"E-mail de boas-vindas reenviado para {reg['email']}.", "success")
+        else:
+            flash("Falha ao reenviar e-mail. Verifique a configuração SMTP.", "danger")
+    else:
+        flash("Registro não encontrado ou e-mail ausente.", "warning")
+    return redirect(url_for('cgrf_manage_records'))
+
+@app.route('/cgrf/edit/<cnf>', methods=['GET', 'POST'])
+@login_required
+def cgrf_edit_record(cnf):
+    db_path = DB_PATHS['cgrf']
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        especie = request.form.get('especie')
+        cidade = request.form.get('cidade')
+        pais = request.form.get('pais')
+        try:
+            conn.execute("UPDATE cidadaos SET nome = ?, especie = ?, cidade = ?, pais = ? WHERE cnf = ?",
+                         (nome, especie, cidade, pais, cnf))
+            conn.commit()
+            flash(f"Dados do registro {cnf} atualizados.", "success")
+            return redirect(url_for('cgrf_manage_records'))
+        except Exception as e:
+            flash(f"Erro ao atualizar: {e}", "danger")
+            
+    reg = conn.execute("SELECT * FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
+    conn.close()
+    if not reg:
+        flash("Registro não encontrado.", "danger")
+        return redirect(url_for('cgrf_manage_records'))
+        
+    return render_template('cgrf_editar.html', reg=reg)
+
+@app.route('/database/delete/<app_name>/<table_name>/<int:row_id>')
+@login_required
+def generic_delete(app_name, table_name, row_id):
+    if app_name not in DB_PATHS:
+        flash("Aplicação inválida.", "danger")
+        return redirect(url_for('index'))
+        
+    db_path = DB_PATHS[app_name]
+    conn = sqlite3.connect(db_path)
+    try:
+        # Tenta identificar coluna de soft delete
+        cursor = conn.execute(f"PRAGMA table_info({table_name})")
+        columns = [c[1] for c in cursor.fetchall()]
+        
+        soft_delete_col = None
+        for col in ['is_valido', 'status', 'ativo', 'active', 'is_uninstalled']:
+            if col in columns:
+                soft_delete_col = col
+                break
+        
+        if soft_delete_col:
+            val = 0 if soft_delete_col in ['is_valido', 'ativo', 'active'] else 'INATIVO'
+            if soft_delete_col == 'is_uninstalled': val = 1
+            conn.execute(f"UPDATE {table_name} SET {soft_delete_col} = ? WHERE id = ?", (val, row_id))
+            flash(f"Registro {row_id} inativado (Soft Delete).", "success")
+        else:
+            # Se não houver coluna de soft delete, usamos um delete real (apesar da regra, 
+            # se não tem suporte no schema, não há muito o que fazer sem alterar o schema)
+            # Mas vamos seguir a regra e negar se não houver suporte? 
+            # Melhor avisar.
+            flash(f"Tabela {table_name} não suporta Soft Delete. Falha na operação de segurança.", "warning")
+            
+        conn.commit()
+    except Exception as e:
+        flash(f"Erro na operação: {e}", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for('view_table', app_name=app_name, table_name=table_name))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=29999, debug=True)

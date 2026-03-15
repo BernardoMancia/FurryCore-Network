@@ -1,92 +1,77 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CGRF | Gestão de Usuários</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background: #06070a; color: #fff; padding: 40px; }
-        .cyber-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px; margin-bottom: 25px; }
-        .table { color: #ccc; }
-        .btn-neon { border: 1px solid #00f2ff; color: #00f2ff; transition: 0.3s; }
-        .btn-neon:hover { background: #00f2ff; color: #000; box-shadow: 0 0 15px #00f2ff; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <h2 class="fw-bold"><i class="bi bi-people-fill text-info"></i> Usuários do Sistema CGRF</h2>
-            <a href="/" class="btn btn-outline-secondary">Voltar ao Painel</a>
+{% extends "base.html" %}
+{% set active_page = 'cgrf_users' %}
+
+{% block title %}Usuários CGRF{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold neon-glow"><i class="bi bi-people-fill me-2"></i> Usuários do Sistema CGRF</h2>
+        <p class="text-white-50">Controle de acesso e cargos para o portal cgrf.com.br</p>
+    </div>
+    <a href="/" class="btn btn-outline-secondary btn-sm">Voltar ao Painel</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="cyber-card">
+            <h5 class="fw-bold mb-4 text-info">Novo Usuário CGRF</h5>
+            <form action="/cgrf/users" method="POST">
+                <div class="mb-3">
+                    <label class="form-label small text-white-50 uppercase fw-bold">E-mail</label>
+                    <input type="email" name="email" class="form-control" placeholder="usuario@provedor.com" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50 uppercase fw-bold">Senha Inicial</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50 uppercase fw-bold">Cargo / Permissão</label>
+                    <select name="cargo" class="form-select">
+                        <option value="USUARIO">Usuário Comum</option>
+                        <option value="ANALISTA">Analista de Dados</option>
+                        <option value="ADMIN">Administrador Full</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small text-white-50 uppercase fw-bold">Vincular CNF (Opcional)</label>
+                    <input type="text" name="cnf" class="form-control" placeholder="000.00.0000-XX">
+                </div>
+                <button type="submit" class="btn btn-neon w-100 py-2">CRIAR ACESSO</button>
+            </form>
         </div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="row">
-            <div class="col-md-4">
-                <div class="cyber-card">
-                    <h5 class="fw-bold mb-4">Novo Usuário CGRF</h5>
-                    <form action="/cgrf/users" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label small">E-mail</label>
-                            <input type="email" name="email" class="form-control bg-black text-white border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Senha</label>
-                            <input type="password" name="password" class="form-control bg-black text-white border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Cargo</label>
-                            <select name="cargo" class="form-select bg-black text-white border-secondary">
-                                <option value="USUARIO">Usuário Comum</option>
-                                <option value="ANALISTA">Analista de Dados</option>
-                                <option value="ADMIN">Administrador Full</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Vincular CNF (Opcional)</label>
-                            <input type="text" name="cnf" class="form-control bg-black text-white border-secondary" placeholder="000.00.0000-XX">
-                        </div>
-                        <button type="submit" class="btn btn-neon w-100">Criar Acesso</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="col-md-8">
-                <div class="cyber-card">
-                    <h5 class="fw-bold mb-4">Acessos Cadastrados</h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th class="text-info border-0">E-mail</th>
-                                    <th class="text-info border-0">Cargo</th>
-                                    <th class="text-info border-0">CNF</th>
-                                    <th class="text-info border-0">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for u in usuarios %}
-                                <tr>
-                                    <td>{{ u.email }}</td>
-                                    <td><span class="badge border border-info text-info bg-dark" style="background: rgba(0, 242, 255, 0.1) !important;">{{ u.cargo }}</span></td>
-                                    <td>{{ u.cnf_vinculado or '-' }}</td>
-                                    <td><span class="badge {% if u.status == 'ATIVO' %}text-success border-success{% else %}text-warning border-warning{% endif %} border bg-dark" style="background: rgba(255,255,255,0.05) !important;">{{ u.status }}</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="cyber-card">
+            <h5 class="fw-bold mb-4 text-info">Acessos Cadastrados</h5>
+            <div class="table-responsive">
+                <table class="cyber-table">
+                    <thead>
+                        <tr>
+                            <th>E-mail</th>
+                            <th>Cargo</th>
+                            <th>Vinculação</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td class="fw-bold">{{ u.email }}</td>
+                            <td><span class="badge-cyber border-info text-info">{{ u.cargo }}</span></td>
+                            <td class="small">{{ u.cnf_vinculado or '<span class="text-white-50 italic">Nenhum</span>'|safe }}</td>
+                            <td class="text-center">
+                                <span class="badge-cyber {% if u.status == 'ATIVO' %}border-success neon-green{% else %}border-warning text-warning{% endif %}">
+                                    {{ u.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

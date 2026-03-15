@@ -1,71 +1,78 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CGRF | Registros Ativos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background: #06070a; color: #fff; padding: 40px; }
-        .cyber-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
-        .table { color: #ccc; vertical-align: middle; }
-        .avatar-sm { width: 35px; height: 35px; border-radius: 5px; object-fit: cover; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <h2 class="fw-bold"><i class="bi bi-database-check text-success"></i> Gestão de Registros</h2>
-            <div>
-                <a href="/cgrf/emit" class="btn btn-info btn-sm"><i class="bi bi-plus-circle"></i> Nova Emissão</a>
-                <a href="/" class="btn btn-outline-secondary btn-sm">Voltar</a>
-            </div>
-        </div>
+{% extends "base.html" %}
+{% set active_page = 'cgrf_records' %}
 
-        <div class="cyber-card p-4">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead style="background: rgba(0, 242, 255, 0.1);">
-                        <tr>
-                            <th class="text-info border-0">CNF</th>
-                            <th class="text-info border-0">Foto</th>
-                            <th class="text-info border-0">Nome</th>
-                            <th class="text-info border-0">País</th>
-                            <th class="text-info border-0">Cidade</th>
-                            <th class="text-info border-0">Espécie</th>
-                            <th class="text-info border-0">Idiomas</th>
-                            <th class="text-info border-0">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for reg in registros %}
-                        <tr>
-                            <td class="fw-bold text-white small">{{ reg.cnf }}</td>
-                            <td>
-                                {% if reg.foto_base64 %}
-                                    <img src="data:image/png;base64,{{ reg.foto_base64 }}" class="avatar-sm">
-                                {% else %}
-                                    <i class="bi bi-person-square opacity-25"></i>
-                                {% endif %}
-                            </td>
-                            <td>{{ reg.nome }}</td>
-                            <td class="small">{{ reg.pais or 'Brasil' }}</td>
-                            <td class="small">{{ reg.cidade or '-' }}</td>
-                            <td class="small">{{ reg.especie }}</td>
-                            <td class="small">{{ reg.idiomas or 'Não Informado' }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-outline-info btn-sm" title="Editar"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-outline-danger btn-sm" title="Excluir"><i class="bi bi-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+{% block title %}Registros CGRF{% endblock %}
+
+{% block head %}
+<style>
+    .avatar-md { width: 45px; height: 45px; border-radius: 10px; border: 2px solid var(--border); object-fit: cover; }
+    .cnf-pill { font-family: 'Outfit'; letter-spacing: 0.5px; font-weight: 700; color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold neon-glow"><i class="bi bi-database-check me-2"></i> Gestão de Registros CGRF</h2>
+        <p class="text-white-50">Lista de identidades ativas e ferramentas de moderação.</p>
     </div>
-</body>
-</html>
+    <div class="d-flex gap-2">
+        <a href="/cgrf/emit" class="btn btn-neon btn-sm px-4"><i class="bi bi-plus-circle me-1"></i> NOVA EMISSÃO</a>
+    </div>
+</div>
+
+<div class="cyber-card p-4">
+    <div class="table-responsive">
+        <table class="cyber-table">
+            <thead>
+                <tr>
+                    <th>CNF & Foto</th>
+                    <th>Nome Completo</th>
+                    <th>Localização</th>
+                    <th>Espécie</th>
+                    <th>E-mail</th>
+                    <th class="text-center">Ações de Controle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reg in registros %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            {% if reg.foto_base64 %}
+                                <img src="data:image/png;base64,{{ reg.foto_base64 }}" class="avatar-md shadow-sm">
+                            {% else %}
+                                <div class="avatar-md d-flex align-items-center justify-content-center bg-dark border border-secondary">
+                                    <i class="bi bi-person-fill text-white-50 fs-4"></i>
+                                </div>
+                            {% endif %}
+                            <div class="cnf-pill">{{ reg.cnf }}</div>
+                        </div>
+                    </td>
+                    <td class="fw-semibold">{{ reg.nome }}</td>
+                    <td>
+                        <div class="small text-white-50"><i class="bi bi-geo-alt me-1"></i>{{ reg.cidade or '-' }}</div>
+                        <div class="x-small text-info text-uppercase fw-bold">{{ reg.pais or 'Brasil' }}</div>
+                    </td>
+                    <td><span class="badge-cyber border-secondary opacity-75">{{ reg.especie }}</span></td>
+                    <td class="small">{{ reg.email or '<span class="text-danger">Não Informado</span>'|safe }}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="/cgrf/resend_email/{{ reg.cnf }}" class="btn btn-outline-warning btn-sm border-0" title="Reenviar E-mail de Ativação">
+                                <i class="bi bi-envelope-at-fill"></i>
+                            </a>
+                            <a href="/cgrf/edit/{{ reg.cnf }}" class="btn btn-outline-info btn-sm border-0" title="Editar Registro">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="/cgrf/delete/{{ reg.cnf }}" class="btn btn-outline-danger btn-sm border-0" title="Inativar/Excluir" onclick="return confirm('Tem certeza que deseja inativar este registro?')">
+                                <i class="bi bi-trash3-fill"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

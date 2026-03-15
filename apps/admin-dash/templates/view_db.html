@@ -1,32 +1,35 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explorador de Dados | {{ app_name }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background: #06070a; color: white; padding: 40px; }
-        .table-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; transition: 0.3s; text-decoration: none; color: white; display: block; margin-bottom: 15px; }
-        .table-card:hover { background: rgba(255,255,255,0.08); border-color: #00f2ff; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <a href="/" class="btn btn-outline-secondary mb-4"><i class="bi bi-arrow-left"></i> Voltar ao Dashboard</a>
-        <h2 class="fw-bold mb-4">Gerenciamento: {{ app_name|upper }}</h2>
-        <p class="text-white-50">Selecione uma tabela para visualizar e editar os dados.</p>
-        
-        <div class="row mt-5">
-            {% for table in tables %}
-            <div class="col-md-4">
-                <a href="/database/{{ app_name }}/{{ table }}" class="table-card">
-                    <h5 class="mb-0"><i class="bi bi-table text-info me-2"></i> {{ table }}</h5>
-                </a>
-            </div>
-            {% endfor %}
-        </div>
+{% extends "base.html" %}
+{% set active_page = 'database' %}
+
+{% block title %}Banco de Dados: {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold text-uppercase neon-glow"><i class="bi bi-database me-2"></i> {{ app_name }} Explorer</h2>
+        <p class="text-white-50">Exploração de tabelas e registros brutos.</p>
     </div>
-</body>
-</html>
+    <a href="/" class="btn btn-outline-secondary btn-sm">Voltar</a>
+</div>
+
+<div class="row g-4">
+    {% for table in tables %}
+    <div class="col-md-3">
+        <a href="/database/{{ app_name }}/{{ table }}" class="text-decoration-none">
+            <div class="cyber-card text-center py-4 bg-dark-subtle border-secondary hover-lift" style="transition: 0.3s;">
+                <i class="bi bi-table fs-2 text-info d-block mb-2"></i>
+                <h6 class="fw-bold mb-0 text-white">{{ table }}</h6>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent) !important;
+        box-shadow: 0 5px 15px rgba(0, 242, 255, 0.1);
+    }
+</style>
+{% endblock %}
