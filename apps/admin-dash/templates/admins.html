@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Administradores</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #06070a; color: #fff; padding: 40px; }
+        .card-admin { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+        .table { color: #ccc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2 class="fw-bold"><i class="bi bi-people text-info"></i> Controle de Administradores</h2>
+            <a href="/" class="btn btn-outline-secondary">Voltar</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <div class="col-md-7">
+                <div class="card-admin">
+                    <h5 class="fw-bold mb-4">Admins do Dashboard (Acesso Global)</h5>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuário</th>
+                                <th>MFA Pendente</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for admin in dash_admins %}
+                            <tr>
+                                <td>{{ admin.id }}</td>
+                                <td>{{ admin.username }}</td>
+                                <td>{{ 'Sim' if admin.must_change_password else 'Não' }}</td>
+                                <td>
+                                    {% if admin.id != current_user.id %}
+                                    <a href="/admins/delete/{{ admin.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Remover este admin?')"><i class="bi bi-trash"></i></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <button class="btn btn-info btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#addAdminModal"><i class="bi bi-plus"></i> Novo Admin Global</button>
+                </div>
+            </div>
+            
+            <div class="col-md-5">
+                <div class="card-admin">
+                    <h5 class="fw-bold mb-4">Admins por Aplicação</h5>
+                    {% for app_name, admins in app_admins.items() %}
+                    <div class="mb-3">
+                        <h6 class="text-uppercase small text-info fw-bold">{{ app_name }}</h6>
+                        {% if admins %}
+                            <ul class="list-unstyled small">
+                            {% for admin in admins %}
+                                <li class="text-white-50"><i class="bi bi-person-fill"></i> {{ admin['username'] }} ({{ admin['email'] }})</li>
+                            {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-white-50 x-small">Nenhum admin encontrado ou erro ao ler DB.</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Admin -->
+    <div class="modal fade" id="addAdminModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Criar Novo Admin Global</h5>
+                </div>
+                <form action="/admins/add" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Usuário</label>
+                            <input type="text" name="username" class="form-control bg-black text-white border-secondary" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Senha</label>
+                            <input type="password" name="password" class="form-control bg-black text-white border-secondary" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-info">Criar Admin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

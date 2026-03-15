@@ -15,7 +15,7 @@ DB_PATHS = {
     'pawsteps': '/app/shared_data/pawsteps/pawsteps.db',
     'shop': '/app/shared_data/shop/shop.db'
 }
-LOG_PATH = '/app/shared_logs/access.log'
+LOG_PATH = '/app/shared_logs/access_log.log'
 
 # Banco de Dados do Próprio Dashboard
 ADMIN_DB_PATH = 'database/admin_panel.db'
@@ -167,6 +167,72 @@ def view_table(app_name, table):
     columns = data[0].keys() if data else []
     conn.close()
     return render_template('view_table.html', app_name=app_name, table=table, columns=columns, data=data)
+
+# --- Segurança e Logs de Invasão ---
+@app.route('/security')
+@login_required
+def view_security():
+    logs = []
+    if os.path.exists(LOG_PATH):
+        with open(LOG_PATH, 'r') as f:
+            lines = f.readlines()[-100:] # Últimos 100 logs
+            for line in lines:
+                if any(x in line for x in ['.env', 'wp-admin', 'config', 'phpinfo', '403', '404']):
+                    logs.append(line)
+    return render_template('security.html', logs=logs)
+
+# --- Gestão Global de Admins ---
+@app.route('/admins')
+@login_required
+def manage_admins():
+    conn = get_admin_db()
+    dash_admins = conn.execute("SELECT * FROM admin_users").fetchall()
+    conn.close()
+    
+    # Tentativa de ler admins das outras apps (SQLite)
+    app_admins = {}
+    for app_name, path in DB_PATHS.items():
+        if os.path.exists(path):
+            try:
+                conn_app = sqlite3.connect(path)
+                conn_app.row_factory = sqlite3.Row
+                # Verifica se a tabela users existe e tem is_admin
+                tables = [t[0] for t in conn_app.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+                if 'users' in tables:
+                     app_admins[app_name] = conn_app.execute("SELECT * FROM users WHERE is_admin = 1").fetchall()
+                conn_app.close()
+            except:
+                app_admins[app_name] = []
+                
+    return render_template('admins.html', dash_admins=dash_admins, app_admins=app_admins)
+
+@app.route('/admins/add', methods=['POST'])
+@login_required
+def add_admin():
+    username = request.form.get('username')
+    password = generate_password_hash(request.form.get('password'))
+    conn = get_admin_db()
+    try:
+        conn.execute("INSERT INTO admin_users (username, password, must_change_password) VALUES (?, ?, ?)", (username, password, 0))
+        conn.commit()
+        flash(f"Admin {username} criado com sucesso.", "success")
+    except:
+        flash("Erro ao criar admin (usuário já existe?)", "danger")
+    conn.close()
+    return redirect(url_for('manage_admins'))
+
+@app.route('/admins/delete/<int:admin_id>')
+@login_required
+def delete_admin(admin_id):
+    if admin_id == current_user.id:
+        flash("Você não pode deletar a si mesmo!", "danger")
+        return redirect(url_for('manage_admins'))
+    conn = get_admin_db()
+    conn.execute("DELETE FROM admin_users WHERE id = ?", (admin_id,))
+    conn.commit()
+    conn.close()
+    flash("Admin removido.", "info")
+    return redirect(url_for('manage_admins'))
 
 @app.route('/logout')
 @login_required
