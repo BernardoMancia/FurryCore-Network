@@ -421,5 +421,5 @@ def set_language(lang):
     return redirect(request.referrer or url_for('index'))
 
 if __name__ == '__main__':
-    port = int(os.getenv('APP_PORT', 6969))
-    app.run(host='0.0.0.0', port=20002, debug=True)
+    port = int(os.environ.get('PORT', 20002))
+    app.run(host='0.0.0.0', port=port, debug=True)

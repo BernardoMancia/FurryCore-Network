@@ -8,6 +8,8 @@ services:
     restart: always
     expose:
       - "20000"
+    environment:
+      - PORT=20000
     networks:
       - furry_net
 
@@ -25,6 +27,8 @@ services:
       - ./apps/pawsteps/static/uploads:/app/static/uploads
       - ./apps/cgrf/database:/app/shared_data/cgrf
       - ./apps/shop/database:/app/shared_data/shop
+    environment:
+      - PORT=20001
     networks:
       - furry_net
 
@@ -42,6 +46,8 @@ services:
       - ./apps/pawsteps/database:/app/shared_data/pawsteps
       - ./apps/shop/database:/app/shared_data/shop
       - ./shared:/app/shared
+    environment:
+      - PORT=20002
     networks:
       - furry_net
 
@@ -57,6 +63,8 @@ services:
     volumes:
       - ./apps/shop/database:/app/database
       - ./apps/cgrf/database:/app/shared_data/cgrf
+    environment:
+      - PORT=20003
     networks:
       - furry_net
 
