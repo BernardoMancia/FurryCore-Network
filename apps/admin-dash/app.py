@@ -303,7 +303,7 @@ def cgrf_emit_wallet():
             if email:
                 temp_pass = secrets.token_urlsafe(12)
                 pwd_hash = generate_password_hash(temp_pass)
-                conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, 'PENDENTE')",
+                conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
                              (email, pwd_hash, 'USUARIO', cnf, 'PENDENTE'))
                 
                 # Mock do welcome email (requer app context se for usar current_app)
@@ -313,6 +313,7 @@ def cgrf_emit_wallet():
             conn.commit()
             flash(f"Carteira de {nome} emitida com sucesso! CNF: {cnf}", "success")
         except Exception as e:
+            print(f"[DATABASE ERROR] Falha na emissão CGRF: {e}")
             flash(f"Erro na emissão: {e}", "danger")
         finally:
             conn.close()
