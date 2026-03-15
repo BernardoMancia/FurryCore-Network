@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS cidadaos (
     is_valido BOOLEAN DEFAULT 1,
     qrcode_base64 TEXT,
     foto_base64 TEXT,
+    cidade TEXT,
+    idiomas TEXT,
+    pais TEXT,
     campos_sob_revisao TEXT -- JSON listando campos ocultos temporariamente
 );
 

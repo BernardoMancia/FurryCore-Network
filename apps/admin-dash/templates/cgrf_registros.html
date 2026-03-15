@@ -31,6 +31,7 @@
                             <th>CNF</th>
                             <th>Foto</th>
                             <th>Nome</th>
+                            <th>País</th>
                             <th>Cidade</th>
                             <th>Espécie</th>
                             <th>Idiomas</th>
@@ -49,6 +50,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ reg.nome }}</td>
+                            <td class="small">{{ reg.pais or 'Brasil' }}</td>
                             <td class="small">{{ reg.cidade or '-' }}</td>
                             <td class="small">{{ reg.especie }}</td>
                             <td class="small">{{ reg.idiomas or 'Não Informado' }}</td>

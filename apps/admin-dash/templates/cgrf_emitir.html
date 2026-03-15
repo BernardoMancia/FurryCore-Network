@@ -6,13 +6,16 @@
     <title>CGRF | Emitir Carteira</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <style>
         body { background: #06070a; color: #fff; padding: 40px; }
         .cyber-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 30px; }
         .btn-neon { border: 1px solid #00f2ff; color: #00f2ff; transition: 0.3s; }
         .btn-neon:hover { background: #00f2ff; color: #000; box-shadow: 0 0 15px #00f2ff; }
-        #preview-foto { width: 150px; height: 150px; border: 2px dashed #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; }
-        #preview-foto img { width: 100%; height: 100%; object-fit: cover; }
+        #preview-foto-container { width: 150px; height: 200px; border: 2px dashed #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; }
+        #preview-foto-container img { width: 100%; height: 100%; object-fit: cover; }
+        .img-container { max-height: 400px; width: 100%; }
+        #image-to-crop { display: block; max-width: 100%; }
     </style>
 </head>
 <body>
@@ -29,8 +32,8 @@
             <form action="/cgrf/emit" method="POST">
                 <div class="row">
                     <div class="col-md-3 text-center">
-                        <label class="form-label small d-block">Foto Oficial</label>
-                        <div id="preview-foto" class="mx-auto mb-3">
+                        <label class="form-label small d-block">Foto Oficial (Proporção 3x4)</label>
+                        <div id="preview-foto-container" class="mx-auto mb-3">
                             <i class="bi bi-person-bounding-box display-4 text-white-50"></i>
                         </div>
                         <input type="file" id="foto-input" class="form-control form-control-sm bg-black text-white border-secondary mb-2" accept="image/*">
@@ -47,19 +50,23 @@
                                 <label class="form-label small">Espécie</label>
                                 <input type="text" name="especie" class="form-control bg-black text-white border-secondary" required placeholder="Ex: Lobo Cinzento">
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label small">Cidade</label>
                                 <input type="text" name="cidade" class="form-control bg-black text-white border-secondary" required placeholder="Ex: São Paulo">
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label small">Estado / Região</label>
-                                <input type="text" name="regiao" class="form-control bg-black text-white border-secondary" required placeholder="Ex: SP, Brasil">
+                                <input type="text" name="regiao" class="form-control bg-black text-white border-secondary" required placeholder="Ex: SP">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label small">País</label>
+                                <input type="text" name="pais" class="form-control bg-black text-white border-secondary" required value="Brasil">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label small">Idiomas (Opcional)</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="idiomas" value="Português" id="lang-pt">
+                                        <input class="form-check-input" type="checkbox" name="idiomas" value="Português" id="lang-pt" checked>
                                         <label class="form-check-label small" for="lang-pt">Português</label>
                                     </div>
                                     <div class="form-check">
@@ -91,17 +98,75 @@
         </div>
     </div>
 
+    <!-- Modal de Recorte -->
+    <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content glass-card border-white/10" style="background: #0f111a; border: 1px solid #333;">
+                <div class="modal-header border-white/5">
+                    <h5 class="modal-title neon-text"><i class="bi bi-crop"></i> Ajustar Foto (3x4)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="img-container">
+                        <img id="image-to-crop" src="">
+                    </div>
+                </div>
+                <div class="modal-footer border-white/5">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="crop-button" class="btn btn-neon btn-sm">Cortar e Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
-        document.getElementById('foto-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
+    let cropper;
+    const fileInput = document.getElementById('foto-input');
+    const imageToCrop = document.getElementById('image-to-crop');
+    const previewContainer = document.getElementById('preview-foto-container');
+    const hiddenInput = document.getElementById('foto_base64');
+    const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+
+    fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
             const reader = new FileReader();
-            reader.onload = function() {
-                const preview = document.getElementById('preview-foto');
-                preview.innerHTML = `<img src="${reader.result}">`;
-                document.getElementById('foto_base64').value = reader.result;
-            }
-            reader.readAsDataURL(file);
+            reader.onload = function(event) {
+                imageToCrop.src = event.target.result;
+                cropModal.show();
+            };
+            reader.readAsDataURL(files[0]);
+        }
+    });
+
+    document.getElementById('cropModal').addEventListener('shown.bs.modal', function() {
+        cropper = new Cropper(imageToCrop, {
+            aspectRatio: 3 / 4,
+            viewMode: 2,
+            dragMode: 'move',
+            background: false,
+            responsive: true
         });
+    });
+
+    document.getElementById('cropModal').addEventListener('hidden.bs.modal', function() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    });
+
+    document.getElementById('crop-button').addEventListener('click', function() {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({ width: 450, height: 600 });
+            const base64 = canvas.toDataURL('image/jpeg', 0.9);
+            previewContainer.innerHTML = `<img src="${base64}">`;
+            hiddenInput.value = base64;
+            cropModal.hide();
+        }
+    });
     </script>
 </body>
 </html>
