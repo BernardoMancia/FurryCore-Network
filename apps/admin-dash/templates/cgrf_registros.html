@@ -31,9 +31,9 @@
                             <th>CNF</th>
                             <th>Foto</th>
                             <th>Nome</th>
+                            <th>Cidade</th>
                             <th>Espécie</th>
-                            <th>Emissão</th>
-                            <th>Expira</th>
+                            <th>Idiomas</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -49,9 +49,9 @@
                                 {% endif %}
                             </td>
                             <td>{{ reg.nome }}</td>
+                            <td class="small">{{ reg.cidade or '-' }}</td>
                             <td class="small">{{ reg.especie }}</td>
-                            <td class="small">{{ reg.data_emissao }}</td>
-                            <td class="small">{{ reg.data_expiracao }}</td>
+                            <td class="small">{{ reg.idiomas or 'Não Informado' }}</td>
                             <td>
                                 <div class="btn-group">
                                     <button class="btn btn-outline-light btn-sm"><i class="bi bi-pencil"></i></button>

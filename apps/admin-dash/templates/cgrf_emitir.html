@@ -19,7 +19,10 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-5">
             <h2 class="fw-bold"><i class="bi bi-card-heading text-info"></i> Nova Emissão Digital</h2>
-            <a href="/cgrf/records" class="btn btn-outline-secondary">Lista de Registros</a>
+            <div class="d-flex gap-2">
+                <a href="/cgrf/records" class="btn btn-outline-info btn-sm">Ver Registros</a>
+                <a href="/" class="btn btn-outline-secondary btn-sm">Voltar ao Dashboard</a>
+            </div>
         </div>
 
         <div class="cyber-card">
@@ -45,8 +48,29 @@
                                 <input type="text" name="especie" class="form-control bg-black text-white border-secondary" required placeholder="Ex: Lobo Cinzento">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label small">Região / Estado</label>
-                                <input type="text" name="regiao" class="form-control bg-black text-white border-secondary" required placeholder="Ex: São Paulo, Brasil">
+                                <label class="form-label small">Cidade</label>
+                                <input type="text" name="cidade" class="form-control bg-black text-white border-secondary" required placeholder="Ex: São Paulo">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Estado / Região</label>
+                                <input type="text" name="regiao" class="form-control bg-black text-white border-secondary" required placeholder="Ex: SP, Brasil">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Idiomas (Opcional)</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="idiomas" value="Português" id="lang-pt">
+                                        <label class="form-check-label small" for="lang-pt">Português</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="idiomas" value="Inglês" id="lang-en">
+                                        <label class="form-check-label small" for="lang-en">Inglês</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="idiomas" value="Espanhol" id="lang-es">
+                                        <label class="form-check-label small" for="lang-es">Espanhol</label>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label small">E-mail para Envio da Credencial</label>

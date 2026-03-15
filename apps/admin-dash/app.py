@@ -272,6 +272,9 @@ def cgrf_emit_wallet():
         nome = request.form.get('nome')
         especie = request.form.get('especie')
         regiao = request.form.get('regiao')
+        cidade = request.form.get('cidade')
+        idiomas_list = request.form.getlist('idiomas')
+        idiomas = ", ".join(idiomas_list) if idiomas_list else "Não Informado"
         email = request.form.get('email')
         foto_base64_raw = request.form.get('foto_base64')
         
@@ -289,9 +292,9 @@ def cgrf_emit_wallet():
         db_path = DB_PATHS['cgrf']
         conn = sqlite3.connect(db_path)
         try:
-            conn.execute("""INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-                           (cnf, rgf, nome, especie, regiao, email, hoje.strftime("%d/%m/%Y"), exp.strftime("%d/%m/%Y"), qr_base64, foto_base64))
+            conn.execute("""INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, cidade, idiomas, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+                           (cnf, rgf, nome, especie, regiao, cidade, idiomas, email, hoje.strftime("%d/%m/%Y"), exp.strftime("%d/%m/%Y"), qr_base64, foto_base64))
             
             # Criar conta automática
             if email:
