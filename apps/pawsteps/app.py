@@ -120,14 +120,20 @@ def login_social():
         username = request.form.get('username')
         password = request.form.get('password')
         user = SocialUser.find_by_identifier(username)
-        if user and user.check_password(password):
-            if user.status == 'PENDENTE':
-                flash("Sua conta ainda não foi ativada. Por favor, ative-a no portal CGRF.", "warning")
-            elif user.status != 'ATIVO':
-                flash("Sua conta está desativada ou suspensa.", "error")
+        if user:
+            if user.check_password(password):
+                if user.status == 'PENDENTE':
+                    flash("Sua conta ainda não foi ativada. Por favor, acesse o portal CGRF.com.br e defina sua senha definitiva primeiro.", "warning")
+                elif user.status != 'ATIVO':
+                    flash("Sua conta está desativada ou suspensa.", "error")
+                else:
+                    login_user(user)
+                    return redirect(url_for('index'))
             else:
-                login_user(user)
-                return redirect(url_for('index'))
+                if user.status == 'PENDENTE':
+                    flash("Senha incorreta. Se você acabou de receber seu e-mail, lembre-se que deve ativar sua conta no portal CGRF.com.br antes de acessar a rede social.", "warning")
+                else:
+                    flash("Usuário ou senha inválidos.", "error")
         else:
             flash("Usuário ou senha inválidos.", "error")
     return render_template('login_social.html')

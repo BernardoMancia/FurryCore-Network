@@ -30,23 +30,32 @@ def get_social_db_path():
     return fallback_path
 
 def create_pre_account_social(email, display_name):
-    """Cria uma conta pendente na rede social PawSteps"""
+    """Cria uma conta pendente na rede social PawSteps (Consistente com Dashboard)"""
     try:
         import sqlite3
+        import secrets
         from werkzeug.security import generate_password_hash
         db_path = get_social_db_path()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        username = email.split('@')[0].replace('.', '').replace('_', '').replace(' ', '')
+        # 1. Verificar se o e-mail já existe
+        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        if cursor.fetchone():
+            conn.close()
+            return True
+            
+        # 2. Gerar Username sem caracteres especiais e tratar colisões
+        username = email.split('@')[0].replace('.', '').replace('_', '').replace(' ', '').lower()
+        
         # Verificar se username existe
         cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         if cursor.fetchone():
             import random
             username += str(random.randint(100, 999))
             
-        # Senha temporária padrão (será alterada na ativação)
-        pwd_hash = generate_password_hash("PRE_CREATED_ACCOUNT_PW")
+        # 3. Senha temporária de sistema (será sobreposta pelo sync_social_account na ativação)
+        pwd_hash = generate_password_hash(secrets.token_urlsafe(32))
         
         cursor.execute(
             "INSERT INTO users (username, display_name, email, password_hash, status) VALUES (?, ?, ?, ?, 'PENDENTE')",
@@ -60,7 +69,7 @@ def create_pre_account_social(email, display_name):
         return False
 
 def sync_social_account(old_email, new_email, status=None, password_hash=None):
-    """Sincroniza e-mail, status e senha com o banco Social"""
+    """Sincroniza e-mail, status e senha com o banco Social (Consistente com Dashboard)"""
     try:
         import sqlite3
         db_path = get_social_db_path()
@@ -79,7 +88,9 @@ def sync_social_account(old_email, new_email, status=None, password_hash=None):
             updates.append("password_hash = ?")
             params.append(password_hash)
             
-        if not updates: return False
+        if not updates: 
+            conn.close()
+            return False
         
         params.append(old_email)
         query = f"UPDATE users SET {', '.join(updates)} WHERE email = ?"

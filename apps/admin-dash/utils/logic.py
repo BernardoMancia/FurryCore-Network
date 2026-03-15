@@ -94,14 +94,72 @@ def create_pre_account_social(email, display_name):
         
     try:
         conn = sqlite3.connect(social_db)
-        exists = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
-        if not exists:
-            conn.execute("INSERT INTO users (username, email, password_hash, display_name, status) VALUES (?, ?, ?, ?, ?)",
-                         (email.split('@')[0], email, 'EXTERNAL_AUTH_PENDING', display_name, 'INACTIVE'))
-            conn.commit()
+        cursor = conn.cursor()
+        
+        # 1. Verificar se o e-mail já existe
+        exists = cursor.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if exists:
+            conn.close()
+            return True # Já existe, nada a fazer
+            
+        # 2. Gerar Username sem caracteres especiais e tratar colisões
+        username = email.split('@')[0].replace('.', '').replace('_', '').replace(' ', '').lower()
+        
+        # Verificar se username existe
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        if cursor.fetchone():
+            import random
+            username += str(random.randint(100, 999))
+            
+        # 3. Senha temporária de sistema (será sobreposta pelo sync_social_account na ativação)
+        import secrets
+        from werkzeug.security import generate_password_hash
+        pwd_hash = generate_password_hash(secrets.token_urlsafe(32))
+        
+        cursor.execute(
+            "INSERT INTO users (username, email, password_hash, display_name, status) VALUES (?, ?, ?, ?, ?)",
+            (username, email, pwd_hash, display_name, 'PENDENTE')
+        )
+        conn.commit()
         conn.close()
         return True
-    except:
+    except Exception as e:
+        print(f"[REDE SOCIAL ERROR] Erro ao criar pré-conta: {e}")
+        return False
+
+def sync_social_account(old_email, new_email, status=None, password_hash=None):
+    """Sincroniza e-mail, status e senha com o banco Social (Portado do CGRF para Central)"""
+    social_db = DB_LOGIC_PATHS['pawsteps']
+    if not os.path.exists(social_db):
+        return False
+    try:
+        conn = sqlite3.connect(social_db)
+        cursor = conn.cursor()
+        
+        updates = []
+        params = []
+        if new_email:
+            updates.append("email = ?")
+            params.append(new_email)
+        if status:
+            updates.append("status = ?")
+            params.append(status)
+        if password_hash:
+            updates.append("password_hash = ?")
+            params.append(password_hash)
+            
+        if not updates: 
+            conn.close()
+            return False
+        
+        params.append(old_email)
+        query = f"UPDATE users SET {', '.join(updates)} WHERE email = ?"
+        cursor.execute(query, params)
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[REDE SOCIAL ERROR] Falha ao sincronizar conta: {e}")
         return False
 
 def deactivate_account_everywhere(email):

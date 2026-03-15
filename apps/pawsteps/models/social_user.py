@@ -32,9 +32,16 @@ class SocialUser(UserMixin):
 
     @staticmethod
     def find_by_identifier(identifier):
-        """Busca usuário por username ou e-mail."""
+        """Busca usuário por username ou e-mail. Trata prefixo @."""
+        if not identifier: return None
+        
+        # Limpar identificador (remover @ se houver no início)
+        clean_id = identifier.strip()
+        if clean_id.startswith('@'):
+            clean_id = clean_id[1:]
+            
         db = SocialDatabaseManager()
-        data = db.execute_query("SELECT * FROM users WHERE username = ? OR email = ?", (identifier, identifier), fetchone=True)
+        data = db.execute_query("SELECT * FROM users WHERE username = ? OR email = ?", (clean_id, clean_id), fetchone=True)
         if data:
             return SocialUser(data['id'], data['username'], data['display_name'], data['email'], data['password_hash'], data['cnf_vinculado'], data['is_plus18'], data['data_nascimento'], data['status'])
         return None
