@@ -15,7 +15,7 @@
             --glass: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.08);
         }
-        /* --- Fundo Cibernético Ultra-Dinâmico --- */
+        /* --- Fundo Cibernético AGRESSIVO & ULTRA-DINÂMICO --- */
         .cyber-background {
             position: fixed;
             top: 0;
@@ -23,76 +23,88 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background-color: var(--bg-color);
+            background-color: #020205;
             overflow: hidden;
         }
 
-        /* Camada 1: Mesh Gradients Intensos */
+        /* Scanlines CRT */
+        .cyber-background::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Camada 1: Mesh Gradients Pulsantes e Vibrantes */
         .mesh-gradient {
             position: absolute;
-            width: 150%;
-            height: 150%;
-            top: -25%;
-            left: -25%;
+            width: 140%;
+            height: 140%;
+            top: -20%;
+            left: -20%;
             background: 
-                radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.25) 0%, transparent 40%),
-                radial-gradient(circle at 80% 20%, rgba(188, 19, 254, 0.25) 0%, transparent 40%),
-                radial-gradient(circle at 50% 80%, rgba(188, 19, 254, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 70% 60%, rgba(0, 242, 255, 0.15) 0%, transparent 30%);
-            filter: blur(60px);
-            animation: rotateMesh 30s linear infinite;
+                radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(188, 19, 254, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(188, 19, 254, 0.3) 0%, transparent 60%),
+                radial-gradient(circle at 70% 60%, rgba(0, 242, 255, 0.3) 0%, transparent 40%);
+            filter: blur(50px);
+            animation: rotateMesh 20s linear infinite, pulseGlow 8s ease-in-out infinite alternate;
         }
 
-        /* Camada 2: Cyber Grid Animado */
+        /* Camada 2: Cyber Grid de Alta Velocidade */
         .cyber-grid {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
             background-image: 
-                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            background-position: center;
-            transform: perspective(500px) rotateX(60deg) translateY(0);
-            animation: moveGrid 10s linear infinite;
-            opacity: 0.3;
+                linear-gradient(rgba(0, 242, 255, 0.15) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.15) 2px, transparent 2px);
+            background-size: 60px 60px;
+            transform: perspective(400px) rotateX(65deg) translateY(0);
+            animation: moveGrid 4s linear infinite;
+            opacity: 0.5;
         }
 
-        /* Camada 3: Partículas/Glitches */
-        .particles {
+        /* Efeito de Brilho nas Bordas (Vignette Neon) */
+        .cyber-background::before {
+            content: "";
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-        }
-        .particle {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.3;
-            filter: blur(2px);
-            animation: floatParticle var(--d) linear infinite;
+            box-shadow: inset 0 0 150px rgba(0, 242, 255, 0.2);
+            z-index: 5;
+            pointer-events: none;
         }
 
         @keyframes rotateMesh {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.2); }
-            100% { transform: rotate(360deg) scale(1); }
+            0% { transform: rotate(0deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1.1); }
+        }
+
+        @keyframes pulseGlow {
+            0% { opacity: 0.7; filter: blur(50px); }
+            100% { opacity: 1; filter: blur(30px); }
         }
 
         @keyframes moveGrid {
-            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
-        }
-
-        @keyframes floatParticle {
-            0% { transform: translateY(110vh) translateX(0); opacity: 0; }
-            50% { opacity: 0.5; }
-            100% { transform: translateY(-10vh) translateX(20px); opacity: 0; }
+            0% { transform: perspective(400px) rotateX(65deg) translateY(0); }
+            100% { transform: perspective(400px) rotateX(65deg) translateY(60px); }
         }
 
         /* --- Estilos Globais e UI --- */
         body {
-            background-color: var(--bg-color);
+            background-color: #020205;
             color: #fff;
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -104,25 +116,37 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            z-index: 1;
+            z-index: 20; /* Acima do background animado */
         }
+        
+        /* Título com GLITCH */
         .neon-text {
             font-family: 'Outfit', sans-serif;
+            font-weight: 800;
             background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
-            animation: floatUI 4s ease-in-out infinite;
+            text-shadow: 0 0 40px rgba(0, 242, 255, 0.6);
+            position: relative;
+            animation: glitch 3s infinite, floatUI 4s ease-in-out infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); text-shadow: 0 0 40px rgba(0, 242, 255, 0.6); }
+            2% { transform: translate(-3px, 2px); text-shadow: 3px 0 #bc13fe, -3px 0 #00f2ff; }
+            4% { transform: translate(3px, -2px); text-shadow: -3px 0 #bc13fe, 3px 0 #00f2ff; }
+            6% { transform: translate(0); }
+            100% { transform: translate(0); }
         }
 
         .service-card {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid rgba(0, 242, 255, 0.2);
             border-radius: 20px;
-            padding: 30px;
+            padding: 35px;
             transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-decoration: none;
             color: #fff;
@@ -131,11 +155,12 @@
             flex-direction: column;
             justify-content: space-between;
             animation: floatUI var(--float-delay, 5s) ease-in-out infinite;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         @keyframes floatUI {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-15px); }
         }
         .service-card:hover {
             transform: translateY(-10px);
@@ -243,17 +268,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Gerador de Partículas
+        // Gerador de Partículas (Mais denso e brilhante)
         const container = document.getElementById('particle-container');
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 60; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
-            const size = Math.random() * 4 + 2 + 'px';
+            const size = Math.random() * 5 + 3 + 'px';
             p.style.width = size;
             p.style.height = size;
             p.style.left = Math.random() * 100 + '%';
-            p.style.setProperty('--d', (Math.random() * 10 + 10) + 's');
-            p.style.animationDelay = Math.random() * 15 + 's';
+            p.style.setProperty('--d', (Math.random() * 8 + 7) + 's');
+            p.style.animationDelay = Math.random() * 10 + 's';
+            p.style.background = Math.random() > 0.5 ? 'var(--accent-cyan)' : 'white';
             container.appendChild(p);
         }
 
