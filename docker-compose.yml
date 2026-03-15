@@ -103,6 +103,7 @@ services:
       - ./apps/cgrf/database:/app/shared_data/cgrf # DB CGRF
       - ./apps/pawsteps/database:/app/shared_data/pawsteps # DB PawSteps
       - ./apps/shop/database:/app/shared_data/shop # DB Shop
+    env_file: .env
     networks:
       - furry_net
     depends_on:

@@ -35,12 +35,14 @@ def gerar_qrcode_base64(cnf, domain="cgrf.com.br"):
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
 def send_transactional_email(to_email, subject, html_content):
-    smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-    smtp_port = int(os.getenv('SMTP_PORT', 587))
-    smtp_user = os.getenv('SMTP_USER')
-    smtp_password = os.getenv('SMTP_PASS', '').strip()
+    smtp_server = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    smtp_port = int(os.getenv('MAIL_PORT', 587))
+    smtp_user = os.getenv('MAIL_USERNAME')
+    # Pode vir como MAIL_PASSWORD ou SMTP_PASS em alguns ambientes
+    smtp_password = (os.getenv('MAIL_PASSWORD') or os.getenv('SMTP_PASS', '')).strip()
     
     if not smtp_user or not smtp_password:
+        print(f"[SMTP ERROR] Credenciais ausentes. USER: {smtp_user}, PASS: {'SET' if smtp_password else 'NOT SET'}")
         return False
 
     msg = MIMEMultipart()
@@ -50,13 +52,44 @@ def send_transactional_email(to_email, subject, html_content):
     msg.attach(MIMEText(html_content, 'html'))
 
     try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
+        # SMTP_SSL se for porta 465
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            
         server.login(smtp_user, smtp_password)
         server.send_message(msg)
         server.quit()
+        print(f"[SMTP SUCCESS] E-mail enviado para {to_email}")
         return True
-    except:
+    except Exception as e:
+        print(f"[SMTP ERROR] Falha ao enviar para {to_email}: {e}")
+        return False
+
+def create_pre_account_social(email, display_name):
+    # O path do banco social é mapeado no docker-compose
+    social_db = "/app/shared_data/pawsteps/pawsteps.db"
+    if not os.path.exists(social_db):
+        print(f"[SOCIAL ERROR] Banco de dados social não encontrado em {social_db}")
+        return False
+        
+    try:
+        conn = sqlite3.connect(social_db)
+        # Verifica se o usuário já existe
+        exists = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if not exists:
+            # Insere um usuário básico pendente de complementação de perfil
+            # Ajustado para o esquema provável do PawSteps
+            conn.execute("INSERT INTO users (username, email, password_hash, display_name, status) VALUES (?, ?, ?, ?, ?)",
+                         (email.split('@')[0], email, 'EXTERNAL_AUTH_PENDING', display_name, 'INACTIVE'))
+            conn.commit()
+            print(f"[SOCIAL SUCCESS] Conta pré-criada para {email}")
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[SOCIAL ERROR] Falha ao criar conta social: {e}")
         return False
 
 def send_welcome_email(user_data):

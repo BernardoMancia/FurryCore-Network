@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
-from utils.logic import gerar_cnf, gerar_rgf, gerar_qrcode_base64, send_welcome_email
+from utils.logic import gerar_cnf, gerar_rgf, gerar_qrcode_base64, send_welcome_email, create_pre_account_social
 
 app = Flask(__name__)
 app.secret_key = os.getenv('ADMIN_SECRET_KEY', 'cyber-furry-admin-9999')
@@ -309,6 +309,9 @@ def cgrf_emit_wallet():
                 # Mock do welcome email (requer app context se for usar current_app)
                 user_data = {'nome': nome, 'cnf': cnf, 'rgf': rgf, 'email': email, 'temp_pass': temp_pass}
                 send_welcome_email(user_data)
+                
+                # Criar conta na rede social PawSteps
+                create_pre_account_social(email, nome)
                 
             conn.commit()
             flash(f"Carteira de {nome} emitida com sucesso! CNF: {cnf}", "success")

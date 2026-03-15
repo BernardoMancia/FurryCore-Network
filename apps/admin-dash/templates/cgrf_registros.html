@@ -26,16 +26,16 @@
         <div class="cyber-card p-4">
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <thead class="bg-dark text-info">
+                    <thead style="background: rgba(0, 242, 255, 0.1);">
                         <tr>
-                            <th>CNF</th>
-                            <th>Foto</th>
-                            <th>Nome</th>
-                            <th>País</th>
-                            <th>Cidade</th>
-                            <th>Espécie</th>
-                            <th>Idiomas</th>
-                            <th>Ações</th>
+                            <th class="text-info border-0">CNF</th>
+                            <th class="text-info border-0">Foto</th>
+                            <th class="text-info border-0">Nome</th>
+                            <th class="text-info border-0">País</th>
+                            <th class="text-info border-0">Cidade</th>
+                            <th class="text-info border-0">Espécie</th>
+                            <th class="text-info border-0">Idiomas</th>
+                            <th class="text-info border-0">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,8 +56,8 @@
                             <td class="small">{{ reg.idiomas or 'Não Informado' }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-outline-light btn-sm"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-outline-info btn-sm" title="Editar"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-outline-danger btn-sm" title="Excluir"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
                         </tr>

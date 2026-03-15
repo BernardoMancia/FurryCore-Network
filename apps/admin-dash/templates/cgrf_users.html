@@ -66,19 +66,19 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>E-mail</th>
-                                    <th>Cargo</th>
-                                    <th>CNF</th>
-                                    <th>Status</th>
+                                    <th class="text-info border-0">E-mail</th>
+                                    <th class="text-info border-0">Cargo</th>
+                                    <th class="text-info border-0">CNF</th>
+                                    <th class="text-info border-0">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for u in usuarios %}
                                 <tr>
                                     <td>{{ u.email }}</td>
-                                    <td><span class="badge bg-dark border border-info text-info">{{ u.cargo }}</span></td>
+                                    <td><span class="badge border border-info text-info bg-dark" style="background: rgba(0, 242, 255, 0.1) !important;">{{ u.cargo }}</span></td>
                                     <td>{{ u.cnf_vinculado or '-' }}</td>
-                                    <td>{{ u.status }}</td>
+                                    <td><span class="badge {% if u.status == 'ATIVO' %}text-success border-success{% else %}text-warning border-warning{% endif %} border bg-dark" style="background: rgba(255,255,255,0.05) !important;">{{ u.status }}</span></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

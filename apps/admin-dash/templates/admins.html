@@ -34,18 +34,18 @@
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Usuário</th>
-                                <th>MFA Pendente</th>
-                                <th>Ações</th>
+                                <th class="text-info border-0">ID</th>
+                                <th class="text-info border-0">Usuário</th>
+                                <th class="text-info border-0">MFA Pendente</th>
+                                <th class="text-info border-0">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for admin in dash_admins %}
                             <tr>
                                 <td>{{ admin.id }}</td>
-                                <td>{{ admin.username }}</td>
-                                <td>{{ 'Sim' if admin.must_change_password else 'Não' }}</td>
+                                <td class="fw-bold text-white">{{ admin.username }}</td>
+                                <td><span class="badge {% if admin.must_change_password %}text-warning border-warning{% else %}text-success border-success{% endif %} border bg-dark">{{ 'Sim' if admin.must_change_password else 'Não' }}</span></td>
                                 <td>
                                     {% if admin.id != current_user.id %}
                                     <a href="/admins/delete/{{ admin.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Remover este admin?')"><i class="bi bi-trash"></i></a>
