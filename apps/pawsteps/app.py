@@ -56,8 +56,15 @@ def add_security_headers(response):
 # Helper para verificar CGRF (Banco Externo)
 def check_cgrf_verified(cnf):
     if not cnf: return False
-    # Caminho correto: um nível acima para 'apps', depois para 'cgrf/base_cgrf.db'
-    cgrf_db_path = os.path.join(os.path.dirname(__file__), '../cgrf/base_cgrf.db')
+    
+    # 1. Tentar caminho do container (Volume compartilhado)
+    docker_path = '/app/shared_data/cgrf/base_cgrf.db'
+    if os.path.exists(docker_path):
+        cgrf_db_path = docker_path
+    else:
+        # 2. Fallback para caminho relativo local
+        cgrf_db_path = os.path.join(os.path.dirname(__file__), '../cgrf/base_cgrf.db')
+
     try:
         conn = sqlite3.connect(cgrf_db_path)
         cursor = conn.cursor()

@@ -23,6 +23,10 @@ services:
     volumes:
       - ./apps/pawsteps/database:/app/database
       - ./apps/pawsteps/static/uploads:/app/static/uploads
+      - ./apps/cgrf/database:/app/shared_data/cgrf
+      - ./apps/shop/database:/app/shared_data/shop
+      - ./apps/cgrf/database:/app/shared_data/cgrf
+      - ./apps/shop/database:/app/shared_data/shop
     networks:
       - furry_net
 
@@ -50,8 +54,9 @@ services:
       dockerfile: ./apps/shop/Dockerfile
     container_name: furry_shop
     restart: always
-    expose:
-      - "20003"
+    volumes:
+      - ./apps/shop/database:/app/database
+      - ./apps/cgrf/database:/app/shared_data/cgrf
     networks:
       - furry_net
 
