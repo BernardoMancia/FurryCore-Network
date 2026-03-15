@@ -15,9 +15,80 @@ from utils.auth_utils import role_required
 from utils.mfa import validar_totp
 from utils.email_utils import send_welcome_email
 
+# Banco de Dados Social (PawSteps) para Integração
+def get_social_db_path():
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'pawsteps/database/pawsteps.db')
+
+def create_pre_account_social(email, display_name):
+    """Cria uma conta pendente na rede social PawSteps"""
+    try:
+        import sqlite3
+        from werkzeug.security import generate_password_hash
+        db_path = get_social_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        username = email.split('@')[0].replace('.', '').replace('_', '').replace(' ', '')
+        # Verificar se username existe
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        if cursor.fetchone():
+            import random
+            username += str(random.randint(100, 999))
+            
+        # Senha temporária padrão (será alterada na ativação)
+        pwd_hash = generate_password_hash("PRE_CREATED_ACCOUNT_PW")
+        
+        cursor.execute(
+            "INSERT INTO users (username, display_name, email, password_hash, status) VALUES (?, ?, ?, ?, 'PENDENTE')",
+            (username, display_name, email, pwd_hash)
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[ERROR] Falha ao pre-criar conta social: {e}")
+        return False
+
+def sync_social_account(old_email, new_email, status=None, password_hash=None):
+    """Sincroniza e-mail, status e senha com o banco Social"""
+    try:
+        import sqlite3
+        db_path = get_social_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        updates = []
+        params = []
+        if new_email:
+            updates.append("email = ?")
+            params.append(new_email)
+        if status:
+            updates.append("status = ?")
+            params.append(status)
+        if password_hash:
+            updates.append("password_hash = ?")
+            params.append(password_hash)
+            
+        if not updates: return False
+        
+        params.append(old_email)
+        query = f"UPDATE users SET {', '.join(updates)} WHERE email = ?"
+        cursor.execute(query, params)
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[ERROR] Falha ao sincronizar conta social: {e}")
+        return False
+
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from core_i18n import configure_i18n
+
 load_dotenv()
 
 app = Flask(__name__)
+configure_i18n(app)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-123')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
@@ -353,6 +424,10 @@ def admin_emitir():
                     'email': email,
                     'temp_pass': temp_pass
                 }
+                
+                # 3. Pre-criar conta na rede social
+                create_pre_account_social(email, nome)
+                
                 if send_welcome_email(user_data):
                     flash(f"Documento emitido e instruções enviadas para {email}", "success")
                 else:
@@ -383,8 +458,11 @@ def ativar_conta():
         pwd_hash = generate_password_hash(nova_senha)
         db.execute_query("UPDATE usuarios_sistema SET senha_hash = ?, status = 'ATIVO' WHERE id = ?", (pwd_hash, current_user.id))
         
-        # 2. Forçar Configuração de MFA (Redirecionar para perfil onde tem o botão de gerar QR)
-        flash("Senha atualizada! Agora, ative seu MFA para segurança total.", "success")
+        # 2. Sincronizar e Ativar Conta Social (PawSteps)
+        sync_social_account(current_user.email, current_user.email, status='ATIVO', password_hash=pwd_hash)
+
+        # 3. Forçar Configuração de MFA (Redirecionar para perfil onde tem o botão de gerar QR)
+        flash("Senha atualizada! Agora, ative seu MFA para segurança total. Sua conta social também está ativa!", "success")
         return redirect(url_for('perfil', cnf=current_user.cnf_vinculado))
         
     return render_template('ativar_conta.html')
@@ -416,9 +494,10 @@ def admin_registro_editar(reg_id):
     query = "UPDATE cidadaos SET nome = ?, especie = ?, regiao = ?, email = ? WHERE id = ?"
     db.execute_query(query, (nome, especie, regiao, email, reg_id))
     
-    # 2. Sincronizar com tabela de usuários se o e-mail mudou
+    # 2. Sincronizar com tabela de usuários e Rede Social se o e-mail mudou
     if old_data and old_data['email'] != email:
         db.execute_query("UPDATE usuarios_sistema SET email = ? WHERE cnf_vinculado = ?", (email, old_data['cnf']))
+        sync_social_account(old_data['email'], email)
     
     flash("Dados do cidadão atualizados com sucesso.", "success")
     return redirect(url_for('admin_registros'))
@@ -615,6 +694,12 @@ def access_denied(e):
 def page_not_found(e):
     return "Erro 404 - Página não encontrada", 404
 
+@app.route('/lang/<lang>')
+def set_language(lang):
+    if lang in ['pt', 'en', 'es']:
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('index'))
+
 if __name__ == '__main__':
     port = int(os.getenv('APP_PORT', 6969))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=20002, debug=True)

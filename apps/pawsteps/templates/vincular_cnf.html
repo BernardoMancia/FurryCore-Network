@@ -1,0 +1,37 @@
+{% extends "base_social.html" %}
+
+{% block title %}Vincular Identidade - PawSteps{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-md-6">
+        <div class="glass-card p-5 border-info">
+            <h2 class="neon-text text-center fw-bold mb-4">Vincular Identidade CGRF</h2>
+            <div class="alert alert-info bg-dark border-info text-info small mb-4">
+                Você recebeu o convite para vincular a CNF <strong>{{ cnf }}</strong> à sua conta.
+                Entre com seus dados sociais abaixo para confirmar o vínculo.
+            </div>
+            
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small">Username Social</label>
+                    <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-white-50 small">Senha</label>
+                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+                
+                <button type="submit" class="neon-btn w-100 py-3 fs-5">Confirmar Vínculo</button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <p class="text-white-50 small">Ainda não tem conta? <a href="{{ url_for('register') }}" class="text-info text-decoration-none">Crie uma agora</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

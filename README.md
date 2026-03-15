@@ -1,49 +1,45 @@
-# CGRF 2.0 - Cadastro e Gestão de Registro Furry
+# FurryCore Network - Multi-App Furry Identity & Social Network
 
 ## 🇧🇷 Português
 
 ### Visão Geral
-O CGRF 2.0 é um Sistema de Governança de Identidades para a comunidade furry, focado em transparência, segurança e conformidade com a LGPD. O sistema emite documentos digitais (CNF e RGF), gerencia perfis através de QR Codes e possui um sistema robusto de controle de acesso (RBAC).
+A FurryCore Network evoluiu para um ecossistema completo composto por três aplicações independentes, integradas para oferecer segurança, socialização e e-commerce para a comunidade furry, tendo como base o Registro CGRF.
 
-### Funcionalidades
-- **Emissão de Identidade**: Geração de CNF e RGF com QR Code individual.
-- **Portabilidade**: Perfil público acessível via QR Code com motor de censura de dados.
-- **Governança**: Sistema de tickets para solicitações de privacidade e suporte.
-- **Segurança**: Proteção contra SQLi, XSS, CSRF e autenticação MFA (TOTP).
+### Componentes
+1.  **Portal CGRF (`apps/cgrf`)**: Sistema central de governança. Emissão de Identidades Digitais (CNF/RGF), painel administrativo e gestão de privacidade LGPD.
+2.  **PawSteps (`apps/pawsteps`)**: Rede social estilo microblogging. Inclui timeline, stories, central de eventos e Mapa de Amigos com ofuscação de privacidade.
+3.  **FurryCore Shop (`apps/shop`)**: Loja virtual para aquisição de carteiras físicas e produtos oficiais, com sistema de carrinho e cálculo de frete.
 
-### Requisitos
-- Python 3.10+
-- SQLite3
+### Infraestrutura
+- **Proxy Reverso**: Configurado via Nginx (`infra/nginx`) para gerenciar domínios e SSL.
+- **Segurança**: Cabeçalhos HSTS, CSP, Proteção contra XSS e Rate Limiting globais.
+- **Bancos de Dados**: SQLite3 independentes para cada aplicação, garantindo isolamento de dados.
 
-### Instalação
-1. Clone o repositório.
-2. Crie um ambiente virtual: `python -m venv venv`.
-3. Ative o ambiente virtual.
-4. Instale as dependências: `pip install -r requirements.txt`.
-5. Configure o arquivo `.env` baseado no `.env.example`.
-6. Execute a aplicação: `python app.py`.
+### Como Executar (Localmente)
+Cada aplicação roda em seu próprio processo Flask:
+- **CGRF**: `cd apps/cgrf && python app.py` (Porta 6969)
+- **PawSteps**: `cd apps/pawsteps && python app.py` (Porta 7070)
+- **Shop**: `cd apps/shop && python app.py` (Porta 8080)
 
 ---
 
 ## 🇺🇸 English
 
 ### Overview
-CGRF 2.0 is an Identity Governance System for the furry community, focused on transparency, security, and LGPD compliance. The system issues digital documents (CNF and RGF), manages profiles via QR Codes, and features a robust Role-Based Access Control (RBAC) system.
+FurryCore Network has evolved into a full ecosystem consisting of three independent applications, integrated to provide security, socialization, and e-commerce for the furry community, based on the CGRF Registry.
 
-### Features
-- **Identity Issuance**: CNF and RGF generation with individual QR Codes.
-- **Portability**: Public profile accessible via QR Code with a data masking engine.
-- **Governance**: Ticket system for privacy requests and support.
-- **Security**: Protection against SQLi, XSS, CSRF, and MFA (TOTP) authentication.
+### Components
+1.  **Portal CGRF (`apps/cgrf`)**: Central governance system. Issuance of Digital Identities (CNF/RGF), admin panel, and LGPD privacy management.
+2.  **PawSteps (`apps/pawsteps`)**: Microblogging-style social network. Includes timeline, stories, event center, and Friend Map with privacy obfuscation.
+3.  **FurryCore Shop (`apps/shop`)**: Virtual store for physical wallets and official products, featuring a cart system and shipping calculation.
 
-### Requirements
-- Python 3.10+
-- SQLite3
+### Infrastructure
+- **Reverse Proxy**: Configured via Nginx (`infra/nginx`) to manage domains and SSL.
+- **Security**: Global HSTS, CSP, XSS Protection, and Rate Limiting headers.
+- **Databases**: Independent SQLite3 databases for each application, ensuring data isolation.
 
-### Installation
-1. Clone the repository.
-2. Create a virtual environment: `python -m venv venv`.
-3. Activate the virtual environment.
-4. Install dependencies: `pip install -r requirements.txt`.
-5. Setup the `.env` file based on `.env.example`.
-6. Run the application: `python app.py`.
+### How to Run (Locally)
+Each application runs in its own Flask process:
+- **CGRF**: `cd apps/cgrf && python app.py` (Port 6969)
+- **PawSteps**: `cd apps/pawsteps && python app.py` (Port 7070)
+- **Shop**: `cd apps/shop && python app.py` (Port 8080)

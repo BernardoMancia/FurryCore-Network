@@ -1,0 +1,105 @@
+{% extends "base_social.html" %}
+
+{% block title %}Mapa de Amigos - PawSteps.social{% endblock %}
+
+{% block content %}
+<div class="glass-card p-4 h-100 d-flex flex-column" style="min-height: 80vh;">
+    <div class="mb-4">
+        <h2 class="neon-text mb-1">Mapa de Proximidade</h2>
+        <p class="text-white-50 small mb-0">Encontre furries perto de você. Sua localização exata nunca é revelada (erro proposital de 100m).</p>
+    </div>
+
+    <div id="map" class="flex-grow-1 rounded-4 border border-secondary" style="min-height: 500px; background: #000;"></div>
+</div>
+
+<!-- Estilos específicos para o mapa dark mode -->
+<style>
+    .leaflet-container {
+        background: #0a0b10 !important;
+    }
+    .leaflet-tile {
+        filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+        background: #14161e;
+        color: white;
+        border: 1px solid rgba(0, 243, 255, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+let map;
+let userMarkers = [];
+
+function initMap() {
+    map = L.map('map').setView([-23.5505, -46.6333], 13); // Default SP
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    loadNearbyUsers();
+}
+
+async function loadNearbyUsers() {
+    const response = await fetch('/api/nearby-users');
+    const data = await response.json();
+
+    // Limpar markers anteriores
+    userMarkers.forEach(m => map.removeLayer(m));
+    userMarkers = [];
+
+    data.forEach(user => {
+        const marker = L.marker([user.lat, user.lng])
+            .addTo(map)
+            .bindPopup(`<div class="text-center"><strong>${user.display_name}</strong><br>@${user.username}</div>`);
+        userMarkers.push(marker);
+    });
+}
+
+async function toggleLocation() {
+    const isActive = document.getElementById('mapToggle').checked;
+    
+    if (isActive) {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                
+                const response = await fetch('/api/update-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ lat: latitude, lng: longitude, active: true })
+                });
+                
+                if (response.ok) {
+                    loadNearbyUsers();
+                    map.setView([latitude, longitude], 13);
+                }
+            }, (error) => {
+                alert("Erro ao obter localização. Verifique as permissões do seu navegador.");
+                document.getElementById('mapToggle').checked = false;
+            });
+        } else {
+            alert("Seu navegador não suporta geolocalização.");
+            document.getElementById('mapToggle').checked = false;
+        }
+    } else {
+        // Desativar
+        await fetch('/api/update-location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+            body: JSON.stringify({ lat: 0, lng: 0, active: false })
+        });
+        loadNearbyUsers();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}

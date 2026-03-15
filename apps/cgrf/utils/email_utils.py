@@ -18,7 +18,7 @@ def send_transactional_email(to_email, subject, html_content):
         return False
 
     msg = MIMEMultipart()
-    msg['From'] = f"CGRF 2.0 <{smtp_user}>"
+    msg['From'] = f"FurryCore Network <{smtp_user}>"
     msg['To'] = to_email
     msg['Subject'] = subject
 
@@ -50,14 +50,14 @@ def send_welcome_email(user_data):
     if not user_data.get('email'):
         return False
         
-    subject = "🔑 Ative sua Identidade Digital - CGRF 2.0"
+    subject = "🔑 Ative sua Identidade Digital - FurryCore Network"
     
     login_url = "http://127.0.0.1:6969/login" # Ajustar para IP da VPS no deploy final
     
     html = f"""
     <div style="background-color: #0a0b10; color: #fff; padding: 40px; font-family: sans-serif; border: 1px solid #00f2ff; border-radius: 10px; max-width: 600px; margin: auto;">
-        <h1 style="color: #00f2ff; text-align: center; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">Seja Bem-vindo(a), {user_data['nome']}!</h1>
-        <p style="font-size: 16px; text-align: center;">Sua credencial oficial <b>CGRF 2.0</b> foi emitida e sua conta de acesso foi criada.</p>
+        <h1 style="color: #00f2ff; text-align: center; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">Seja Bem-vindo(a) à FurryCore!</h1>
+        <p style="font-size: 16px; text-align: center;">Sua credencial oficial do Registro <b>CGRF</b> foi emitida e sua conta de acesso foi criada.</p>
         
         <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #00f2ff;">
             <p style="margin: 5px 0;"><b>CNF:</b> {user_data['cnf']}</p>
@@ -85,6 +85,12 @@ def send_welcome_email(user_data):
 
         <div style="text-align: center; margin-top: 30px;">
             <a href="{login_url}" style="display: inline-block; padding: 15px 30px; background: #00f2ff; color: #000; font-weight: bold; text-decoration: none; border-radius: 5px; box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);">ATIVAR MINHA CONTA AGORA</a>
+        </div>
+
+        <div style="margin-top: 30px; border: 1px dashed #555; padding: 20px; border-radius: 8px; text-align: center;">
+            <h4 style="color: #00f2ff; margin-top: 0;">🌐 Já possui uma conta no PawSteps.social?</h4>
+            <p style="font-size: 14px;">Utilize o link abaixo para vincular sua nova CNF diretamente à sua conta social existente:</p>
+            <a href="http://127.0.0.1:7070/vincular?cnf={user_data['cnf']}&email={user_data['email']}" style="color: #00f2ff; text-decoration: underline; font-size: 14px;">Vincular à conta social existente</a>
         </div>
         
         <p style="margin-top: 40px; color: #888; font-size: 12px; text-align: center;">🛡️ CGRF 2.0 - Governança e Transparência Furry. <br> Este link expira em 24h.</p>
@@ -146,7 +152,7 @@ def send_privacy_status_email(to_email, nome, status, tipo_acao, motivo=""):
             Se você tiver dúvidas sobre este processo, entre em contato com o suporte administrativo.
         </p>
         
-        <p style="margin-top: 20px; color: #555; font-size: 11px; text-align: center;">🛡️ CGRF 2.0 - Governança Segura e Identidade Digital Furry.</p>
+        <p style="margin-top: 20px; color: #555; font-size: 11px; text-align: center;">🛡️ FurryCore Network - Governança Segura e Identidade Digital Furry.</p>
     </div>
     """
     

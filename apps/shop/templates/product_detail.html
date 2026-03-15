@@ -1,0 +1,98 @@
+{% extends "shop_base.html" %}
+
+{% block content %}
+<div class="row g-5">
+    <!-- Imagem do Produto -->
+    <div class="col-md-6">
+        <div class="rounded-4 overflow-hidden border border-secondary" style="background: rgba(0,243,255,0.05);">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" class="img-fluid w-100">
+            {% else %}
+            <div class="py-5 text-center">
+                <i class="bi bi-card-heading text-white-10" style="font-size: 10rem;"></i>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Info e Compra -->
+    <div class="col-md-6">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-info text-decoration-none">Início</a></li>
+                <li class="breadcrumb-item active text-white-50" aria-current="page">Produtos</li>
+            </ol>
+        </nav>
+        
+        <h1 class="fw-800 mb-2">{{ product.name }}</h1>
+        <div class="price-tag mb-4">R$ {{ "%.2f"|format(product.price) }}</div>
+        
+        <p class="text-white-50 mb-4">{{ product.description }}</p>
+        
+        <!-- Simulador de Frete -->
+        <div class="shipping-box mb-4">
+            <h6 class="fw-bold text-info mb-3"><i class="bi bi-truck"></i> Simular Frete</h6>
+            <form id="shippingForm" class="d-flex gap-2">
+                <input type="text" name="zip_code" class="form-control bg-dark text-white border-info w-50" placeholder="00000-000" id="cepInput">
+                <button type="button" class="btn btn-info px-4 fw-bold" onclick="calculateShipping()">Calcular</button>
+            </form>
+            <div id="shippingResult" class="mt-3 small text-white-50 d-none">
+                <!-- Resultado via JS -->
+            </div>
+        </div>
+        
+        <div class="d-grid gap-3">
+            <form action="{{ url_for('add_to_cart') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <button type="submit" class="btn-shop py-3 fs-5 d-flex align-items-center justify-content-center gap-3 w-100">
+                    <i class="bi bi-cart-plus-fill"></i> Adicionar ao Carrinho
+                </button>
+            </form>
+            <button class="btn btn-outline-info py-2">Comprar Agora</button>
+        </div>
+    </div>
+</div>
+
+<!-- Especificações -->
+<div class="mt-5 border-top border-secondary pt-5">
+    <h4 class="fw-bold mb-4">Especificações do Produto</h4>
+    <div class="row text-white-50">
+        <div class="col-md-3"><strong>Peso:</strong> {{ product.weight_gr }}g</div>
+        <div class="col-md-3"><strong>Dimensões:</strong> {{ product.length_cm }}x{{ product.width_cm }}x{{ product.height_cm }}cm</div>
+        <div class="col-md-3"><strong>Material:</strong> PVC Premium</div>
+        <div class="col-md-3"><strong>Tecnologia:</strong> QR Code Dinâmico</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function calculateShipping() {
+    const cep = document.getElementById('cepInput').value;
+    const resultDiv = document.getElementById('shippingResult');
+    
+    if (cep.length < 8) {
+        alert("Digite um CEP válido.");
+        return;
+    }
+    
+    resultDiv.classList.remove('d-none');
+    resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-info" role="status"></div> Calculando...';
+    
+    // Simulação de chamada API
+    setTimeout(() => {
+        resultDiv.innerHTML = `
+            <div class="d-flex justify-content-between border-top border-secondary pt-2 mt-2">
+                <span>PAC (Correios)</span>
+                <span class="text-white">R$ 15,90 - 7 dias úteis</span>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <span>Sedex (Correios)</span>
+                <span class="text-white">R$ 28,40 - 2 dias úteis</span>
+            </div>
+        `;
+    }, 800);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base_social.html" %}
+
+{% block title %}PawSteps - Editar Perfil{% endblock %}
+
+{% block content %}
+<div class="row min-vh-75">
+    <div class="col-lg-8 mx-auto">
+        <h2 class="display-6 fw-bold neon-text mb-4 text-info"><i class="bi bi-pencil-square"></i> Editar meu Perfil</h2>
+        
+        <div class="glass-card rounded-4 p-4 border border-secondary shadow-lg">
+            <form action="{{ url_for('edit_profile') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <h5 class="fw-bold text-info mb-3 border-bottom border-secondary pb-2">Informações Públicas</h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50">Nome de Exibição</label>
+                        <input type="text" name="display_name" class="form-control bg-dark border-secondary text-white" value="{{ user.display_name }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50">Nome de Usuário (@)</label>
+                        <input type="text" class="form-control bg-dark border-secondary text-white-50" value="{{ user.username }}" disabled>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white-50">Biografia</label>
+                        <textarea name="bio" class="form-control bg-dark border-secondary text-white" rows="3">{{ user.bio or '' }}</textarea>
+                    </div>
+                </div>
+                
+                <h5 class="fw-bold text-info mb-3 border-bottom border-secondary pb-2">Identidade Visual</h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50">Foto de Perfil (Avatar)</label>
+                        <div class="d-flex gap-2">
+                            <input type="file" name="avatar_file" class="form-control bg-dark border-secondary text-white" accept="image/*">
+                            <input type="url" name="avatar_url" class="form-control bg-dark border-secondary text-white" value="{{ user.avatar_url or '' }}" placeholder="Ou URL externa...">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50">Foto de Capa</label>
+                        <div class="d-flex gap-2">
+                            <input type="file" name="cover_file" class="form-control bg-dark border-secondary text-white" accept="image/*">
+                            <input type="url" name="profile_cover_url" class="form-control bg-dark border-secondary text-white" value="{{ user.profile_cover_url or '' }}" placeholder="Ou URL externa...">
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-info mb-3 border-bottom border-secondary pb-2">Privacidade e Conteúdo</h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="glass-card bg-info bg-opacity-10 border border-info p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-info mb-1"><i class="bi bi-eye-slash-fill"></i> Ver Conteúdo NSFW</h6>
+                                <p class="text-white-50 small mb-0">Habilitar a visualização de mídias marcadas como sensíveis nos eventos.</p>
+                            </div>
+                            <div class="form-check form-switch mt-3 ps-0">
+                                <label class="form-check-label ms-3 text-white fw-bold me-4" for="nsfwSwitch">Permitir</label>
+                                <input class="form-check-input ms-0" type="checkbox" role="switch" id="nsfwSwitch" name="view_nsfw" value="1" {{ 'checked' if user.view_nsfw else '' }}>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-card bg-info bg-opacity-10 border border-info p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-info mb-1"><i class="bi bi-geo-alt-fill"></i> Mapa de Proximidade</h6>
+                                <p class="text-white-50 small mb-0">Ativar ou desativar sua exibição no mapa de amigos (com ruído de segurança).</p>
+                            </div>
+                            <div class="form-check form-switch mt-3 ps-0">
+                                <label class="form-check-label ms-3 text-white fw-bold me-4" for="mapSwitch">Ativar</label>
+                                <input class="form-check-input ms-0" type="checkbox" role="switch" id="mapSwitch" name="share_location" value="1" {{ 'checked' if user.share_location else '' }}>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-info mb-3 border-bottom border-secondary pb-2">Contato e Segurança</h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50">E-mail</label>
+                        <input type="email" name="email" class="form-control bg-dark border-secondary text-white" value="{{ user.email }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50">Celular</label>
+                        <input type="tel" name="phone_number" class="form-control bg-dark border-secondary text-white" value="{{ user.phone_number or '' }}">
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="mfaSwitch" name="mfa_enabled" value="1" {{ 'checked' if user.mfa_enabled else '' }}>
+                            <label class="form-check-label text-white-50" for="mfaSwitch">Habilitar MFA (2FA)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <a href="{{ url_for('profile', username=user.username) }}" class="btn btn-outline-secondary px-4 rounded-pill">Voltar</a>
+                    <button type="submit" class="neon-btn px-5 py-2">Salvar Alterações</button>
+                </div>
+                
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

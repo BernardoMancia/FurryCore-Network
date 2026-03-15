@@ -1,0 +1,62 @@
+/* CGRF Shop - Styles */
+:root {
+    --bg-deep: #05060a;
+    --accent-neon: #00f3ff;
+    --accent-gold: #ffd700;
+    --card-bg: rgba(255, 255, 255, 0.03);
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+}
+
+.shop-header {
+    background: rgba(5, 6, 10, 0.9);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+    padding: 15px 0;
+}
+
+.product-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-neon);
+    box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
+}
+
+.price-tag {
+    color: var(--accent-neon);
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.btn-shop {
+    background: var(--accent-neon);
+    color: #000;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    padding: 10px 20px;
+}
+
+.btn-shop:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* Frete/Mapa */
+.shipping-box {
+    background: rgba(0, 243, 255, 0.05);
+    border: 1px dashed var(--accent-neon);
+    border-radius: 12px;
+    padding: 15px;
+}

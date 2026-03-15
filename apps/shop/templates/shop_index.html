@@ -1,0 +1,48 @@
+{% extends "shop_base.html" %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-8">
+        <h1 class="fw-800 display-4" style="font-family: 'Outfit';">Sua Identidade Furry, <span style="color: var(--accent-neon);">Em Suas Mãos.</span></h1>
+        <p class="lead text-white-50">Adquira sua carteira física oficial CGRF com tecnologia QR Code e acabamento premium.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for p in products %}
+    <div class="col-md-4">
+        <div class="product-card h-100 p-3 d-flex flex-column">
+            <div class="rounded-3 overflow-hidden mb-3" style="height: 200px; background: rgba(0,243,255,0.05);">
+                {% if p.image_url %}
+                <img src="{{ p.image_url }}" class="img-fluid w-100 h-100 object-fit-cover">
+                {% else %}
+                <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-card-heading display-1 text-white-10"></i>
+                </div>
+                {% endif %}
+            </div>
+            
+            <h4 class="fw-bold">{{ p.name }}</h4>
+            <p class="small text-white-50 flex-grow-1">{{ p.description }}</p>
+            
+            <div class="d-flex justify-content-between align-items-end mt-3">
+                <div class="price-tag">R$ {{ "%.2f"|format(p.price) }}</div>
+                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn-shop text-decoration-none">Ver Detalhes</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="mt-5 p-4 rounded-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+    <div class="row align-items-center">
+        <div class="col-md-2 text-center">
+            <i class="bi bi-truck display-4 text-info"></i>
+        </div>
+        <div class="col-md-10">
+            <h5 class="fw-bold">Envio para todo o Brasil</h5>
+            <p class="small text-white-50 mb-0">Utilizamos os Correios e transportadoras parceiras para garantir que sua CGRF chegue com segurança e rapidez. Consulte o frete na página do produto!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "shop_base.html" %}
+
+{% block title %}Meu Carrinho - CGRF Shop{% endblock %}
+
+{% block content %}
+<div class="mb-5">
+    <h1 class="fw-800" style="font-family: 'Outfit';">Seu <span style="color: var(--accent-neon);">Carrinho</span></h1>
+</div>
+
+<div class="row g-5">
+    <!-- Itens do Carrinho -->
+    <div class="col-lg-8">
+        <div class="glass-card p-4 h-100" style="background: var(--card-bg); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+            {% for item in cart_items %}
+            <div class="d-flex align-items-center gap-4 py-3 border-bottom border-secondary">
+                <div class="rounded-3 overflow-hidden d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; background: rgba(0,243,255,0.05);">
+                    <i class="bi bi-card-heading fs-1 text-info"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold mb-1">{{ item.name }}</h5>
+                    <p class="small text-white-50 mb-0">Unidade: R$ {{ "%.2f"|format(item.price) }}</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-white-50 small">Qtd:</span>
+                    <span class="fw-bold">{{ item.quantity }}</span>
+                </div>
+                <div class="text-end" style="min-width: 100px;">
+                    <span class="fw-bold text-info">R$ {{ "%.2f"|format(item.price * item.quantity) }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-cart-x display-1 text-white-10"></i>
+                <p class="text-white-50 mt-3">Seu carrinho está vazio.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-info mt-2">Voltar para a Loja</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Resumo -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4 sticky-top" style="background: rgba(0,243,255,0.05); border-radius: 20px; border: 1px solid var(--accent-neon); top: 100px;">
+            <h5 class="fw-bold mb-4">Resumo do Pedido</h5>
+            
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-white-50">Subtotal</span>
+                <span>R$ {{ "%.2f"|format(total) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-4">
+                <span class="text-white-50">Frete</span>
+                <span class="text-success small">Calculado no próximo passo</span>
+            </div>
+            
+            <hr class="border-secondary">
+            
+            <div class="d-flex justify-content-between mb-4 fs-4 fw-bold">
+                <span>Total</span>
+                <span class="text-info">R$ {{ "%.2f"|format(total) }}</span>
+            </div>
+            
+            <a href="{{ url_for('checkout') }}" class="btn-shop w-100 py-3 mb-3 text-center text-decoration-none d-block">Finalizar Compra</a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary w-100 py-2">Continuar Comprando</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

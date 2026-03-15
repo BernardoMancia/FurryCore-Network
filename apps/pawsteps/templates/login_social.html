@@ -1,0 +1,35 @@
+{% extends "base_social.html" %}
+
+{% block title %}Login - PawSteps.social{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-md-6 col-lg-5">
+        <div class="glass-card p-5">
+            <h2 class="neon-text text-center fw-bold mb-4">Bem-vindo de volta!</h2>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-info">@</span>
+                        <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-white-50 small">Senha</label>
+                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required>
+                </div>
+                
+                <button type="submit" class="neon-btn w-100 py-3 fs-5 mb-4">Entrar</button>
+                
+                <div class="text-center">
+                    <p class="text-white-50 small">Não tem uma conta? <a href="{{ url_for('register') }}" class="text-info text-decoration-none">Cadastre-se aqui</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

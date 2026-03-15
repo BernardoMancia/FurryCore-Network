@@ -1,0 +1,226 @@
+{% extends "base_social.html" %}
+
+{% block content %}
+<!-- Barra de Stories -->
+<div class="stories-bar mb-4">
+    <div class="d-flex flex-column align-items-center gap-1" style="cursor: pointer;">
+        <div class="story-circle">
+            <img src="https://i.pravatar.cc/150?u=me" class="story-img">
+        </div>
+        <span class="x-small text-white-50">Seu Story</span>
+    </div>
+    <!-- Exemplo de Stories -->
+    {% for i in range(5) %}
+    <div class="d-flex flex-column align-items-center gap-1" style="cursor: pointer;">
+        <div class="story-circle">
+            <img src="https://i.pravatar.cc/150?u={{i}}" class="story-img">
+        </div>
+        <span class="x-small text-white-50">Usuário {{i}}</span>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Área de Novo Post -->
+{% if current_user.is_authenticated %}
+<div class="post-card mb-4">
+    <div class="d-flex gap-3">
+        <img src="https://i.pravatar.cc/150?u={{ current_user.username }}" class="rounded-circle" style="width: 50px; height: 50px;">
+        <div class="flex-grow-1">
+            <form action="{{ url_for('create_post') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="location" id="postLocation">
+                <textarea name="content" class="form-control bg-transparent text-white border-0 fs-5 mb-2" placeholder="O que está acontecendo no mundo Furry?" rows="2" style="resize: none;" id="postContent" required></textarea>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex gap-3 text-info">
+                        <i class="bi bi-image" style="cursor: pointer;" title="Anexar Imagem (Em breve)"></i>
+                        <i class="bi bi-geo-alt" style="cursor: pointer;" onclick="addLocation()" title="Adicionar Localização"></i>
+                        <i class="bi bi-emoji-smile" style="cursor: pointer;" onclick="addEmoji('🐾')" title="Adicionar Pata Furry"></i>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="submit" class="neon-btn px-4 py-2">Postar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="post-card mb-4 text-center py-4 bg-info/5 border-info/20">
+    <h5 class="neon-text mb-3">Compartilhe sua jornada furry!</h5>
+    <p class="text-white-50 small mb-4">Crie uma conta para postar, fazer check-in em eventos e ver conteúdo exclusivo.</p>
+    <div class="d-flex justify-content-center gap-2">
+        <a href="{{ url_for('login_social') }}" class="btn btn-outline-info rounded-pill px-4">Entrar</a>
+        <a href="{{ url_for('register') }}" class="btn btn-neon rounded-pill px-4">Cadastrar</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Feed de Posts -->
+<div id="feed">
+    {% for p in posts %}
+    {% set is_rp = p.is_repost %}
+    {% set p_avatar = p.orig_avatar_url if is_rp else p.avatar_url %}
+    {% set p_username = p.orig_username if is_rp else p.username %}
+    {% set p_display = p.orig_display_name if is_rp else p.display_name %}
+    {% set p_content = p.orig_content if is_rp else p.content %}
+    {% set p_media = p.orig_media_url if is_rp else p.media_url %}
+    {% set actual_post_id = p.original_post_id if is_rp else p.id %}
+    
+    <div class="post-card">
+        {% if is_rp %}
+        <div class="text-white-50 small mb-2 ms-5">
+            <i class="bi bi-arrow-repeat"></i> {{ p.display_name }} repostou
+        </div>
+        {% endif %}
+        <div class="d-flex gap-3">
+            <a href="{{ url_for('profile', username=p_username) }}">
+                <img src="{{ p_avatar or 'https://i.pravatar.cc/150?u=' ~ p_username }}" class="rounded-circle object-fit-cover" style="width: 50px; height: 50px;">
+            </a>
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <a href="{{ url_for('profile', username=p_username) }}" class="text-white text-decoration-none fw-bold hover-info">{{ p_display }}</a>
+                    {% if p.is_verified and not is_rp %}
+                    <i class="bi bi-patch-check-fill text-info" title="Furry Verificado (CGRF)"></i>
+                    {% endif %}
+                    <span class="text-white-50 small">@{{ p_username }} · {{ p.created_at.split(' ')[0] }}</span>
+                </div>
+                
+                {% if p.location and not is_rp %}
+                <small class="text-info mb-2 d-block"><i class="bi bi-geo-alt-fill"></i> {{ p.location }}</small>
+                {% endif %}
+                
+                <p class="mb-3" style="white-space: pre-wrap;">{{ p_content }}</p>
+                
+                {% if p_media %}
+                <div class="rounded-4 overflow-hidden border border-secondary mb-3">
+                    {% if p_media.endswith('.mp4') or p_media.endswith('.webm') %}
+                        <video src="{{ p_media }}" class="w-100" style="max-height: 80vh;" controls></video>
+                    {% else %}
+                        <img src="{{ p_media }}" class="w-100" style="max-height: 80vh; object-fit: contain;">
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between text-white-50 mt-2" style="max-width: 400px; font-size: 1.1rem;">
+                    <div class="d-flex align-items-center gap-2 action-btn" onclick="toggleReply('{{ actual_post_id }}')" style="cursor: pointer; transition: color 0.2s;">
+                        <i class="bi bi-chat"></i> <span class="fs-6">{{ p.replies_count }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 action-btn {{ 'text-success' if p.user_reposted else '' }}" onclick="toggleRepost('{{ actual_post_id }}', this)" style="cursor: pointer; transition: color 0.2s;">
+                        <i class="bi bi-arrow-repeat"></i> <span class="fs-6 repost-count">{{ p.reposts_count }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 action-btn {{ 'text-danger' if p.user_liked else '' }}" onclick="toggleLike('{{ actual_post_id }}', this)" style="cursor: pointer; transition: color 0.2s;">
+                        <i class="bi {{ 'bi-heart-fill text-danger' if p.user_liked else 'bi-heart' }} like-icon"></i> <span class="fs-6 like-count">{{ p.likes_count }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 action-btn {{ 'text-warning' if p.user_saved else '' }}" onclick="toggleSave('{{ actual_post_id }}', this)" style="cursor: pointer; transition: color 0.2s;">
+                        <i class="bi {{ 'bi-bookmark-fill text-warning' if p.user_saved else 'bi-bookmark' }} save-icon"></i>
+                    </div>
+                </div>
+                
+                <!-- Inline Reply Box -->
+                <div id="replyBox-{{ actual_post_id }}" class="mt-3" style="display: none;">
+                    <form action="{{ url_for('create_post') }}" method="POST" class="d-flex gap-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="reply_to_post_id" value="{{ actual_post_id }}">
+                        <input type="text" name="content" class="form-control bg-dark border-secondary text-white rounded-pill px-3" placeholder="Sua resposta..." required>
+                        <button class="btn btn-info btn-sm rounded-pill px-3 neon-btn">Responder</button>
+                    </form>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-wind fs-1 text-white-50"></i>
+        <p class="text-white-50 mt-3">Nada por aqui ainda. Comece a seguir pessoas para ver posts!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function addLocation() {
+        const loc = prompt("De onde você está postando?");
+        if(loc) {
+            document.getElementById('postLocation').value = loc;
+            alert(`Localização '${loc}' anexada ao seu post!`);
+        }
+    }
+    
+    function addEmoji(emoji) {
+        const txt = document.getElementById('postContent');
+        txt.value += emoji;
+        txt.focus();
+    }
+    
+    // AJAX Interactivity Functions
+    const csrfToken = "{{ csrf_token() }}";
+    
+    function toggleReply(postId) {
+        const box = document.getElementById('replyBox-' + postId);
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        if(box.style.display === 'block') {
+            box.querySelector('input[name="content"]').focus();
+        }
+    }
+    
+    async function toggleLike(postId, element) {
+        try {
+            const res = await fetch(`/api/toggle_like/${postId}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const data = await res.json();
+            const icon = element.querySelector('.like-icon');
+            const count = element.querySelector('.like-count');
+            
+            if(data.liked) {
+                element.classList.add('text-danger');
+                icon.className = 'bi bi-heart-fill text-danger like-icon';
+            } else {
+                element.classList.remove('text-danger');
+                icon.className = 'bi bi-heart like-icon';
+            }
+            count.innerText = data.count;
+        } catch(e) { console.error('Erro ao curtir', e); }
+    }
+    
+    async function toggleRepost(postId, element) {
+        try {
+            const res = await fetch(`/api/toggle_repost/${postId}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const data = await res.json();
+            const count = element.querySelector('.repost-count');
+            
+            if(data.reposted) {
+                element.classList.add('text-success');
+            } else {
+                element.classList.remove('text-success');
+            }
+            count.innerText = data.count;
+            // Opcional: recarregar a página levemente para mostrar o retweet na timeline
+            if(data.reposted) location.reload();
+        } catch(e) { console.error('Erro ao repostar', e); }
+    }
+    
+    async function toggleSave(postId, element) {
+        try {
+            const res = await fetch(`/api/toggle_save/${postId}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const data = await res.json();
+            const icon = element.querySelector('.save-icon');
+            
+            if(data.saved) {
+                element.classList.add('text-warning');
+                icon.className = 'bi bi-bookmark-fill text-warning save-icon';
+            } else {
+                element.classList.remove('text-warning');
+                icon.className = 'bi bi-bookmark save-icon';
+            }
+        } catch(e) { console.error('Erro ao salvar', e); }
+    }
+</script>
+{% endblock %}

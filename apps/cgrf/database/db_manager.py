@@ -8,12 +8,15 @@ class DatabaseManager:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DatabaseManager, cls).__new__(cls)
-            cls._instance.db_path = os.getenv("DB_PATH", "base_cgrf.db")
+            # Caminho absoluto baseado no local do script
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            cls._instance.db_path = os.getenv("DB_PATH", os.path.join(base_dir, "base_cgrf.db"))
             cls._instance._init_db()
         return cls._instance
 
     def _init_db(self):
-        schema_path = os.path.join("database", "schema.sql")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        schema_path = os.path.join(base_dir, "database", "schema.sql")
         if os.path.exists(schema_path):
             with self.get_connection() as conn:
                 with open(schema_path, "r", encoding="utf-8") as f:

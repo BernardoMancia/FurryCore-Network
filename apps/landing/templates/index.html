@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FurryCore Network - Ecossistema Oficial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #06070a;
+            --accent-cyan: #00f2ff;
+            --accent-purple: #bc13fe;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background: linear-gradient(rgba(6, 7, 10, 0.85), rgba(6, 7, 10, 0.9)), url('/static/img/furry_cyber_bg.png') center/cover fixed;
+        }
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .neon-text {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+        }
+        .service-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: #fff;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 40px rgba(0, 242, 255, 0.1);
+            color: #fff;
+        }
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--accent-cyan);
+        }
+        .btn-launch {
+            background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .btn-launch:hover {
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.5);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <section class="hero-section position-relative">
+        <div class="position-absolute top-0 end-0 p-4 d-flex gap-2 z-3">
+            <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'pt' else 'text-white-50' }}">PT</a>
+            <span class="text-white-50">|</span>
+            <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'en' else 'text-white-50' }}">EN</a>
+            <span class="text-white-50">|</span>
+            <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'es' else 'text-white-50' }}">ES</a>
+        </div>
+        <div class="container text-center">
+            <h1 class="display-2 fw-800 neon-text mb-3">FurryCore Network</h1>
+            <p class="lead text-white-50 mb-5 fs-4">{{ t('landing_subtitle') }}</p>
+            
+            <div class="row g-4 justify-content-center">
+                <!-- Portal CGRF -->
+                <div class="col-md-4">
+                    <a href="http://127.0.0.1:6969" class="service-card">
+                        <div>
+                            <div class="icon-box"><i class="bi bi-shield-check"></i></div>
+                            <h3 class="fw-bold mb-3">Portal CGRF</h3>
+                            <p class="text-white-50 small">{{ t('landing_cgrf_desc') }}</p>
+                        </div>
+                        <div class="mt-4">
+                            <span class="btn btn-outline-info w-100 rounded-pill">{{ t('landing_cgrf_btn') }}</span>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- PawSteps -->
+                <div class="col-md-4">
+                    <a href="http://127.0.0.1:7070" class="service-card">
+                        <div>
+                            <div class="icon-box" style="color: var(--accent-purple);"><i class="bi bi-chat-heart"></i></div>
+                            <h3 class="fw-bold mb-3">PawSteps</h3>
+                            <p class="text-white-50 small">{{ t('landing_social_desc') }}</p>
+                        </div>
+                        <div class="mt-4">
+                            <span class="btn btn-outline-primary w-100 rounded-pill" style="border-color: var(--accent-purple); color: var(--accent-purple);">{{ t('landing_social_btn') }}</span>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Shop -->
+                <div class="col-md-4">
+                    <a href="http://127.0.0.1:8080" class="service-card">
+                        <div>
+                            <div class="icon-box text-warning"><i class="bi bi-bag-check"></i></div>
+                            <h3 class="fw-bold mb-3">FurryCore Shop</h3>
+                            <p class="text-white-50 small">{{ t('landing_shop_desc') }}</p>
+                        </div>
+                        <div class="mt-4">
+                            <span class="btn btn-outline-warning w-100 rounded-pill">{{ t('landing_shop_btn') }}</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-5 pt-5">
+                <p class="small text-white-50">{{ t('footer_rights') }}</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+{% extends "base_social.html" %}
+
+{% block title %}Eventos - PawSteps.social{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="neon-text">Central de Eventos</h2>
+        <p class="text-white-50">Convenções, encontros e meetups da comunidade.</p>
+    </div>
+    <button class="btn btn-neon" data-bs-toggle="modal" data-bs-target="#addEventModal">+ Sugerir Evento</button>
+</div>
+
+<!-- Filtros e Toggle NSFW -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div class="d-flex gap-2 overflow-x-auto pb-1" id="eventFilters">
+        <button class="btn btn-outline-info active rounded-pill px-4" onclick="filterEvents('all')">Todos</button>
+        {% for category in categories %}
+        <button class="btn btn-outline-info rounded-pill px-4" onclick="filterEvents('{{ category }}')">{{ category }}</button>
+        {% endfor %}
+    </div>
+
+    {% if current_user.is_authenticated and current_user.is_plus18 %}
+    <div class="form-check form-switch bg-dark p-3 rounded border border-secondary" style="min-width: 250px;">
+        <input class="form-check-input ms-0 me-3" type="checkbox" id="nsfwGlobalToggle" onchange="toggleNSFWContent()">
+        <label class="form-check-label text-warning small fw-bold" for="nsfwGlobalToggle">
+            Deseja ver conteúdo explícito?
+        </label>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    {% for e in events %}
+    <div class="col-md-6">
+        <div class="post-card h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h4 class="fw-bold mb-0 text-info">{{ e.name }}</h4>
+                <span class="badge bg-secondary">
+                    Ecossistema
+                </span>
+            </div>
+            
+            <p class="text-white-50 small flex-grow-1">{{ e.description }}</p>
+            
+            <div class="mt-3 small mb-3">
+                <div class="mb-1"><i class="bi bi-geo-alt text-info"></i> {{ e.city }}, {{ e.country }}</div>
+            </div>
+            
+            <div class="mt-auto">
+                <a href="{{ url_for('event_details', slug=e.slug) }}" class="btn btn-outline-info w-100">Abrir Álbum do Evento</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-calendar-x fs-1 text-white-50"></i>
+        <p class="text-white-50 mt-3">Nenhum evento encontrado para os filtros selecionados.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal Sugerir Evento -->
+<div class="modal fade" id="addEventModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title neon-text">Sugerir Novo Evento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Evento</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Ex: FurryCon 2026">
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">País</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" rows="3"></textarea>
+                    </div>
+                    <p class="x-small text-white-50">* Todo evento sugerido passa por aprovação administrativa.</p>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="neon-btn">Enviar Sugestão</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Anos do Evento -->
+
+
+<script>
+function filterEvents(cat) {
+    if(cat === 'all') window.location.href = '/events';
+    else window.location.href = `/events?category=${encodeURIComponent(cat)}`;
+}
+</script>
+{% endblock %}

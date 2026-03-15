@@ -1,4 +1,4 @@
--- CGRF 2.0 - Schema SQL
+-- FurryCore Network - Schema SQL
 
 -- Tabela 1: cidadaos (O Cofre de Identidades)
 CREATE TABLE IF NOT EXISTS cidadaos (

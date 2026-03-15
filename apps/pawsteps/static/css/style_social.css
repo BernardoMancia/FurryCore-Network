@@ -1,0 +1,111 @@
+/* PawSteps.social - Global Styles */
+:root {
+    --bg-dark: #0a0b10;
+    --card-bg: rgba(20, 22, 30, 0.7);
+    --neon-cyan: #00f3ff;
+    --neon-violet: #bc13fe;
+    --text-main: #e0e0e0;
+    --hover-bg: rgba(0, 243, 255, 0.1);
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.glass-nav {
+    background: rgba(10, 11, 16, 0.8);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100vh;
+    position: fixed;
+    width: 250px;
+    padding: 20px;
+}
+
+.main-feed {
+    margin-left: 270px;
+    margin-right: 350px;
+    padding: 20px;
+    min-height: 100vh;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-right {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 330px;
+    height: 100vh;
+    padding: 20px;
+}
+
+/* Post Cards */
+.post-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+}
+
+.post-card:hover {
+    border-color: var(--neon-cyan);
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+    border-radius: 30px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.nav-link:hover {
+    background: var(--hover-bg);
+    color: var(--neon-cyan);
+}
+
+.neon-btn {
+    background: linear-gradient(45deg, var(--neon-cyan), var(--neon-violet));
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+}
+
+/* Stories */
+.stories-bar {
+    display: flex;
+    gap: 15px;
+    padding-bottom: 20px;
+    overflow-x: auto;
+}
+
+.story-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.story-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--bg-dark);
+    object-fit: cover;
+}
