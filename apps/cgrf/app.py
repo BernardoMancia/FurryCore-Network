@@ -315,387 +315,42 @@ def admin_privacidade():
 def admin_usuario_editar(user_id):
     cargo = request.form.get('cargo')
     cnf = request.form.get('cnf')
-    
     query = "UPDATE usuarios_sistema SET cargo = ?, cnf_vinculado = ? WHERE id = ?"
     db.execute_query(query, (cargo, cnf or None, user_id))
-    flash("Configurações do usuário atualizadas com sucesso.", "success")
-    return redirect(url_for('admin_usuarios'))
+    flash("Configurações atualizadas.", "success")
+    return redirect("https://arwolf.com.br/cgrf/users")
 
 @app.route('/admin/usuario/excluir/<int:user_id>')
 @login_required
 @role_required(['ADMIN'])
 def admin_usuario_excluir(user_id):
-    # Soft delete nos logs (is_uninstalled ou similar), mas aqui deletamos o acesso
     db.execute_query("DELETE FROM usuarios_sistema WHERE id = ?", (user_id,))
-    flash("Usuário removido do sistema.", "warning")
-    return redirect(url_for('admin_usuarios'))
+    flash("Usuário removido.", "warning")
+    return redirect("https://arwolf.com.br/cgrf/users")
 
 @app.route('/admin/usuario/reenviar-email/<int:user_id>')
 @login_required
 @role_required(['ADMIN'])
-def admin_usuario_reenviar_email(user_id):
-    """
-    Gera uma nova senha temporária e reenvia as instruções de acesso ao usuário.
-    """
-    user = db.execute_query("SELECT * FROM usuarios_sistema WHERE id = ?", (user_id,), fetchone=True)
-    if not user or not user['cnf_vinculado']:
-        flash("Usuário não encontrado ou não possui CNF vinculado.", "error")
-        return redirect(url_for('admin_usuarios'))
-        
-    cidadao = db.execute_query("SELECT * FROM cidadaos WHERE cnf = ?", (user['cnf_vinculado'],), fetchone=True)
-    if not cidadao:
-        flash("Cidadão vinculado não encontrado.", "error")
-        return redirect(url_for('admin_usuarios'))
-        
-    # Gerar nova senha temporária
-    import secrets
-    temp_pass = secrets.token_urlsafe(12)
-    pwd_hash = generate_password_hash(temp_pass)
-    
-    # Atualizar no banco
-    db.execute_query("UPDATE usuarios_sistema SET senha_hash = ?, status = 'PENDENTE' WHERE id = ?", (pwd_hash, user_id))
-    
-    # Enviar e-mail
-    user_data = {
-        'nome': cidadao['nome'],
-        'cnf': cidadao['cnf'],
-        'rgf': cidadao['rgf'],
-        'email': user['email'],
-        'temp_pass': temp_pass
-    }
-    
-    if send_welcome_email(user_data):
-        flash(f"Instruções enviadas com sucesso para {user['email']}", "success")
-    else:
-        flash("Falha ao enviar e-mail. Verifique os logs do servidor.", "error")
-        
-    return redirect(url_for('admin_usuarios'))
-
-@app.route('/admin/emitir', methods=['GET', 'POST'])
-@login_required
-@role_required(['ADMIN'])
-def admin_emitir():
-    """
-    Motor de emissão de novas credenciais com de-duplicação e auto-conta.
-    """
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        especie = request.form.get('especie')
-        regiao = request.form.get('regiao')
-        email = request.form.get('email')
-        foto_base64_raw = request.form.get('foto_base64')
-        
-        # Gerar Identificadores e Datas
-        cnf = gerar_cnf()
-        rgf = gerar_rgf()
-        qr_base64 = gerar_qrcode_base64(cnf)
-        
-        # Processar Foto
-        foto_base64 = None
-        if foto_base64_raw and "," in foto_base64_raw:
-            foto_base64 = foto_base64_raw.split(",")[1]
-            
-        hoje = datetime.now()
-        exp = hoje.replace(year=hoje.year + 10)
-        data_emissao = formatar_data_sp(hoje)
-        data_expiracao = formatar_data_sp(exp)
-        
-        # 1. Verificar Duplicidade apenas em registros ATIVOS
-        check_query = "SELECT id FROM cidadaos WHERE ( (nome = ? AND especie = ?) OR (email IS NOT NULL AND email = ?) ) AND is_valido = 1"
-        duplicate = db.execute_query(check_query, (nome, especie, email), fetchone=True)
-        if duplicate:
-            flash("Erro: Já existe um cidadão ATIVO registrado com este Nome/Espécie ou E-mail.", "error")
-            return redirect(url_for('admin_emitir'))
-
-        query = """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        params = (cnf, rgf, nome, especie, regiao, email, data_emissao, data_expiracao, qr_base64, foto_base64)
-        
-        try:
-            db.execute_query(query, params)
-            
-            # 2. Criar conta automática em estado PENDENTE
-            if email:
-                from werkzeug.security import generate_password_hash
-                import secrets
-                # Senha temporária aleatória (será resetada no primeiro acesso)
-                temp_pass = secrets.token_urlsafe(12)
-                pwd_hash = generate_password_hash(temp_pass)
-                
-                db.execute_query(
-                    "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
-                    (email, pwd_hash, 'USUARIO', cnf, 'PENDENTE')
-                )
-
-                # 3. Disparar E-mail Detalhado (Fase 7)
-                user_data = {
-                    'nome': nome,
-                    'cnf': cnf,
-                    'rgf': rgf,
-                    'email': email,
-                    'temp_pass': temp_pass
-                }
-                
-                # 3. Pre-criar conta na rede social
-                create_pre_account_social(email, nome)
-                
-                if send_welcome_email(user_data):
-                    flash(f"Documento emitido e instruções enviadas para {email}", "success")
-                else:
-                    flash("Documento emitido, mas houve falha ao enviar o e-mail. Tente reenviar manualmente na aba Usuários.", "warning")
-                
-            return redirect(url_for('perfil', cnf=cnf))
-        except Exception as e:
-            return f"Erro ao emitir documento: {e}", 500
-            
-    return render_template('admin_emitir.html')
+def admin_usuario_reenviar_email_redir(user_id):
+    return redirect(f"https://arwolf.com.br/cgrf/user/resend/{user_id}")
 
 @app.route('/ativar-conta', methods=['GET', 'POST'])
 @login_required
 def ativar_conta():
     if current_user.status != 'PENDENTE':
         return redirect(url_for('index'))
-        
     if request.method == 'POST':
         nova_senha = request.form.get('password')
         conf_senha = request.form.get('confirm_password')
-        
         if nova_senha != conf_senha:
             flash("As senhas não coincidem.", "error")
             return render_template('ativar_conta.html')
-            
-        # 1. Atualizar Senha e Ativar Status
-        from werkzeug.security import generate_password_hash
         pwd_hash = generate_password_hash(nova_senha)
         db.execute_query("UPDATE usuarios_sistema SET senha_hash = ?, status = 'ATIVO' WHERE id = ?", (pwd_hash, current_user.id))
-        
-        # 2. Sincronizar e Ativar Conta Social (PawSteps)
         sync_social_account(current_user.email, current_user.email, status='ATIVO', password_hash=pwd_hash)
-
-        # 3. Forçar Configuração de MFA (Redirecionar para perfil onde tem o botão de gerar QR)
-        flash("Senha atualizada! Agora, ative seu MFA para segurança total. Sua conta social também está ativa!", "success")
+        flash("Sua conta foi ativada com sucesso!", "success")
         return redirect(url_for('perfil', cnf=current_user.cnf_vinculado))
-        
     return render_template('ativar_conta.html')
-
-@app.route('/admin/registros')
-@login_required
-@role_required(['ADMIN', 'ANALISTA'])
-def admin_registros():
-    """
-    Lista todos os registros de cidadãos ativos para gestão.
-    """
-    registros = db.execute_query("SELECT * FROM cidadaos WHERE is_valido = 1 ORDER BY id DESC", fetchall=True)
-    return render_template('admin_registros.html', registros=registros)
-
-@app.route('/admin/registro/editar/<int:reg_id>', methods=['POST'])
-@login_required
-@role_required(['ADMIN', 'ANALISTA'])
-def admin_registro_editar(reg_id):
-    nome = request.form.get('nome')
-    especie = request.form.get('especie')
-    regiao = request.form.get('regiao')
-    email = request.form.get('email')
-    
-    print(f"[DEBUG] Editar ID {reg_id}: {nome}, {especie}, {email}")
-    
-    # 1. Buscar e-mail antigo para sincronização de conta
-    old_data = db.execute_query("SELECT cnf, email FROM cidadaos WHERE id = ?", (reg_id,), fetchone=True)
-    
-    query = "UPDATE cidadaos SET nome = ?, especie = ?, regiao = ?, email = ? WHERE id = ?"
-    db.execute_query(query, (nome, especie, regiao, email, reg_id))
-    
-    # 2. Sincronizar com tabela de usuários e Rede Social se o e-mail mudou
-    if old_data and old_data['email'] != email:
-        db.execute_query("UPDATE usuarios_sistema SET email = ? WHERE cnf_vinculado = ?", (email, old_data['cnf']))
-        sync_social_account(old_data['email'], email)
-    
-    flash("Dados do cidadão atualizados com sucesso.", "success")
-    return redirect(url_for('admin_registros'))
-
-@app.route('/admin/registro/excluir/<int:reg_id>')
-@login_required
-@role_required(['ADMIN'])
-def admin_registro_excluir(reg_id):
-    """
-    Desativa um registro (Soft Delete) e revoga acesso do usuário vinculado.
-    """
-    cidadao = db.execute_query("SELECT cnf FROM cidadaos WHERE id = ?", (reg_id,), fetchone=True)
-    if cidadao:
-        db.execute_query("UPDATE cidadaos SET is_valido = 0 WHERE id = ?", (reg_id,))
-        db.execute_query("UPDATE usuarios_sistema SET status = 'INATIVO' WHERE cnf_vinculado = ?", (cidadao['cnf'],))
-        flash("Registro desativado e acesso revogado com sucesso.", "warning")
-    else:
-        flash("Registro não encontrado.", "error")
-        
-    return redirect(url_for('admin_registros'))
-
-# --- SISTEMA DE PRIVACIDADE (LGPD) ---
-
-@app.route('/solicitar-privacidade', methods=['POST'])
-@login_required
-def solicitar_privacidade():
-    """
-    Processa solicitações de alteração ou exclusão de dados do cidadão titular.
-    """
-    import json
-    from datetime import datetime
-    
-    cnf = current_user.cnf_vinculado
-    if not cnf:
-        flash("Nenhum registro vinculado para solicitar privacidade.", "error")
-        return redirect(url_for('perfil', cnf='indefinido'))
-
-    # 1. Verificar se é pedido de exclusão total
-    delete_all = request.form.get('delete_all') == '1'
-    
-    if delete_all:
-        # Registrar ticket de remoção total
-        db.execute_query(
-            "INSERT INTO solicitacoes_privacidade (cnf_solicitante, tipo_acao, status, data_solicitacao) VALUES (?, ?, ?, ?)",
-            (cnf, 'REMOVER', 'PENDENTE', datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-        )
-        flash("Solicitação de EXCLUSÃO TOTAL enviada para análise. Seus dados ficarão restritos.", "warning")
-        return redirect(url_for('perfil', cnf=cnf))
-
-    # 2. Processar campos específicos para alteração ou ocultação
-    campos_alterar = {}
-    campos_remover = []
-    
-    campos_mapeados = ['nome', 'especie', 'regiao', 'foto']
-    
-    for campo in campos_mapeados:
-        acao = request.form.get(f'action_{campo}')
-        if acao == 'alterar':
-            valor = sanitizar_input(request.form.get(f'value_{campo}'))
-            if valor:
-                campos_alterar[campo] = valor
-        elif acao == 'remover':
-            campos_remover.append(campo)
-
-    if not campos_alterar and not campos_remover:
-        flash("Nenhuma alteração selecionada.", "info")
-        return redirect(url_for('perfil', cnf=cnf))
-
-    # 3. Registrar ticket de alteração parcial
-    detalhes = {
-        'alterar': campos_alterar,
-        'remover': campos_remover
-    }
-    
-    db.execute_query(
-        "INSERT INTO solicitacoes_privacidade (cnf_solicitante, tipo_acao, detalhes_json, status, data_solicitacao) VALUES (?, ?, ?, ?, ?)",
-        (cnf, 'ALTERAR', json.dumps(detalhes), 'PENDENTE', datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-    )
-    
-    # 4. Ocultação Temporária (LGPD Proof)
-    # Lista de campos que não devem aparecer no perfil público até aprovação
-    sob_revisao = list(campos_alterar.keys()) + campos_remover
-    db.execute_query("UPDATE cidadaos SET campos_sob_revisao = ? WHERE cnf = ?", (json.dumps(sob_revisao), cnf))
-
-    flash("Solicitações de privacidade enviadas! Os dados afetados ficarão ocultos para terceiros até a aprovação.", "success")
-    return redirect(url_for('perfil', cnf=cnf))
-
-@app.route('/admin/privacidade')
-@login_required
-@role_required(['ADMIN'])
-def admin_privacidade():
-    """
-    Painel para administradores gerenciarem tickets de LGPD.
-    """
-    query = """
-    SELECT s.*, c.nome as nome_cidadao 
-    FROM solicitacoes_privacidade s
-    JOIN cidadaos c ON s.cnf_solicitante = c.cnf
-    WHERE s.status = 'PENDENTE'
-    ORDER BY s.data_solicitacao ASC
-    """
-    solicitacoes = db.execute_query(query, fetchall=True)
-    return render_template('admin_privacidade.html', solicitacoes=solicitacoes)
-
-@app.route('/admin/privacidade/processar/<int:sol_id>', methods=['POST'])
-@login_required
-@role_required(['ADMIN'])
-def admin_privacidade_processar(sol_id):
-    """
-    Aprova ou rejeita uma solicitação de privacidade.
-    """
-    import json
-    from utils.email_utils import send_privacy_status_email
-    
-    decisao = request.form.get('decisao') # 'APROVAR' ou 'REJEITAR'
-    motivo = request.form.get('motivo', '')
-    
-    sol = db.execute_query("SELECT * FROM solicitacoes_privacidade WHERE id_solicitacao = ?", (sol_id,), fetchone=True)
-    if not sol:
-        flash("Solicitação não encontrada.", "error")
-        return redirect(url_for('admin_privacidade'))
-        
-    cidadao = db.execute_query("SELECT * FROM cidadaos WHERE cnf = ?", (sol['cnf_solicitante'],), fetchone=True)
-    
-    if decisao == 'APROVAR':
-        if sol['tipo_acao'] == 'REMOVER':
-            # 1. EXCLUSÃO TOTAL (LGPD Direito ao Esquecimento)
-            db.execute_query("DELETE FROM usuarios_sistema WHERE cnf_vinculado = ?", (sol['cnf_solicitante'],))
-            db.execute_query("DELETE FROM cidadaos WHERE cnf = ?", (sol['cnf_solicitante'],))
-            db.execute_query("DELETE FROM solicitacoes_privacidade WHERE cnf_solicitante = ?", (sol['cnf_solicitante'],))
-            
-            if cidadao and cidadao['email']:
-                send_privacy_status_email(
-                    cidadao['email'],
-                    cidadao['nome'],
-                    'APROVADO',
-                    'REMOVER'
-                )
-            flash("Registro e conta excluídos permanentemente.", "success")
-        
-        else:
-            # 2. ALTERAÇÃO PARCIAL
-            detalhes = json.loads(sol['detalhes_json'])
-            
-            # Aplicar alterações
-            for campo, valor in detalhes.get('alterar', {}).items():
-                db.execute_query(f"UPDATE cidadaos SET {campo} = ? WHERE cnf = ?", (valor, sol['cnf_solicitante']))
-            
-            # Aplicar remoções (Setar null ou vazio)
-            for campo in detalhes.get('remover', []):
-                # Se for foto, setamos null
-                if campo == 'foto':
-                    db.execute_query("UPDATE cidadaos SET foto_base64 = NULL WHERE cnf = ?", (sol['cnf_solicitante'],))
-                else:
-                    db.execute_query(f"UPDATE cidadaos SET {campo} = 'Oculto pelo Usuário' WHERE cnf = ?", (sol['cnf_solicitante'],))
-            
-            # Limpar campos sob revisão
-            db.execute_query("UPDATE cidadaos SET campos_sob_revisao = NULL WHERE cnf = ?", (sol['cnf_solicitante'],))
-            db.execute_query("UPDATE solicitacoes_privacidade SET status = 'APROVADO' WHERE id_solicitacao = ?", (sol_id,))
-            
-            if cidadao and cidadao['email']:
-                send_privacy_status_email(
-                    cidadao['email'],
-                    cidadao['nome'],
-                    'APROVADO',
-                    'ALTERAR'
-                )
-            flash("Solicitação aprovada e dados atualizados.", "success")
-            
-    else:
-        # REJEITAR
-        db.execute_query("UPDATE solicitacoes_privacidade SET status = 'REJEITADO', motivo_rejeicao = ? WHERE id_solicitacao = ?", (motivo, sol_id))
-        # Restaurar visibilidade
-        db.execute_query("UPDATE cidadaos SET campos_sob_revisao = NULL WHERE cnf = ?", (sol['cnf_solicitante'],))
-        
-        if cidadao and cidadao['email']:
-            send_privacy_status_email(
-                cidadao['email'],
-                cidadao['nome'],
-                'REJEITADO',
-                sol['tipo_acao'],
-                motivo=motivo
-            )
-        
-        flash("Solicitação recusada e usuário notificado.", "info")
-
-    return redirect(url_for('admin_privacidade'))
 
 @app.errorhandler(403)
 def access_denied(e):
