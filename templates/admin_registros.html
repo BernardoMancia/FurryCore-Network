@@ -48,7 +48,16 @@
                             <a href="{{ url_for('perfil', cnf=r.cnf) }}" class="btn btn-outline-info" title="Ver Perfil">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ r.id }}" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            {% if current_user.cargo == 'ADMIN' %}
+                            <a href="{{ url_for('admin_registro_excluir', reg_id=r.id) }}" class="btn btn-outline-danger" title="Remover" onclick="return confirm('Deseja realmente desativar este registro?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
                         </div>
+
                     </td>
                 </tr>
                 {% endfor %}
@@ -56,4 +65,55 @@
         </table>
     </div>
 </div>
+
+<!-- Modais de Edição (Movidos para FORA do glass-card para evitar conflito de z-index com backdrop-filter) -->
+{% for r in registros %}
+<div class="modal fade" id="editModal{{ r.id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="{{ url_for('admin_registro_editar', reg_id=r.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title neon-text">Editar Registro: {{ r.cnf }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small">Nome Social</label>
+                            <input type="text" name="nome" class="form-control bg-dark text-white border-secondary" value="{{ r.nome }}" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3 text-start">
+                                <label class="form-label small text-secondary">CNF (Fixo)</label>
+                                <input type="text" class="form-control bg-dark text-secondary border-secondary" value="{{ r.cnf }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3 text-start">
+                                <label class="form-label small text-secondary">RGF (Fixo)</label>
+                                <input type="text" class="form-control bg-dark text-secondary border-secondary" value="{{ r.rgf }}" readonly>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Espécie</label>
+                                <input type="text" name="especie" class="form-control bg-dark text-white border-secondary" value="{{ r.especie }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Região</label>
+                                <input type="text" name="regiao" class="form-control bg-dark text-white border-secondary" value="{{ r.regiao }}" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">E-mail</label>
+                            <input type="email" name="email" class="form-control bg-dark text-white border-secondary" value="{{ r.email or '' }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-neon">Salvar Alterações</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
 {% endblock %}

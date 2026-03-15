@@ -11,7 +11,7 @@ def send_transactional_email(to_email, subject, html_content):
     smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
     smtp_port = int(os.getenv('SMTP_PORT', 587))
     smtp_user = os.getenv('SMTP_USER')
-    smtp_password = os.getenv('SMTP_PASS')
+    smtp_password = os.getenv('SMTP_PASS', '').strip()
     
     if not smtp_user or not smtp_password:
         print("CRITICAL: SMTP configurado incorretamente. Verifique .env")
@@ -25,14 +25,22 @@ def send_transactional_email(to_email, subject, html_content):
     msg.attach(MIMEText(html_content, 'html'))
 
     try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
+        print(f"[DEBUG] Conectando ao servidor SMTP: {smtp_server}:{smtp_port}", flush=True)
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            
+        server.set_debuglevel(1)
+        print(f"[DEBUG] Autenticando usuário: {smtp_user}", flush=True)
         server.login(smtp_user, smtp_password)
         server.send_message(msg)
         server.quit()
+        print(f"[SUCCESS] E-mail enviado com sucesso para {to_email}", flush=True)
         return True
     except Exception as e:
-        print(f"ERRO AO ENVIAR E-MAIL: {e}")
+        print(f"[CRITICAL ERROR] Falha ao enviar e-mail para {to_email}: {e}", flush=True)
         return False
 
 def send_welcome_email(user_data):
@@ -84,3 +92,62 @@ def send_welcome_email(user_data):
     """
     
     return send_transactional_email(user_data['email'], subject, html)
+
+def send_privacy_status_email(to_email, nome, status, tipo_acao, motivo=""):
+    """
+    Envia e-mail estilizado sobre o status da solicitação LGPD
+    """
+    if status == 'APROVADO':
+        color = "#00f2ff" # Cyan
+        status_text = "APROVADA"
+        icon = "✅"
+        msg_header = "Sua privacidade é nossa prioridade."
+    else:
+        color = "#ffca2c" # Gold/Yellow
+        status_text = "RECUSADA"
+        icon = "⚠️"
+        msg_header = "Sua solicitação precisa de ajustes."
+
+    subject = f"{icon} Status da Solicitação de Privacidade - CGRF 2.0"
+    
+    # Detalhes específicos por tipo
+    if tipo_acao == 'REMOVER':
+        detalhe_tipo = "Exclusão Total de Dados (Direito de Esquecimento)"
+        msg_acao = "Seu registro foi completamente removido de nossa base de dados pública e privada." if status == 'APROVADO' else "Sua solicitação de exclusão total foi revisada."
+    else:
+        detalhe_tipo = "Alteração/Ocultação Parcial de Dados"
+        msg_acao = "As alterações solicitadas foram aplicadas e seu perfil foi atualizado." if status == 'APROVADO' else "Analisamos seu pedido de alteração de dados."
+
+    html = f"""
+    <div style="background-color: #0a0b10; color: #fff; padding: 40px; font-family: sans-serif; border: 1px solid {color}; border-radius: 10px; max-width: 600px; margin: auto;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span style="font-size: 40px;">{icon}</span>
+        </div>
+        <h1 style="color: {color}; text-align: center; text-shadow: 0 0 10px {color}80; margin-top: 0;">Solicitação {status_text}</h1>
+        <p style="font-size: 16px; text-align: center; color: #aaa;">{msg_header}</p>
+        
+        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid {color};">
+            <p style="margin: 5px 0;"><b>Titular:</b> {nome}</p>
+            <p style="margin: 5px 0;"><b>Tipo de Ação:</b> {detalhe_tipo}</p>
+            <p style="margin: 5px 0;"><b>Status Final:</b> <span style="color: {color}; font-weight: bold;">{status_text}</span></p>
+        </div>
+
+        <div style="padding: 10px 0;">
+            <p style="line-height: 1.6;">{msg_acao}</p>
+            
+            {f'''<div style="background: rgba(255,100,100,0.1); padding: 15px; border-radius: 5px; border: 1px dashed #ff4444; margin-top: 15px;">
+                <p style="margin: 0; color: #ff6666;"><b>Motivo da Recusa:</b></p>
+                <p style="margin: 10px 0 0 0; color: #eee;">{motivo}</p>
+            </div>''' if status == 'REJEITADO' and motivo else ''}
+        </div>
+
+        <p style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; font-size: 14px; color: #888;">
+            Este é um comunicado automático de conformidade com a <b>LGPD (Lei Geral de Proteção de Dados)</b>.
+            Se você tiver dúvidas sobre este processo, entre em contato com o suporte administrativo.
+        </p>
+        
+        <p style="margin-top: 20px; color: #555; font-size: 11px; text-align: center;">🛡️ CGRF 2.0 - Governança Segura e Identidade Digital Furry.</p>
+    </div>
+    """
+    
+    return send_transactional_email(to_email, subject, html)

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Privacidade (LGPD){% endblock %}
+
+{% block content %}
+<div class="glass-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="neon-text mb-0">Solicitações de Privacidade (LGPD)</h2>
+        <span class="badge bg-neon text-dark">{{ solicitacoes|length }} Pendentes</span>
+    </div>
+
+    {% if not solicitacoes %}
+    <div class="text-center py-5">
+        <i class="bi bi-shield-check fs-1 text-secondary"></i>
+        <p class="text-secondary mt-3">Nenhuma solicitação pendente no momento.</p>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle border-white/5">
+            <thead>
+                <tr>
+                    <th>Solicitante</th>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sol in solicitacoes %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ sol.nome_cidadao }}</div>
+                        <div class="text-secondary small">{{ sol.cnf_solicitante }}</div>
+                    </td>
+                    <td>
+                        {% if sol.tipo_acao == 'REMOVER' %}
+                        <span class="badge bg-danger">EXCLUSÃO TOTAL</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">ALTERAÇÃO</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-secondary small">{{ sol.data_solicitacao }}</td>
+                    <td>
+                        <button class="btn btn-outline-neon btn-sm" data-bs-toggle="modal" data-bs-target="#modalSol{{ sol.id_solicitacao }}">
+                            Analisar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+{% if solicitacoes %}
+    {% for sol in solicitacoes %}
+    <!-- Modal de Análise (Fora do container para prevenir clipping/z-index) -->
+    <div class="modal fade" id="modalSol{{ sol.id_solicitacao }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content glass-card border-white/10">
+                <div class="modal-header border-white/5">
+                    <h5 class="modal-title neon-text">Analisar Solicitação: {{ sol.nome_cidadao }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <h6 class="text-secondary small mb-3">Detalhes do Pedido:</h6>
+                    
+                    {% if sol.tipo_acao == 'REMOVER' %}
+                    <div class="alert alert-danger bg-danger/10 border-danger/20 text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>ATENÇÃO:</strong> O usuário solicitou o <strong>Direito de Esquecimento</strong>. 
+                        A aprovação removerá permanentemente o registro e o acesso ao sistema.
+                    </div>
+                    {% else %}
+                    <div class="bg-dark rounded p-3 mb-3 border border-white/5">
+                        {% set detalhes = sol.detalhes_json|from_json %}
+                        
+                        {% if detalhes.alterar %}
+                        <p class="text-neon small mb-2">Campos para Alterar:</p>
+                        <ul class="small mb-3">
+                            {% for campo, valor in detalhes.alterar.items() %}
+                            <li><strong>{{ campo|capitalize }}:</strong> {{ valor }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+
+                        {% if detalhes.remover %}
+                        <p class="text-danger small mb-2">Campos para Ocultar/Remover:</p>
+                        <ul class="small mb-0">
+                            {% for campo in detalhes.remover %}
+                            <li>{{ campo|capitalize }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <form action="{{ url_for('admin_privacidade_processar', sol_id=sol.id_solicitacao) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small">Motivo para o usuário (em caso de recusa)</label>
+                            <textarea name="motivo" class="form-control bg-dark text-white border-white/10" rows="2" placeholder="Ex: Foto não permitida, dados inválidos..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="submit" name="decisao" value="REJEITAR" class="btn btn-outline-danger btn-sm">Recusar Pedido</button>
+                            <button type="submit" name="decisao" value="APROVAR" class="btn btn-neon btn-sm shadow-neon">Aprovar e Aplicar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}
