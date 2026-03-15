@@ -1,0 +1,14 @@
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.env
+.git
+.gitignore
+nginx_logs/
+tmp_*.py
+diag_*.py
+*.sh
+infra/

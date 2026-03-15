@@ -10,6 +10,11 @@ services:
       - "20000"
     environment:
       - PORT=20000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:20000')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - furry_net
 
@@ -29,6 +34,11 @@ services:
       - ./apps/shop/database:/app/shared_data/shop
     environment:
       - PORT=20001
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:20001')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - furry_net
 
@@ -48,6 +58,11 @@ services:
       - ./shared:/app/shared
     environment:
       - PORT=20002
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:20002')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - furry_net
 
@@ -65,6 +80,11 @@ services:
       - ./apps/cgrf/database:/app/shared_data/cgrf
     environment:
       - PORT=20003
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:20003/shop')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - furry_net
 
@@ -112,10 +132,10 @@ services:
       - "29999:29999"
     volumes:
       - ./apps/admin-dash/database:/app/database
-      - ./nginx_logs:/app/shared_logs # Logs do Nginx para monitoramento
-      - ./apps/cgrf/database:/app/shared_data/cgrf # DB CGRF
-      - ./apps/pawsteps/database:/app/shared_data/pawsteps # DB PawSteps
-      - ./apps/shop/database:/app/shared_data/shop # DB Shop
+      - ./nginx_logs:/app/shared_logs
+      - ./apps/cgrf/database:/app/shared_data/cgrf
+      - ./apps/pawsteps/database:/app/shared_data/pawsteps
+      - ./apps/shop/database:/app/shared_data/shop
     env_file: .env
     networks:
       - furry_net
