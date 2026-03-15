@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY ./apps/admin-dash/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ./apps/admin-dash/ .
 
 # Garante que o diretório de banco de dados exista dentro do container
 RUN mkdir -p /app/database
