@@ -15,36 +15,33 @@ sudo mkdir -p apps/admin-dash/database
 echo "📁 Organizando arquivos de banco de dados..."
 
 # CGRF
-if [ -f "apps/cgrf/base_cgrf.db" ]; then
+if [ -f "apps/cgrf/base_cgrf.db" ] && [ ! -f "apps/cgrf/database/base_cgrf.db" ]; then
     sudo mv -f apps/cgrf/base_cgrf.db apps/cgrf/database/
     echo "✓ base_cgrf.db movido para apps/cgrf/database/"
+elif [ -f "apps/cgrf/base_cgrf.db" ]; then
+    echo "⚠️  base_cgrf.db já existe no destino. Removendo duplicata órfã..."
+    sudo rm apps/cgrf/base_cgrf.db
 fi
 
 # PawSteps
-if [ -f "apps/pawsteps/pawsteps.db" ]; then
+if [ -f "apps/pawsteps/pawsteps.db" ] && [ ! -f "apps/pawsteps/database/pawsteps.db" ]; then
     sudo mv -f apps/pawsteps/pawsteps.db apps/pawsteps/database/
     echo "✓ pawsteps.db movido para apps/pawsteps/database/"
 fi
-if [ -f "apps/pawsteps/database.db" ]; then
-    sudo mv -f apps/pawsteps/database.db apps/pawsteps/database/pawsteps.db
-    echo "✓ database.db (antigo) movido e renomeado para apps/pawsteps/database/pawsteps.db"
-fi
 
-# Shop
-if [ -f "apps/shop/shop.db" ]; then
-    sudo mv -f apps/shop/shop.db apps/shop/database/
-    echo "✓ shop.db movido para apps/shop/database/"
-fi
+# 3. Rodar Migrações de Banco (Garantir que as colunas novas existam)
+echo "🗄️ Verificando integridade das tabelas..."
+python3 tmp_migrate_db_v3.py
 
-# 3. Permissões Progressivas (Crucial para o 502)
+# 4. Permissões Progressivas
 echo "🔐 Ajustando permissões de acesso..."
 sudo chmod -R 777 apps/*/database
 sudo chown -R $USER:$USER apps/*/database
 
-# 4. Reiniciar e Reconstruir Docker (Limpeza total de cache)
-echo "🐳 Reiniciando containers e limpando cache..."
+# 5. Reiniciar e Reconstruir Docker
+echo "🐳 Reiniciando containers..."
 sudo docker compose down
-sudo docker compose build --no-cache admin-dash cgrf
+sudo docker compose build admin-dash cgrf
 sudo docker compose up -d
 
 echo "✅ Reparo concluído! Aguarde 10 segundos e verifique https://arwolf.com.br"

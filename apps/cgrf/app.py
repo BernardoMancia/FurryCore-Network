@@ -16,8 +16,14 @@ from utils.mfa import validar_totp
 from utils.email_utils import send_welcome_email
 
 # Banco de Dados Social (PawSteps) para Integração
+# Banco de Dados Social (PawSteps) para Integração em Docker
 def get_social_db_path():
-    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'pawsteps/database/pawsteps.db')
+    # Caminho mapeado via volume em shared_data
+    docker_path = '/app/shared_data/pawsteps/pawsteps.db'
+    if os.path.exists(docker_path):
+        return docker_path
+    # Fallback para desenvolvimento local
+    return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pawsteps', 'database', 'pawsteps.db'))
 
 def create_pre_account_social(email, display_name):
     """Cria uma conta pendente na rede social PawSteps"""
@@ -81,9 +87,12 @@ def sync_social_account(old_email, new_email, status=None, password_hash=None):
         print(f"[ERROR] Falha ao sincronizar conta social: {e}")
         return False
 
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from core_i18n import configure_i18n
+try:
+    from core_i18n import configure_i18n
+except ImportError:
+    import sys
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from core_i18n import configure_i18n
 
 load_dotenv()
 

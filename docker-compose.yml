@@ -37,6 +37,9 @@ services:
       - "20002"
     volumes:
       - ./apps/cgrf/database:/app/database
+      - ./apps/pawsteps/database:/app/shared_data/pawsteps
+      - ./apps/shop/database:/app/shared_data/shop
+      - ./shared:/app/shared
     networks:
       - furry_net
 
