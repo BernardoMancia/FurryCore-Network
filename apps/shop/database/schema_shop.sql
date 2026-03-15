@@ -46,6 +46,14 @@ CREATE TABLE IF NOT EXISTS order_items (
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+-- Tabela 4: users (Autenticação da Loja)
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ATIVO' -- ATIVO, INATIVO
+);
+
 -- Inserindo produto base (Carteira CGRF)
 INSERT INTO products (name, description, price, weight_gr, length_cm, width_cm, height_cm, stock)
 VALUES ('Carteira CGRF Física', 'Identidade oficial Furry com impressão em PVC de alta qualidade e QR Code funcional.', 49.90, 50, 15, 10, 1, 999);

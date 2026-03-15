@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
-from utils.logic import gerar_cnf, gerar_rgf, gerar_qrcode_base64, send_welcome_email, create_pre_account_social
+from utils.logic import gerar_cnf, gerar_rgf, gerar_qrcode_base64, send_welcome_email, create_pre_account_social, deactivate_account_everywhere, check_email_conflicts
 
 app = Flask(__name__)
 app.secret_key = os.getenv('ADMIN_SECRET_KEY', 'cyber-furry-admin-9999')
@@ -263,7 +263,7 @@ def cgrf_manage_users():
         except Exception as e:
             flash(f"Erro ao criar usuário: {e}", "danger")
             
-    usuarios = conn.execute("SELECT * FROM usuarios_sistema").fetchall()
+    usuarios = conn.execute("SELECT * FROM usuarios_sistema WHERE cargo IN ('ADMIN', 'ANALISTA') AND status = 'ATIVO'").fetchall()
     conn.close()
     return render_template('cgrf_users.html', usuarios=usuarios)
 
@@ -280,6 +280,13 @@ def cgrf_emit_wallet():
         idiomas = ", ".join(idiomas_list) if idiomas_list else "Não Informado"
         email = request.form.get('email')
         foto_base64_raw = request.form.get('foto_base64')
+        confirmed_link = request.form.get('confirmed_link') == 'true'
+        
+        # Checagem de Conflitos se for tentativa inicial de emissão
+        if email and not confirmed_link:
+            conflicts = check_email_conflicts(email)
+            if conflicts:
+                return render_template('cgrf_confirm_link.html', conflicts=conflicts, form_data=request.form.to_dict(flat=False))
         
         cnf = gerar_cnf()
         rgf = gerar_rgf()
@@ -359,9 +366,16 @@ def cgrf_delete_record(cnf):
     db_path = DB_PATHS['cgrf']
     conn = sqlite3.connect(db_path)
     try:
+        # Soft Delete do Cidadão
         conn.execute("UPDATE cidadaos SET is_valido = 0 WHERE cnf = ?", (cnf,))
+        
+        # Sincronização: Desativar acessos vinculados
+        reg = conn.execute("SELECT email FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
+        if reg and reg[0]:
+            deactivate_account_everywhere(reg[0])
+            
         conn.commit()
-        flash(f"Registro {cnf} inativado com sucesso.", "success")
+        flash(f"Registro {cnf} e acessos vinculados inativados com sucesso.", "success")
     except Exception as e:
         flash(f"Erro ao inativar registro: {e}", "danger")
     finally:

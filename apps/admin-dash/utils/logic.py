@@ -8,6 +8,14 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import sqlite3
+
+# Caminhos internos para logic.py
+DB_LOGIC_PATHS = {
+    'cgrf': '/app/shared_data/cgrf/base_cgrf.db',
+    'pawsteps': '/app/shared_data/pawsteps/pawsteps.db',
+    'shop': '/app/shared_data/shop/shop.db'
+}
 
 def gerar_cnf():
     parte1 = f"{random.randint(100, 999)}"
@@ -80,28 +88,69 @@ def send_transactional_email(to_email, subject, html_content):
         return False, err
 
 def create_pre_account_social(email, display_name):
-    # O path do banco social é mapeado no docker-compose
-    social_db = "/app/shared_data/pawsteps/pawsteps.db"
+    social_db = DB_LOGIC_PATHS['pawsteps']
     if not os.path.exists(social_db):
-        print(f"[SOCIAL ERROR] Banco de dados social não encontrado em {social_db}")
         return False
         
     try:
         conn = sqlite3.connect(social_db)
-        # Verifica se o usuário já existe
         exists = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
         if not exists:
-            # Insere um usuário básico pendente de complementação de perfil
-            # Ajustado para o esquema provável do PawSteps
             conn.execute("INSERT INTO users (username, email, password_hash, display_name, status) VALUES (?, ?, ?, ?, ?)",
                          (email.split('@')[0], email, 'EXTERNAL_AUTH_PENDING', display_name, 'INACTIVE'))
             conn.commit()
-            print(f"[SOCIAL SUCCESS] Conta pré-criada para {email}")
         conn.close()
         return True
-    except Exception as e:
-        print(f"[SOCIAL ERROR] Falha ao criar conta social: {e}")
+    except:
         return False
+
+def deactivate_account_everywhere(email):
+    """Desativa o acesso em todas as plataformas de forma sincronizada."""
+    # 1. CGRF (usuarios_sistema)
+    try:
+        conn = sqlite3.connect(DB_LOGIC_PATHS['cgrf'])
+        conn.execute("UPDATE usuarios_sistema SET status = 'INATIVO' WHERE email = ?", (email,))
+        conn.commit()
+        conn.close()
+    except: pass
+
+    # 2. PawSteps (Social)
+    try:
+        conn = sqlite3.connect(DB_LOGIC_PATHS['pawsteps'])
+        conn.execute("UPDATE users SET status = 'INATIVO' WHERE email = ?", (email,))
+        conn.commit()
+        conn.close()
+    except: pass
+
+    # 3. Shop (Loja)
+    try:
+        conn = sqlite3.connect(DB_LOGIC_PATHS['shop'])
+        conn.execute("UPDATE users SET status = 'INATIVO' WHERE email = ?", (email,))
+        conn.commit()
+        conn.close()
+    except: pass
+
+def check_email_conflicts(email):
+    """Verifica se o e-mail já possui conta em alguma plataforma."""
+    conflicts = []
+    
+    # Check Social
+    try:
+        conn = sqlite3.connect(DB_LOGIC_PATHS['pawsteps'])
+        if conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone():
+            conflicts.append("Rede Social (PawSteps)")
+        conn.close()
+    except: pass
+
+    # Check Shop
+    try:
+        conn = sqlite3.connect(DB_LOGIC_PATHS['shop'])
+        if conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone():
+            conflicts.append("Loja FurryCore")
+        conn.close()
+    except: pass
+
+    return conflicts
 
 def send_welcome_email(user_data):
     if not user_data.get('email'):

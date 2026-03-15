@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="cyber-card p-5 border-warning animate__animated animate__fadeIn">
+                <div class="text-center mb-4">
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    <h2 class="text-warning mt-3">Conflito de Identidade Detectado</h2>
+                    <p class="text-white-50">O e-mail <strong>{{ form_data.email }}</strong> já possui vínculos em nosso ecossistema.</p>
+                </div>
+
+                <div class="alert bg-dark border-warning text-white mb-4">
+                    <h5>Detectamos contas existentes em:</h5>
+                    <ul class="mb-0">
+                        {% for conflict in conflicts %}
+                        <li><i class="bi bi-check2-circle text-cyan me-2"></i>{{ conflict }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <p class="text-center mb-4">
+                    Deseja <strong>vincular</strong> esta nova carteira CGRF às contas existentes ou cancelar a operação?
+                </p>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <form method="POST" action="{{ url_for('cgrf_emit_wallet') }}">
+                        {% for key, value in form_data.items() %}
+                            {% if value is list %}
+                                {% for item in value %}
+                                    <input type="hidden" name="{{ key }}" value="{{ item }}">
+                                {% endfor %}
+                            {% else %}
+                                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                            {% endif %}
+                        {% endfor %}
+                        <input type="hidden" name="confirmed_link" value="true">
+                        <button type="submit" class="btn btn-neon-cyan px-4">SIM, VINCULAR E EMITIR</button>
+                    </form>
+                    <a href="{{ url_for('cgrf_emit_wallet') }}" class="btn btn-outline-danger px-4">CANCELAR</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
