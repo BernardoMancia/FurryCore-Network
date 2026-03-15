@@ -105,4 +105,5 @@ def set_language(lang):
 
 if __name__ == '__main__':
     # A loja roda em porta diferente para o Proxy Reverso
-    app.run(host='0.0.0.0', port=20003, debug=True)
+    port = int(os.environ.get('PORT', 20003))
+    app.run(host='0.0.0.0', port=port, debug=True)
