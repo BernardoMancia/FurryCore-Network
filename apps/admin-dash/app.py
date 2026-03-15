@@ -393,6 +393,33 @@ def cgrf_resend_email(cnf):
         flash("Registro não encontrado ou e-mail ausente.", "warning")
     return redirect(url_for('cgrf_manage_records'))
 
+@app.route('/cgrf/resend_user_email/<email>')
+@login_required
+def cgrf_resend_user_email(email):
+    db_path = DB_PATHS['cgrf']
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    reg = conn.execute("SELECT * FROM cidadaos WHERE email = ?", (email,)).fetchone()
+    conn.close()
+    
+    if reg:
+        user_data = {
+            'nome': reg['nome'],
+            'cnf': reg['cnf'],
+            'rgf': reg['rgf'],
+            'email': reg['email'],
+            'temp_pass': 'Consulte sua senha anterior'
+        }
+        if send_welcome_email(user_data):
+            flash(f"E-mail de boas-vindas reenviado para {email}.", "success")
+        else:
+            flash("Falha ao reenviar e-mail.", "danger")
+    else:
+        # Se não encontrar no cidadaos, talvez seja apenas um usuário de sistema
+        flash(f"Registro detalhado não encontrado para {email}. Somente usuários vinculados a um CNF podem receber o e-mail de boas-vindas completo.", "warning")
+    
+    return redirect(url_for('cgrf_manage_users'))
+
 @app.route('/cgrf/edit/<cnf>', methods=['GET', 'POST'])
 @login_required
 def cgrf_edit_record(cnf):
