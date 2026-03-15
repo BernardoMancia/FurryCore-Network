@@ -74,7 +74,7 @@ services:
       - "10050:10050"
     environment:
       - ZBX_SERVER_HOST=187.77.233.230
-      - ZBX_HOSTNAME=FurryCoreServer
+      - ZBX_HOSTNAME=SRV-AUTOMACAO
     networks:
       - furry_net
 
