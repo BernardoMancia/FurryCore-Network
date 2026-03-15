@@ -12,7 +12,7 @@ from core_i18n import configure_i18n
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/shop/static', static_folder='static')
 configure_i18n(app)
 app.config['SECRET_KEY'] = os.getenv('SHOP_SECRET_KEY', 'shop-secret-456')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
@@ -84,7 +84,7 @@ def checkout():
     
     # Limpa o carrinho após a "compra"
     session.pop('cart', None)
-    return "<h1>Pedido Realizado com Sucesso!</h1><p>Em breve você receberá os detalhes no seu e-mail.</p><a href='/'>Voltar para a Loja</a>"
+    return "<h1>Pedido Realizado com Sucesso!</h1><p>Em breve você receberá os detalhes no seu e-mail.</p><a href='/shop'>Voltar para a Loja</a>"
 
 @app.route('/shop/calculate_shipping', methods=['POST'])
 def calculate_shipping():
