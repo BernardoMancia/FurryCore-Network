@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS cidadaos (
     data_expiracao TEXT NOT NULL,
     is_valido BOOLEAN DEFAULT 1,
     qrcode_base64 TEXT,
-    foto_base64 TEXT
+    foto_base64 TEXT,
+    campos_sob_revisao TEXT -- JSON listando campos ocultos temporariamente
 );
 
 -- Tabela 2: usuarios_sistema (Controle de Acessos)
@@ -32,8 +33,10 @@ CREATE TABLE IF NOT EXISTS usuarios_sistema (
 CREATE TABLE IF NOT EXISTS solicitacoes_privacidade (
     id_solicitacao INTEGER PRIMARY KEY AUTOINCREMENT,
     cnf_solicitante TEXT NOT NULL,
-    tipo_solicitacao TEXT NOT NULL,
+    tipo_acao TEXT NOT NULL CHECK (tipo_acao IN ('ALTERAR', 'REMOVER')),
+    detalhes_json TEXT, -- Dados novos ou campos a remover
     status TEXT NOT NULL DEFAULT 'PENDENTE' CHECK (status IN ('PENDENTE', 'APROVADO', 'REJEITADO')),
+    motivo_rejeicao TEXT,
     data_solicitacao TEXT NOT NULL,
     FOREIGN KEY (cnf_solicitante) REFERENCES cidadaos(cnf) ON DELETE CASCADE
 );
