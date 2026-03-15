@@ -18,12 +18,16 @@ from utils.email_utils import send_welcome_email
 # Banco de Dados Social (PawSteps) para Integração
 # Banco de Dados Social (PawSteps) para Integração em Docker
 def get_social_db_path():
-    # Caminho mapeado via volume em shared_data
+    # 1. Tentar caminho do container (Volume compartilhado)
     docker_path = '/app/shared_data/pawsteps/pawsteps.db'
     if os.path.exists(docker_path):
         return docker_path
-    # Fallback para desenvolvimento local
-    return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pawsteps', 'database', 'pawsteps.db'))
+    
+    # 2. Tentar caminho relativo ao arquivo atual (Pasta superior)
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    fallback_path = os.path.join(base_dir, 'pawsteps', 'database', 'pawsteps.db')
+    
+    return fallback_path
 
 def create_pre_account_social(email, display_name):
     """Cria uma conta pendente na rede social PawSteps"""

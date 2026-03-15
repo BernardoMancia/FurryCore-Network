@@ -2,7 +2,12 @@ import sqlite3
 import os
 
 # Caminho DEFINITIVO
-db_path = "f:/Projetos/Cadastro-e-Gestão-de-Registro-Furry/apps/cgrf/database/base_cgrf.db"
+# Caminho RELATIVO para compatibilidade VPS/Local
+base_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(base_dir, "apps", "cgrf", "database", "base_cgrf.db")
+if not os.path.exists(db_path):
+    # Tenta caminho do container se estiver em ambiente Docker
+    db_path = "/app/database/base_cgrf.db"
 
 def migrate():
     if not os.path.exists(db_path):

@@ -31,7 +31,7 @@ fi
 
 # 3. Rodar Migrações de Banco (Garantir que as colunas novas existam)
 echo "🗄️ Verificando integridade das tabelas..."
-python3 tmp_migrate_db_v3.py
+python3 tmp_migrate_db_v3.py || echo "⚠️ Alerta: Falha na migração do banco. Verifique permissões."
 
 # 4. Permissões Progressivas
 echo "🔐 Ajustando permissões de acesso..."
@@ -41,7 +41,12 @@ sudo chown -R $USER:$USER apps/*/database
 # 5. Reiniciar e Reconstruir Docker
 echo "🐳 Reiniciando containers..."
 sudo docker compose down
-sudo docker compose build admin-dash cgrf
+sudo docker compose build cgrf admin-dash
 sudo docker compose up -d
 
-echo "✅ Reparo concluído! Aguarde 10 segundos e verifique https://arwolf.com.br"
+echo "⏳ Aguardando startup (15s)..."
+sleep 15
+sudo docker ps
+sudo docker logs furry_cgrf --tail 20
+
+echo "✅ Reparo concluído! Verifique https://arwolf.com.br e https://cgrf.com.br"
