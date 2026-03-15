@@ -79,7 +79,7 @@ services:
     container_name: furry_zabbix_agent
     restart: always
     ports:
-      - "10050:10050"
+      - "10055:10050"
     environment:
       - ZBX_SERVER_HOST=187.77.233.230
       - ZBX_HOSTNAME=SRV-AUTOMACAO
