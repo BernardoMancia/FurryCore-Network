@@ -66,19 +66,19 @@
     {% set p_media = p.orig_media_url if is_rp else p.media_url %}
     {% set actual_post_id = p.original_post_id if is_rp else p.id %}
     
-    <div class="post-card">
+    <div class="post-card p-2">
         {% if is_rp %}
-        <div class="text-white-50 small mb-2 ms-5">
+        <div class="text-white-50 x-small mb-1 ms-4">
             <i class="bi bi-arrow-repeat"></i> {{ p.display_name }} repostou
         </div>
         {% endif %}
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-2">
             <a href="{{ url_for('profile', username=p_username) }}">
-                <img src="{{ p_avatar or 'https://i.pravatar.cc/150?u=' ~ p_username }}" class="rounded-circle object-fit-cover" style="width: 50px; height: 50px;">
+                <img src="{{ p_avatar or 'https://i.pravatar.cc/150?u=' ~ p_username }}" class="rounded-circle object-fit-cover" style="width: 40px; height: 40px;">
             </a>
             <div class="flex-grow-1">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <a href="{{ url_for('profile', username=p_username) }}" class="text-white text-decoration-none fw-bold hover-info">{{ p_display }}</a>
+                    <a href="{{ url_for('profile', username=p_username) }}" class="text-white text-decoration-none fw-bold small hover-info">{{ p_display }}</a>
                     {% if p.is_verified and not is_rp %}
                     <i class="bi bi-patch-check-fill text-info" title="Furry Verificado (CGRF)"></i>
                     {% endif %}
@@ -89,7 +89,7 @@
                 <small class="text-info mb-2 d-block"><i class="bi bi-geo-alt-fill"></i> {{ p.location }}</small>
                 {% endif %}
                 
-                <p class="mb-3" style="white-space: pre-wrap;">{{ p_content }}</p>
+                <p class="mb-2 small" style="white-space: pre-wrap;">{{ p_content }}</p>
                 
                 {% if p_media %}
                 <div class="rounded-4 overflow-hidden border border-secondary mb-3">
