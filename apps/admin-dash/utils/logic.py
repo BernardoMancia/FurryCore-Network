@@ -42,8 +42,9 @@ def send_transactional_email(to_email, subject, html_content):
     smtp_password = (os.getenv('MAIL_PASSWORD') or os.getenv('SMTP_PASS', '')).strip()
     
     if not smtp_user or not smtp_password:
-        print(f"[SMTP ERROR] Credenciais ausentes. USER: {smtp_user}, PASS: {'SET' if smtp_password else 'NOT SET'}")
-        return False
+        err = "Configurações de SMTP ausentes no arquivo .env"
+        print(f"[SMTP ERROR] {err}")
+        return False, err
 
     msg = MIMEMultipart()
     msg['From'] = f"FurryCore Network <{smtp_user}>"
@@ -63,14 +64,19 @@ def send_transactional_email(to_email, subject, html_content):
         server.send_message(msg)
         server.quit()
         print(f"✅ [SMTP SUCCESS] E-mail enviado para {to_email}")
-        return True
+        return True, "E-mail enviado com sucesso."
     except smtplib.SMTPAuthenticationError:
-        print(f"❌ [SMTP AUTH ERROR] Falha de login para {smtp_user}. Verifique se a senha de app está correta.")
+        err = "Falha de autenticação (Verifique a Senha de Aplicativo)."
+        print(f"❌ [SMTP AUTH ERROR] {err}")
+        return False, err
     except smtplib.SMTPConnectError:
-        print(f"❌ [SMTP CONN ERROR] Não foi possível conectar ao servidor {smtp_server}:{smtp_port}.")
+        err = f"Falha ao conectar ao servidor {smtp_server}."
+        print(f"❌ [SMTP CONN ERROR] {err}")
+        return False, err
     except Exception as e:
-        print(f"❌ [SMTP EXCEPTION] Erro inesperado ao enviar para {to_email}: {e}")
-    return False
+        err = f"Erro inesperado: {str(e)}"
+        print(f"❌ [SMTP EXCEPTION] {err}")
+        return False, err
 
 def create_pre_account_social(email, display_name):
     # O path do banco social é mapeado no docker-compose

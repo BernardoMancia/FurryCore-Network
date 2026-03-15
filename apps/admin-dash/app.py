@@ -306,9 +306,11 @@ def cgrf_emit_wallet():
                 conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
                              (email, pwd_hash, 'USUARIO', cnf, 'PENDENTE'))
                 
-                # Mock do welcome email (requer app context se for usar current_app)
+                # Envio do welcome email com diagnóstico
                 user_data = {'nome': nome, 'cnf': cnf, 'rgf': rgf, 'email': email, 'temp_pass': temp_pass}
-                send_welcome_email(user_data)
+                success, mail_err = send_welcome_email(user_data)
+                if not success:
+                    print(f"[SMTP FAIL] Emissão CGRF enviou falha: {mail_err}")
                 
                 # Criar conta na rede social PawSteps
                 create_pre_account_social(email, nome)
@@ -385,10 +387,11 @@ def cgrf_resend_email(cnf):
             'email': reg['email'],
             'temp_pass': 'Consulte sua senha anterior'
         }
-        if send_welcome_email(user_data):
+        success, mail_err = send_welcome_email(user_data)
+        if success:
             flash(f"E-mail de boas-vindas reenviado para {reg['email']}.", "success")
         else:
-            flash("Falha ao reenviar e-mail. Verifique a configuração SMTP.", "danger")
+            flash(f"Falha ao reenviar e-mail: {mail_err}", "danger")
     else:
         flash("Registro não encontrado ou e-mail ausente.", "warning")
     return redirect(url_for('cgrf_manage_records'))
@@ -410,10 +413,11 @@ def cgrf_resend_user_email(email):
             'email': reg['email'],
             'temp_pass': 'Consulte sua senha anterior'
         }
-        if send_welcome_email(user_data):
+        success, mail_err = send_welcome_email(user_data)
+        if success:
             flash(f"E-mail de boas-vindas reenviado para {email}.", "success")
         else:
-            flash("Falha ao reenviar e-mail.", "danger")
+            flash(f"Falha ao reenviar: {mail_err}", "danger")
     else:
         # Se não encontrar no cidadaos, talvez seja apenas um usuário de sistema
         flash(f"Registro detalhado não encontrado para {email}. Somente usuários vinculados a um CNF podem receber o e-mail de boas-vindas completo.", "warning")
