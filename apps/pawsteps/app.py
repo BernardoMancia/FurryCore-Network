@@ -112,7 +112,7 @@ def login_social():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = SocialUser.find_by_username(username)
+        user = SocialUser.find_by_identifier(username)
         if user and user.check_password(password):
             if user.status == 'PENDENTE':
                 flash("Sua conta ainda não foi ativada. Por favor, ative-a no portal CGRF.", "warning")

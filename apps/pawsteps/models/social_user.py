@@ -30,5 +30,14 @@ class SocialUser(UserMixin):
             return SocialUser(data['id'], data['username'], data['display_name'], data['email'], data['password_hash'], data['cnf_vinculado'], data['is_plus18'], data['data_nascimento'], data['status'])
         return None
 
+    @staticmethod
+    def find_by_identifier(identifier):
+        """Busca usuário por username ou e-mail."""
+        db = SocialDatabaseManager()
+        data = db.execute_query("SELECT * FROM users WHERE username = ? OR email = ?", (identifier, identifier), fetchone=True)
+        if data:
+            return SocialUser(data['id'], data['username'], data['display_name'], data['email'], data['password_hash'], data['cnf_vinculado'], data['is_plus18'], data['data_nascimento'], data['status'])
+        return None
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)

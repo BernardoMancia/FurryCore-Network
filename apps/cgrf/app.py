@@ -352,6 +352,60 @@ def ativar_conta():
         return redirect(url_for('perfil', cnf=current_user.cnf_vinculado))
     return render_template('ativar_conta.html')
 
+@app.route('/solicitar-privacidade', methods=['POST'])
+@login_required
+def solicitar_privacidade():
+    import json
+    cnf = current_user.cnf_vinculado
+    if not cnf:
+        flash("Sua conta não possui uma CNF vinculada para gerenciar privacidade.", "error")
+        return redirect(url_for('index'))
+        
+    # Coleta de dados do formulário
+    acoes = {}
+    sob_revisao = []
+    
+    campos = ['nome', 'especie', 'regiao', 'foto']
+    for campo in campos:
+        action = request.form.get(f'action_{campo}', 'none')
+        if action != 'none':
+            acoes[campo] = {
+                'acao': action,
+                'novo_valor': request.form.get(f'value_{campo}')
+            }
+            sob_revisao.append(campo)
+            
+    # Caso de exclusão total
+    if request.form.get('delete_all') == '1':
+        acoes['delete_all'] = True
+        
+    if not acoes:
+        flash("Nenhuma alteração solicitada.", "warning")
+        return redirect(url_for('perfil', cnf=cnf))
+        
+    try:
+        # 1. Registrar a solicitação no banco
+        query_ticket = """INSERT INTO solicitacoes_privacidade (cnf_solicitante, tipo_acao, detalhes_json, data_solicitacao)
+                          VALUES (?, ?, ?, ?)"""
+        db.execute_query(query_ticket, (cnf, 'REMOVER' if 'delete_all' in acoes else 'ALTERAR', json.dumps(acoes), datetime.now().strftime("%d/%m/%Y %H:%M")))
+        
+        # 2. Atualizar campos sob revisão no cidadão para ocultação imediata
+        # Buscamos os atuais para não sobrescrever se já existir algo
+        curr_reg = db.execute_query("SELECT campos_sob_revisao FROM cidadaos WHERE cnf = ?", (cnf,), fetchone=True)
+        already_revising = []
+        if curr_reg and curr_reg['campos_sob_revisao']:
+            try: already_revising = json.loads(curr_reg['campos_sob_revisao'])
+            except: pass
+            
+        final_revisao = list(set(already_revising + sob_revisao))
+        db.execute_query("UPDATE cidadaos SET campos_sob_revisao = ? WHERE cnf = ?", (json.dumps(final_revisao), cnf))
+        
+        flash("Sua solicitação de privacidade foi enviada e os dados já foram ocultados para análise!", "success")
+    except Exception as e:
+        flash(f"Erro ao processar solicitação: {e}", "error")
+        
+    return redirect(url_for('perfil', cnf=cnf))
+
 @app.errorhandler(403)
 def access_denied(e):
     return "Acesso Negado", 403
