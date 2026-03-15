@@ -21,6 +21,33 @@ Cada aplicação roda em seu próprio processo Flask:
 - **PawSteps**: `cd apps/pawsteps && python app.py` (Porta 7070)
 - **Shop**: `cd apps/shop && python app.py` (Porta 8080)
 
+### Como Executar (Produção - Docker)
+Este projeto está pronto para ser implantado usando Docker Compose V2:
+```bash
+# Instalar dependências (Debian/Ubuntu)
+sudo apt update && sudo apt install docker.io docker-compose-v2 -y
+
+# Subir ecossistema completo
+sudo docker compose up -d --build
+```
+
+---
+
+## 🇺🇸 English
+
+...
+
+### How to Run (Production - Docker)
+This project is ready to be deployed using Docker Compose V2:
+```bash
+# Install dependencies (Debian/Ubuntu)
+sudo apt update && sudo apt install docker.io docker-compose-v2 -y
+
+# Start full ecosystem
+sudo docker compose up -d --build
+```
+
+
 ---
 
 ## 🇺🇸 English
