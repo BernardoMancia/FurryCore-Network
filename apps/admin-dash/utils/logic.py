@@ -39,7 +39,8 @@ def send_transactional_email(to_email, subject, html_content):
     smtp_port = int(os.getenv('MAIL_PORT', 587))
     smtp_user = os.getenv('MAIL_USERNAME')
     # Pode vir como MAIL_PASSWORD ou SMTP_PASS em alguns ambientes
-    smtp_password = (os.getenv('MAIL_PASSWORD') or os.getenv('SMTP_PASS', '')).strip()
+    # Remove espaços comuns em senhas de app do Google para evitar erros de copy-paste
+    smtp_password = (os.getenv('MAIL_PASSWORD') or os.getenv('SMTP_PASS', '')).replace(" ", "").strip()
     
     if not smtp_user or not smtp_password:
         err = "Configurações de SMTP ausentes no arquivo .env"
