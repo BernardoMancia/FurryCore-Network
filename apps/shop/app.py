@@ -27,13 +27,14 @@ def add_security_headers(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     return response
 
-@app.route('/')
+@app.route('/shop')
+@app.route('/shop/')
 def index():
     """Vitrine da Loja"""
     products = db.execute_query("SELECT * FROM products WHERE stock > 0", fetchall=True)
     return render_template('shop_index.html', products=products)
 
-@app.route('/product/<int:product_id>')
+@app.route('/shop/product/<int:product_id>')
 def product_detail(product_id):
     product = db.execute_query("SELECT * FROM products WHERE id = ?", (product_id,), fetchone=True)
     if not product:
@@ -41,14 +42,14 @@ def product_detail(product_id):
         return redirect(url_for('index'))
     return render_template('product_detail.html', product=product)
 
-@app.route('/cart')
+@app.route('/shop/cart')
 def cart():
     """Carrinho de Compras"""
     cart_items = session.get('cart', [])
     total = sum(item['price'] * item['quantity'] for item in cart_items)
     return render_template('cart.html', cart_items=cart_items, total=total)
 
-@app.route('/add_to_cart', methods=['POST'])
+@app.route('/shop/add_to_cart', methods=['POST'])
 def add_to_cart():
     product_id = int(request.form.get('product_id'))
     product = db.execute_query("SELECT * FROM products WHERE id = ?", (product_id,), fetchone=True)
@@ -73,7 +74,7 @@ def add_to_cart():
     
     return redirect(url_for('cart'))
 
-@app.route('/checkout')
+@app.route('/shop/checkout')
 def checkout():
     """Finalização de Compra (Simulada)"""
     cart = session.get('cart', [])
@@ -85,7 +86,7 @@ def checkout():
     session.pop('cart', None)
     return "<h1>Pedido Realizado com Sucesso!</h1><p>Em breve você receberá os detalhes no seu e-mail.</p><a href='/'>Voltar para a Loja</a>"
 
-@app.route('/calculate_shipping', methods=['POST'])
+@app.route('/shop/calculate_shipping', methods=['POST'])
 def calculate_shipping():
     """Simulação de Frete (Integração futura com Correios)"""
     zip_code = request.form.get('zip_code')
@@ -96,7 +97,7 @@ def calculate_shipping():
         'deadline': '5 dias úteis'
     })
 
-@app.route('/lang/<lang>')
+@app.route('/shop/lang/<lang>')
 def set_language(lang):
     if lang in ['pt', 'en', 'es']:
         session['lang'] = lang
