@@ -97,7 +97,7 @@ services:
     volumes:
       - ./apps/admin-dash/database:/app/database
       - ./nginx_logs:/app/shared_logs # Logs do Nginx para monitoramento
-      - ./apps/cgrf:/app/shared_data/cgrf # DB CGRF
+      - ./apps/cgrf/database:/app/shared_data/cgrf # DB CGRF
       - ./apps/pawsteps/database:/app/shared_data/pawsteps # DB PawSteps
       - ./apps/shop/database:/app/shared_data/shop # DB Shop
     networks:
