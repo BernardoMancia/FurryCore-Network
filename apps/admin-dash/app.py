@@ -492,7 +492,7 @@ def cgrf_manage_privacy():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     query = """
-    SELECT s.*, c.nome as nome_cidadao
+    SELECT s.rowid as id, s.*, c.nome as nome_cidadao
     FROM solicitacoes_privacidade s
     JOIN cidadaos c ON s.cnf_solicitante = c.cnf
     WHERE s.status = 'PENDENTE'
@@ -754,7 +754,7 @@ def cgrf_privacy_approve(request_id):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     try:
-        sol = conn.execute("SELECT * FROM solicitacoes_privacidade WHERE id = ?", (request_id,)).fetchone()
+        sol = conn.execute("SELECT rowid, * FROM solicitacoes_privacidade WHERE rowid = ?", (request_id,)).fetchone()
         if not sol:
             flash("Solicitação não encontrada.", "danger")
         else:
@@ -767,7 +767,7 @@ def cgrf_privacy_approve(request_id):
                     deactivate_account_everywhere(reg["email"])
             elif tipo == "ANONIMIZACAO":
                 conn.execute("UPDATE cidadaos SET nome = 'ANONIMIZADO', email = NULL, cidade = NULL WHERE cnf = ?", (cnf,))
-            conn.execute("UPDATE solicitacoes_privacidade SET status = 'APROVADA', data_processamento = ? WHERE id = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
+            conn.execute("UPDATE solicitacoes_privacidade SET status = 'APROVADA', data_processamento = ? WHERE rowid = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
             conn.commit()
             flash(f"Solicitação #{request_id} ({tipo}) aprovada com sucesso.", "success")
     except Exception as e:
@@ -783,7 +783,7 @@ def cgrf_privacy_reject(request_id):
     db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     try:
-        conn.execute("UPDATE solicitacoes_privacidade SET status = 'REJEITADA', data_processamento = ? WHERE id = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
+        conn.execute("UPDATE solicitacoes_privacidade SET status = 'REJEITADA', data_processamento = ? WHERE rowid = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
         conn.commit()
         flash(f"Solicitação #{request_id} rejeitada.", "info")
     except Exception as e:
