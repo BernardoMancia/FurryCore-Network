@@ -528,7 +528,8 @@ def cgrf_manage_privacy():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     query = """
-    SELECT s.rowid as id, s.*, c.nome as nome_cidadao
+    SELECT s.id_solicitacao as id, s.cnf_solicitante, s.tipo_acao, s.detalhes_json,
+           s.status, s.motivo_rejeicao, s.data_solicitacao, c.nome as nome_cidadao
     FROM solicitacoes_privacidade s
     JOIN cidadaos c ON s.cnf_solicitante = c.cnf
     WHERE s.status = 'PENDENTE'
@@ -790,24 +791,20 @@ def cgrf_privacy_approve(request_id):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     try:
-        sol = conn.execute("SELECT rowid, * FROM solicitacoes_privacidade WHERE rowid = ?", (request_id,)).fetchone()
+        sol = conn.execute("SELECT * FROM solicitacoes_privacidade WHERE id_solicitacao = ?", (request_id,)).fetchone()
         if not sol:
             flash("Solicitação não encontrada.", "danger")
         else:
-            tipo = sol["tipo_solicitacao"]
+            tipo = sol["tipo_acao"]
             cnf = sol["cnf_solicitante"]
-            if tipo == "EXCLUSAO":
+            if tipo == "REMOVER":
                 conn.execute("UPDATE cidadaos SET is_valido = 0 WHERE cnf = ?", (cnf,))
                 reg = conn.execute("SELECT email FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
                 if reg and reg["email"]:
                     deactivate_account_everywhere(reg["email"])
-            elif tipo == "ANONIMIZACAO":
+            elif tipo == "ALTERAR":
                 conn.execute("UPDATE cidadaos SET nome = 'ANONIMIZADO', email = NULL, cidade = NULL WHERE cnf = ?", (cnf,))
-            try:
-                conn.execute("ALTER TABLE solicitacoes_privacidade ADD COLUMN data_processamento TEXT")
-            except Exception:
-                pass
-            conn.execute("UPDATE solicitacoes_privacidade SET status = 'APROVADA', data_processamento = ? WHERE rowid = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
+            conn.execute("UPDATE solicitacoes_privacidade SET status = 'APROVADO' WHERE id_solicitacao = ?", (request_id,))
             conn.commit()
             flash(f"Solicitação #{request_id} ({tipo}) aprovada com sucesso.", "success")
     except Exception as e:
@@ -823,11 +820,7 @@ def cgrf_privacy_reject(request_id):
     db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     try:
-        try:
-            conn.execute("ALTER TABLE solicitacoes_privacidade ADD COLUMN data_processamento TEXT")
-        except Exception:
-            pass
-        conn.execute("UPDATE solicitacoes_privacidade SET status = 'REJEITADA', data_processamento = ? WHERE rowid = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
+        conn.execute("UPDATE solicitacoes_privacidade SET status = 'REJEITADO' WHERE id_solicitacao = ?", (request_id,))
         conn.commit()
         flash(f"Solicitação #{request_id} rejeitada.", "info")
     except Exception as e:

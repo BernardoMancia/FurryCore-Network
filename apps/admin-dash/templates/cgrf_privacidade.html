@@ -24,7 +24,7 @@
                     <th>Data</th>
                     <th>Cidadão</th>
                     <th>Tipo</th>
-                    <th>Mensagem / Motivo</th>
+                    <th>Detalhes</th>
                     <th class="text-center">Ações</th>
                 </tr>
             </thead>
@@ -37,26 +37,26 @@
                         <div class="text-info" style="font-size: 0.7rem;">{{ s.cnf_solicitante }}</div>
                     </td>
                     <td>
-                        {% if s.tipo_solicitacao == 'EXCLUSAO' %}
-                            <span class="badge-cyber border-danger text-danger small">EXCLUSÃO</span>
-                        {% elif s.tipo_solicitacao == 'ANONIMIZACAO' %}
-                            <span class="badge-cyber border-warning text-warning small">ANONIMIZAÇÃO</span>
+                        {% if s.tipo_acao == 'REMOVER' %}
+                            <span class="badge-cyber border-danger text-danger small">REMOVER</span>
+                        {% elif s.tipo_acao == 'ALTERAR' %}
+                            <span class="badge-cyber border-warning text-warning small">ALTERAR</span>
                         {% else %}
-                            <span class="badge-cyber border-info text-info small">{{ s.tipo_solicitacao }}</span>
+                            <span class="badge-cyber border-info text-info small">{{ s.tipo_acao }}</span>
                         {% endif %}
                     </td>
-                    <td class="small" style="max-width: 300px;">{{ s.mensagem or '—' }}</td>
+                    <td class="small" style="max-width: 300px;">{{ s.detalhes_json or '—' }}</td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
                             <form action="/cgrf/privacy/approve/{{ s.id }}" method="POST" class="d-inline" onsubmit="return confirm('Aprovar esta solicitação? A ação é irreversível.')">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-neon btn-sm py-1 px-3" title="Aprovar Solicitação">
+                                <button type="submit" class="btn btn-neon btn-sm py-1 px-3">
                                     <i class="bi bi-check-lg me-1"></i>Aprovar
                                 </button>
                             </form>
                             <form action="/cgrf/privacy/reject/{{ s.id }}" method="POST" class="d-inline" onsubmit="return confirm('Rejeitar esta solicitação?')">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-neon-danger btn-sm py-1 px-3" title="Rejeitar Solicitação">
+                                <button type="submit" class="btn btn-neon-danger btn-sm py-1 px-3">
                                     <i class="bi bi-x-lg me-1"></i>Rejeitar
                                 </button>
                             </form>
