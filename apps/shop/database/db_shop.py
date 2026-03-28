@@ -1,39 +1,15 @@
-import sqlite3
 import os
+import sys
 
-class ShopDatabaseManager:
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
+from shared.database.base_manager import BaseDatabaseManager
+
+
+class ShopDatabaseManager(BaseDatabaseManager):
     def __init__(self):
-        self.db_path = os.path.join(os.path.dirname(__file__), 'shop.db')
-        self._init_db()
+        db_path = os.path.join(os.path.dirname(__file__), "shop.db")
+        schema_path = os.path.join(os.path.dirname(__file__), "schema_shop.sql")
+        super().__init__(db_path, schema_path if not os.path.exists(db_path) else None)
 
-    def _get_connection(self):
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    def _init_db(self):
-        if not os.path.exists(self.db_path):
-            schema_path = os.path.join(os.path.dirname(__file__), 'schema_shop.sql')
-            with open(schema_path, 'r', encoding='utf-8') as f:
-                schema = f.read()
-            
-            conn = self._get_connection()
-            conn.executescript(schema)
-            conn.commit()
-            conn.close()
-
-    def execute_query(self, query, params=(), fetchone=False, fetchall=False):
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute(query, params)
-            if fetchone:
-                res = cursor.fetchone()
-            elif fetchall:
-                res = cursor.fetchall()
-            else:
-                conn.commit()
-                res = cursor.lastrowid
-            return res
-        finally:
-            conn.close()
+        if not self.table_exists("products"):
+            self._init_schema(schema_path)

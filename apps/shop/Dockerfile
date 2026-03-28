@@ -15,4 +15,4 @@ RUN mkdir -p /app/database /app/shared_data/cgrf
 
 EXPOSE 20003
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:20003", "--workers", "2", "--timeout", "120", "app:app"]

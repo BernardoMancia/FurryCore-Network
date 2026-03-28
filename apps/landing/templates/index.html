@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FurryCore Network - Ecossistema Oficial</title>
+    <meta name="description" content="FurryCore Network - Sua porta de entrada para o ecossistema digital furry. Portal CGRF, PawSteps Social e FurryCore Shop.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -15,41 +16,30 @@
             --glass: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.08);
         }
-        /* --- Fundo Cibernético AGRESSIVO & ULTRA-DINÂMICO --- */
         .cyber-background {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: -1;
             background-color: #020205;
             overflow: hidden;
         }
-
-        /* Scanlines CRT */
         .cyber-background::after {
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
                         linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 3px 100%;
             pointer-events: none;
             z-index: 10;
         }
-
-        /* Camada 1: Mesh Gradients Pulsantes e Vibrantes */
         .mesh-gradient {
             position: absolute;
-            width: 140%;
-            height: 140%;
-            top: -20%;
-            left: -20%;
-            background: 
+            width: 140%; height: 140%;
+            top: -20%; left: -20%;
+            background:
                 radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.4) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(188, 19, 254, 0.4) 0%, transparent 50%),
                 radial-gradient(circle at 50% 80%, rgba(188, 19, 254, 0.3) 0%, transparent 60%),
@@ -57,15 +47,11 @@
             filter: blur(50px);
             animation: rotateMesh 20s linear infinite, pulseGlow 8s ease-in-out infinite alternate;
         }
-
-        /* Camada 2: Cyber Grid de Alta Velocidade */
         .cyber-grid {
             position: absolute;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
-            background-image: 
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background-image:
                 linear-gradient(rgba(0, 242, 255, 0.15) 2px, transparent 2px),
                 linear-gradient(90deg, rgba(0, 242, 255, 0.15) 2px, transparent 2px);
             background-size: 60px 60px;
@@ -73,15 +59,11 @@
             animation: moveGrid 4s linear infinite;
             opacity: 0.5;
         }
-
-        /* Efeito de Brilho nas Bordas (Vignette Neon) */
         .cyber-background::before {
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             box-shadow: inset 0 0 150px rgba(0, 242, 255, 0.2);
             z-index: 5;
             pointer-events: none;
@@ -91,18 +73,15 @@
             0% { transform: rotate(0deg) scale(1.1); }
             100% { transform: rotate(360deg) scale(1.1); }
         }
-
         @keyframes pulseGlow {
             0% { opacity: 0.7; filter: blur(50px); }
             100% { opacity: 1; filter: blur(30px); }
         }
-
         @keyframes moveGrid {
             0% { transform: perspective(400px) rotateX(65deg) translateY(0); }
             100% { transform: perspective(400px) rotateX(65deg) translateY(60px); }
         }
 
-        /* --- Estilos Globais e UI --- */
         body {
             background-color: #020205;
             color: #fff;
@@ -116,10 +95,9 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            z-index: 20; /* Acima do background animado */
+            z-index: 20;
+            padding: 80px 0 40px;
         }
-        
-        /* Título com GLITCH */
         .neon-text {
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
@@ -131,7 +109,6 @@
             position: relative;
             animation: glitch 3s infinite, floatUI 4s ease-in-out infinite;
         }
-
         @keyframes glitch {
             0% { transform: translate(0); text-shadow: 0 0 40px rgba(0, 242, 255, 0.6); }
             2% { transform: translate(-3px, 2px); text-shadow: 3px 0 #bc13fe, -3px 0 #00f2ff; }
@@ -139,14 +116,13 @@
             6% { transform: translate(0); }
             100% { transform: translate(0); }
         }
-
         .service-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(30px) saturate(150%);
             -webkit-backdrop-filter: blur(30px) saturate(150%);
             border: 1px solid rgba(0, 242, 255, 0.2);
             border-radius: 20px;
-            padding: 35px;
+            padding: 30px;
             transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-decoration: none;
             color: #fff;
@@ -157,7 +133,6 @@
             animation: floatUI var(--float-delay, 5s) ease-in-out infinite;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-
         @keyframes floatUI {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-15px); }
@@ -169,8 +144,7 @@
             color: #fff;
         }
         .icon-box {
-            width: 60px;
-            height: 60px;
+            width: 60px; height: 60px;
             border-radius: 15px;
             background: rgba(255,255,255,0.05);
             display: flex;
@@ -195,6 +169,25 @@
             box-shadow: 0 0 25px rgba(0, 242, 255, 0.5);
             transform: scale(1.05);
         }
+
+        @media (max-width: 767.98px) {
+            .neon-text { font-size: 2rem !important; }
+            .hero-section .lead { font-size: 1rem !important; }
+            .service-card { padding: 24px; animation: none; }
+            .icon-box { width: 48px; height: 48px; font-size: 1.5rem; }
+            .hero-section { padding: 60px 0 30px; }
+        }
+
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            .neon-text { font-size: 2.5rem !important; }
+            .service-card { padding: 28px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .mesh-gradient, .cyber-grid { animation: none; }
+            .neon-text { animation: none; }
+            .service-card { animation: none; }
+        }
     </style>
 </head>
 <body>
@@ -205,62 +198,59 @@
     </div>
 
     <section class="hero-section position-relative">
-        <div class="position-absolute top-0 end-0 p-4 d-flex gap-2 z-3">
+        <div class="position-absolute top-0 end-0 p-3 p-md-4 d-flex gap-2 z-3">
             <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'pt' else 'text-white-50' }}">PT</a>
             <span class="text-white-50">|</span>
             <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'en' else 'text-white-50' }}">EN</a>
             <span class="text-white-50">|</span>
             <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'es' else 'text-white-50' }}">ES</a>
         </div>
-        <div class="container text-center">
+        <div class="container text-center px-3">
             <h1 class="display-2 fw-800 neon-text mb-3">FurryCore Network</h1>
-            <p class="lead text-white-50 mb-5 fs-4">{{ t('landing_subtitle') }}</p>
-            
-            <div class="row g-4 justify-content-center">
-                <!-- Portal CGRF -->
-                <div class="col-md-4">
-                    <a href="https://cgrf.com.br" class="service-card">
+            <p class="lead text-white-50 mb-4 mb-md-5 fs-4">{{ t('landing_subtitle') }}</p>
+
+            <div class="row g-3 g-md-4 justify-content-center">
+                <div class="col-12 col-md-4">
+                    <a href="https://cgrf.com.br" class="service-card" id="card-cgrf">
                         <div>
                             <div class="icon-box"><i class="bi bi-shield-check"></i></div>
                             <h3 class="fw-bold mb-3">Portal CGRF</h3>
                             <p class="text-white-50 small">{{ t('landing_cgrf_desc') }}</p>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-3 mt-md-4">
                             <span class="btn btn-outline-info w-100 rounded-pill">{{ t('landing_cgrf_btn') }}</span>
                         </div>
                     </a>
                 </div>
-                
-                <!-- PawSteps -->
-                <div class="col-md-4">
-                    <a href="https://pawsteps.social" class="service-card">
+
+                <div class="col-12 col-md-4">
+                    <a href="https://pawsteps.social" class="service-card" id="card-pawsteps">
                         <div>
                             <div class="icon-box" style="color: var(--accent-purple);"><i class="bi bi-chat-heart"></i></div>
                             <h3 class="fw-bold mb-3">PawSteps</h3>
                             <p class="text-white-50 small">{{ t('landing_social_desc') }}</p>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-3 mt-md-4">
                             <span class="btn btn-outline-primary w-100 rounded-pill" style="border-color: var(--accent-purple); color: var(--accent-purple);">{{ t('landing_social_btn') }}</span>
                         </div>
                     </a>
                 </div>
-                
-                <!-- Shop -->
-                <div class="col-md-4">
-                    <a href="https://furrycore.com.br/shop" class="service-card">
+
+                <div class="col-12 col-md-4">
+                    <a href="https://furrycore.com.br/shop" class="service-card" id="card-shop">
                         <div>
                             <div class="icon-box text-warning"><i class="bi bi-bag-check"></i></div>
                             <h3 class="fw-bold mb-3">FurryCore Shop</h3>
                             <p class="text-white-50 small">{{ t('landing_shop_desc') }}</p>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-3 mt-md-4">
                             <span class="btn btn-outline-warning w-100 rounded-pill">{{ t('landing_shop_btn') }}</span>
                         </div>
                     </a>
                 </div>
             </div>
-            
-            <div class="mt-5 pt-5">
+
+            <div class="mt-4 mt-md-5 pt-3 pt-md-5">
                 <p class="small text-white-50">{{ t('footer_rights') }}</p>
             </div>
         </div>
@@ -268,25 +258,26 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Gerador de Partículas (Mais denso e brilhante)
-        const container = document.getElementById('particle-container');
-        for (let i = 0; i < 60; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            const size = Math.random() * 5 + 3 + 'px';
-            p.style.width = size;
-            p.style.height = size;
-            p.style.left = Math.random() * 100 + '%';
-            p.style.setProperty('--d', (Math.random() * 8 + 7) + 's');
-            p.style.animationDelay = Math.random() * 10 + 's';
-            p.style.background = Math.random() > 0.5 ? 'var(--accent-cyan)' : 'white';
-            container.appendChild(p);
-        }
+        var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!prefersReduced) {
+            var container = document.getElementById('particle-container');
+            for (var i = 0; i < 40; i++) {
+                var p = document.createElement('div');
+                p.className = 'particle';
+                var size = Math.random() * 5 + 3 + 'px';
+                p.style.width = size;
+                p.style.height = size;
+                p.style.left = Math.random() * 100 + '%';
+                p.style.setProperty('--d', (Math.random() * 8 + 7) + 's');
+                p.style.animationDelay = Math.random() * 10 + 's';
+                p.style.background = Math.random() > 0.5 ? 'var(--accent-cyan)' : 'white';
+                container.appendChild(p);
+            }
 
-        // Delay aleatório para flutuação dos cards
-        document.querySelectorAll('.service-card').forEach(card => {
-            card.style.setProperty('--float-delay', (Math.random() * 2 + 4) + 's');
-        });
+            document.querySelectorAll('.service-card').forEach(function(card) {
+                card.style.setProperty('--float-delay', (Math.random() * 2 + 4) + 's');
+            });
+        }
     </script>
 </body>
 </html>

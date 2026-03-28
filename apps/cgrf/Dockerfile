@@ -15,4 +15,4 @@ RUN mkdir -p /app/database /app/shared_data/pawsteps /app/shared_data/shop
 
 EXPOSE 20002
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:20002", "--workers", "3", "--timeout", "120", "app:app"]

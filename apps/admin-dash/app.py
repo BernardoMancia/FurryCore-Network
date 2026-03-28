@@ -1,30 +1,41 @@
 import os
+import sys
 import sqlite3
-import pandas as pd
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
-from utils.logic import gerar_cnf, gerar_rgf, gerar_qrcode_base64, send_welcome_email, create_pre_account_social, deactivate_account_everywhere, check_email_conflicts
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from shared.utils.config import Config
+from shared.utils.identity import gerar_cnf, gerar_rgf, gerar_qrcode_base64
+from shared.utils.email_service import send_welcome_email
+from shared.utils.cross_db import create_pre_account_social, deactivate_account_everywhere, check_email_conflicts
 
 app = Flask(__name__)
-app.secret_key = os.getenv('ADMIN_SECRET_KEY', 'cyber-furry-admin-9999')
+app.secret_key = Config.SECRET_KEY_ADMIN
+csrf = CSRFProtect(app)
 
-# Configurações de Caminhos (Mapeados via Docker Volumes)
-DB_PATHS = {
-    'cgrf': '/app/shared_data/cgrf/base_cgrf.db',
-    'pawsteps': '/app/shared_data/pawsteps/pawsteps.db',
-    'shop': '/app/shared_data/shop/shop.db'
+DB_PATHS = Config.DB_PATHS
+LOG_PATH = "/app/shared_logs/access_log.log"
+
+ADMIN_DB_PATH = "database/admin_panel.db"
+
+ALLOWED_TABLES = {
+    "cgrf": ["cidadaos", "usuarios_sistema", "solicitacoes_privacidade"],
+    "pawsteps": [
+        "users", "events", "posts", "stories", "messages",
+        "follows", "location_pins", "post_likes", "post_saves", "post_reposts",
+    ],
+    "shop": ["products", "orders", "order_items", "users"],
 }
-LOG_PATH = '/app/shared_logs/access_log.log'
-
-# Banco de Dados do Próprio Dashboard
-ADMIN_DB_PATH = 'database/admin_panel.db'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = "login"
+
 
 class AdminUser(UserMixin):
     def __init__(self, id, username, must_change):
@@ -32,325 +43,390 @@ class AdminUser(UserMixin):
         self.username = username
         self.must_change = must_change
 
+
 def get_admin_db():
     conn = sqlite3.connect(ADMIN_DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
+
 def init_admin_db():
-    if not os.path.exists('database'):
-        os.makedirs('database')
+    if not os.path.exists("database"):
+        os.makedirs("database")
     conn = get_admin_db()
-    conn.execute('''CREATE TABLE IF NOT EXISTS admin_users (
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS admin_users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT,
         must_change_password BOOLEAN DEFAULT 1
-    )''')
-    # Cria o usuário inicial se não existir
-    user = conn.execute('SELECT * FROM admin_users WHERE username = ?', ('Luke_Arwolf',)).fetchone()
+    )"""
+    )
+    user = conn.execute("SELECT * FROM admin_users WHERE username = ?", ("Luke_Arwolf",)).fetchone()
     if not user:
-        hashed = generate_password_hash('senha123')
-        conn.execute('INSERT INTO admin_users (username, password, must_change_password) VALUES (?, ?, 1)', 
-                     ('Luke_Arwolf', hashed))
+        initial_pass = os.getenv("ADMIN_INITIAL_PASSWORD", secrets.token_urlsafe(16))
+        hashed = generate_password_hash(initial_pass)
+        conn.execute(
+            "INSERT INTO admin_users (username, password, must_change_password) VALUES (?, ?, 1)",
+            ("Luke_Arwolf", hashed),
+        )
+        print(f"[ADMIN BOOTSTRAP] Initial admin created. Password: {initial_pass}")
+        print("[ADMIN BOOTSTRAP] Change this password immediately on first login.")
     conn.commit()
     conn.close()
 
+
 init_admin_db()
+
 
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_admin_db()
-    user = conn.execute('SELECT * FROM admin_users WHERE id = ?', (user_id,)).fetchone()
+    user = conn.execute("SELECT * FROM admin_users WHERE id = ?", (user_id,)).fetchone()
     conn.close()
     if user:
-        return AdminUser(user['id'], user['username'], user['must_change_password'])
+        return AdminUser(user["id"], user["username"], user["must_change_password"])
     return None
 
-@app.route('/login', methods=['GET', 'POST'])
+
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
         conn = get_admin_db()
-        user = conn.execute('SELECT * FROM admin_users WHERE username = ?', (username,)).fetchone()
+        user = conn.execute("SELECT * FROM admin_users WHERE username = ?", (username,)).fetchone()
         conn.close()
-        
-        if user and check_password_hash(user['password'], password):
-            admin_user = AdminUser(user['id'], user['username'], user['must_change_password'])
+
+        if user and check_password_hash(user["password"], password):
+            admin_user = AdminUser(user["id"], user["username"], user["must_change_password"])
             login_user(admin_user)
             if admin_user.must_change:
-                return redirect(url_for('change_password'))
-            return redirect(url_for('index'))
-        flash('Credenciais inválidas.', 'danger')
-    return render_template('login.html')
+                return redirect(url_for("change_password"))
+            return redirect(url_for("index"))
+        flash("Credenciais inválidas.", "danger")
+    return render_template("login.html")
 
-@app.route('/change_password', methods=['GET', 'POST'])
+
+@app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
-    if request.method == 'POST':
-        new_password = request.form.get('new_password')
+    if request.method == "POST":
+        new_password = request.form.get("new_password")
         hashed = generate_password_hash(new_password)
         conn = get_admin_db()
-        conn.execute('UPDATE admin_users SET password = ?, must_change_password = 0 WHERE id = ?', 
-                     (hashed, current_user.id))
+        conn.execute(
+            "UPDATE admin_users SET password = ?, must_change_password = 0 WHERE id = ?",
+            (hashed, current_user.id),
+        )
         conn.commit()
         conn.close()
-        flash('Senha alterada com sucesso!', 'success')
-        return redirect(url_for('index'))
-    return render_template('change_password.html')
+        flash("Senha alterada com sucesso!", "success")
+        return redirect(url_for("index"))
+    return render_template("change_password.html")
 
-@app.route('/')
+
+@app.route("/")
 @login_required
 def index():
     if current_user.must_change:
-        return redirect(url_for('change_password'))
-    return render_template('index.html', active_page='index')
+        return redirect(url_for("change_password"))
+    return render_template("index.html", active_page="index")
 
-# --- Monitoramento ---
-@app.route('/api/stats')
+
+@app.route("/api/stats")
 @login_required
 def get_stats():
-    # Análise básica de logs do Nginx
     stats = {
-        'total_requests': 0,
-        'status_200': 0,
-        'status_404': 0,
-        'status_500': 0,
-        'recent_ips': [],
-        'security_alerts': []
+        "total_requests": 0,
+        "status_200": 0,
+        "status_404": 0,
+        "status_500": 0,
+        "recent_ips": [],
+        "security_alerts": [],
     }
-    
+
     if os.path.exists(LOG_PATH):
         try:
-            # Lógica simplificada de parsing de log
-            with open(LOG_PATH, 'r') as f:
-                lines = f.readlines()[-500:] # Últimas 500 requisições
-                stats['total_requests'] = len(lines)
+            with open(LOG_PATH, "r") as f:
+                lines = f.readlines()[-500:]
+                stats["total_requests"] = len(lines)
                 for line in lines:
-                    if ' 200 ' in line: stats['status_200'] += 1
-                    elif ' 404 ' in line: stats['status_404'] += 1
-                    elif ' 500 ' in line or ' 502 ' in line: stats['status_500'] += 1
-                    
-                    # Alerta Simples de Segurança (ex: tentando acessar .env)
-                    if '.env' in line or 'wp-admin' in line or 'config' in line:
-                        stats['security_alerts'].append(f"Tentativa suspeita detectada: {line[:50]}...")
-        except:
+                    if " 200 " in line:
+                        stats["status_200"] += 1
+                    elif " 404 " in line:
+                        stats["status_404"] += 1
+                    elif " 500 " in line or " 502 " in line:
+                        stats["status_500"] += 1
+
+                    if ".env" in line or "wp-admin" in line or "config" in line:
+                        stats["security_alerts"].append(f"Tentativa suspeita detectada: {line[:50]}...")
+        except Exception:
             pass
-            
+
     return jsonify(stats)
 
-# --- Gestão de Banco de Dados ---
-@app.route('/database/<app_name>')
+
+@app.route("/database/<app_name>")
 @login_required
 def view_db(app_name):
     if app_name not in DB_PATHS:
         return "App não encontrado", 404
-    
-    db_path = DB_PATHS[app_name]
+
+    db_path = Config.get_db_path(app_name)
     if not os.path.exists(db_path):
         return f"Banco de dados de {app_name} não encontrado no path mapeado.", 404
-        
+
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     tables = [t[0] for t in cursor.fetchall()]
     conn.close()
-    
-    return render_template('view_db.html', app_name=app_name, tables=tables)
 
-@app.route('/database/<app_name>/<table>')
+    return render_template("view_db.html", app_name=app_name, tables=tables)
+
+
+@app.route("/database/<app_name>/<table>")
 @login_required
 def view_table(app_name, table):
-    db_path = DB_PATHS[app_name]
+    if app_name not in ALLOWED_TABLES:
+        flash("Aplicação inválida.", "danger")
+        return redirect(url_for("index"))
+
+    if table not in ALLOWED_TABLES[app_name]:
+        flash("Tabela não autorizada.", "danger")
+        return redirect(url_for("view_db", app_name=app_name))
+
+    db_path = Config.get_db_path(app_name)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    data = conn.execute(f"SELECT * FROM {table} LIMIT 100").fetchall()
+    data = conn.execute(f"SELECT * FROM [{table}] ORDER BY rowid DESC LIMIT 100").fetchall()
     columns = data[0].keys() if data else []
     conn.close()
-    return render_template('view_table.html', app_name=app_name, table=table, columns=columns, data=data)
+    return render_template("view_table.html", app_name=app_name, table=table, columns=columns, data=data)
 
-# --- Segurança e Logs de Invasão ---
-@app.route('/security')
+
+@app.route("/security")
 @login_required
 def view_security():
     logs = []
     if os.path.exists(LOG_PATH):
-        with open(LOG_PATH, 'r') as f:
-            lines = f.readlines()[-100:] # Últimos 100 logs
+        with open(LOG_PATH, "r") as f:
+            lines = f.readlines()[-100:]
             for line in lines:
-                if any(x in line for x in ['.env', 'wp-admin', 'config', 'phpinfo', '403', '404']):
+                if any(x in line for x in [".env", "wp-admin", "config", "phpinfo", "403", "404"]):
                     logs.append(line)
-    return render_template('security.html', logs=logs)
+    return render_template("security.html", logs=logs)
 
-# --- Gestão Global de Admins ---
-@app.route('/admins')
+
+@app.route("/admins")
 @login_required
 def manage_admins():
     conn = get_admin_db()
     dash_admins = conn.execute("SELECT * FROM admin_users").fetchall()
     conn.close()
-    
-    # Tentativa de ler admins das outras apps (SQLite)
-    app_admins = {}
-    for app_name, path in DB_PATHS.items():
-        if os.path.exists(path):
-            try:
-                conn_app = sqlite3.connect(path)
-                conn_app.row_factory = sqlite3.Row
-                # Verifica se a tabela users existe e tem is_admin
-                tables = [t[0] for t in conn_app.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
-                if 'users' in tables:
-                     app_admins[app_name] = conn_app.execute("SELECT * FROM users WHERE is_admin = 1").fetchall()
-                conn_app.close()
-            except:
-                app_admins[app_name] = []
-                
-    return render_template('admins.html', dash_admins=dash_admins, app_admins=app_admins)
 
-@app.route('/admins/add', methods=['POST'])
+    app_admins = {}
+    for app_name, path_key in DB_PATHS.items():
+        db_path = Config.get_db_path(app_name)
+        if os.path.exists(db_path):
+            try:
+                conn_app = sqlite3.connect(db_path)
+                conn_app.row_factory = sqlite3.Row
+                tables = [
+                    t[0]
+                    for t in conn_app.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    ).fetchall()
+                ]
+                if "users" in tables:
+                    cols = [
+                        c[1]
+                        for c in conn_app.execute("PRAGMA table_info(users)").fetchall()
+                    ]
+                    if "is_admin" in cols:
+                        app_admins[app_name] = conn_app.execute(
+                            "SELECT * FROM users WHERE is_admin = 1"
+                        ).fetchall()
+                conn_app.close()
+            except Exception:
+                app_admins[app_name] = []
+
+    return render_template("admins.html", dash_admins=dash_admins, app_admins=app_admins)
+
+
+@app.route("/admins/add", methods=["POST"])
 @login_required
 def add_admin():
-    username = request.form.get('username')
-    password = generate_password_hash(request.form.get('password'))
+    username = request.form.get("username")
+    password = generate_password_hash(request.form.get("password"))
     conn = get_admin_db()
     try:
-        conn.execute("INSERT INTO admin_users (username, password, must_change_password) VALUES (?, ?, ?)", (username, password, 0))
+        conn.execute(
+            "INSERT INTO admin_users (username, password, must_change_password) VALUES (?, ?, ?)",
+            (username, password, 0),
+        )
         conn.commit()
         flash(f"Admin {username} criado com sucesso.", "success")
-    except:
+    except Exception:
         flash("Erro ao criar admin (usuário já existe?)", "danger")
     conn.close()
-    return redirect(url_for('manage_admins'))
+    return redirect(url_for("manage_admins"))
 
-@app.route('/admins/delete/<int:admin_id>')
+
+@app.route("/admins/delete/<int:admin_id>", methods=["POST"])
 @login_required
 def delete_admin(admin_id):
-    if admin_id == current_user.id:
+    if admin_id == int(current_user.id):
         flash("Você não pode deletar a si mesmo!", "danger")
-        return redirect(url_for('manage_admins'))
+        return redirect(url_for("manage_admins"))
     conn = get_admin_db()
     conn.execute("DELETE FROM admin_users WHERE id = ?", (admin_id,))
     conn.commit()
     conn.close()
     flash("Admin removido.", "info")
-    return redirect(url_for('manage_admins'))
+    return redirect(url_for("manage_admins"))
 
-@app.route('/logout')
+
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
-# --- GESTÃO CGRF (CONSOLIDADA) ---
 
-@app.route('/cgrf/users', methods=['GET', 'POST'])
+@app.route("/cgrf/users", methods=["GET", "POST"])
 @login_required
 def cgrf_manage_users():
-    db_path = DB_PATHS['cgrf']
+    db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = generate_password_hash(request.form.get('password'))
-        cargo = request.form.get('cargo')
-        cnf = request.form.get('cnf')
+
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = generate_password_hash(request.form.get("password"))
+        cargo = request.form.get("cargo")
+        cnf = request.form.get("cnf")
         try:
-            conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, 'ATIVO')", (email, password, cargo, cnf or None))
+            conn.execute(
+                "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, 'ATIVO')",
+                (email, password, cargo, cnf or None),
+            )
             conn.commit()
             flash(f"Usuário {email} criado no CGRF.", "success")
         except Exception as e:
             flash(f"Erro ao criar usuário: {e}", "danger")
-            
-    usuarios = conn.execute("SELECT * FROM usuarios_sistema WHERE cargo IN ('ADMIN', 'ANALISTA') AND status = 'ATIVO'").fetchall()
-    conn.close()
-    return render_template('cgrf_users.html', usuarios=usuarios)
 
-@app.route('/cgrf/emit', methods=['GET', 'POST'])
+    usuarios = conn.execute(
+        "SELECT * FROM usuarios_sistema WHERE cargo IN ('ADMIN', 'ANALISTA') AND status = 'ATIVO'"
+    ).fetchall()
+    conn.close()
+    return render_template("cgrf_users.html", usuarios=usuarios)
+
+
+@app.route("/cgrf/emit", methods=["GET", "POST"])
 @login_required
 def cgrf_emit_wallet():
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        especie = request.form.get('especie')
-        regiao = request.form.get('regiao')
-        cidade = request.form.get('cidade')
-        pais = request.form.get('pais', 'Brasil')
-        idiomas_list = request.form.getlist('idiomas')
+    if request.method == "POST":
+        nome = request.form.get("nome")
+        especie = request.form.get("especie")
+        regiao = request.form.get("regiao")
+        cidade = request.form.get("cidade")
+        pais = request.form.get("pais", "Brasil")
+        idiomas_list = request.form.getlist("idiomas")
         idiomas = ", ".join(idiomas_list) if idiomas_list else "Não Informado"
-        email = request.form.get('email')
-        foto_base64_raw = request.form.get('foto_base64')
-        confirmed_link = request.form.get('confirmed_link') == 'true'
-        
-        # Checagem de Conflitos se for tentativa inicial de emissão
+        email = request.form.get("email")
+        foto_base64_raw = request.form.get("foto_base64")
+        confirmed_link = request.form.get("confirmed_link") == "true"
+
         if email and not confirmed_link:
             conflicts = check_email_conflicts(email)
             if conflicts:
-                return render_template('cgrf_confirm_link.html', conflicts=conflicts, form_data=request.form.to_dict(flat=False))
-        
+                return render_template(
+                    "cgrf_confirm_link.html",
+                    conflicts=conflicts,
+                    form_data=request.form.to_dict(flat=False),
+                )
+
         cnf = gerar_cnf()
         rgf = gerar_rgf()
         qr_base64 = gerar_qrcode_base64(cnf)
-        
+
         foto_base64 = None
         if foto_base64_raw and "," in foto_base64_raw:
             foto_base64 = foto_base64_raw.split(",")[1]
-            
+
         hoje = datetime.now()
         exp = hoje.replace(year=hoje.year + 10)
-        
-        db_path = DB_PATHS['cgrf']
+
+        db_path = Config.get_db_path("cgrf")
         conn = sqlite3.connect(db_path)
         try:
-            conn.execute("""INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, cidade, pais, idiomas, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-                           (cnf, rgf, nome, especie, regiao, cidade, pais, idiomas, email, hoje.strftime("%d/%m/%Y"), exp.strftime("%d/%m/%Y"), qr_base64, foto_base64))
-            
-            # Criar conta automática
+            conn.execute(
+                """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, cidade, pais, idiomas, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    cnf, rgf, nome, especie, regiao, cidade, pais, idiomas, email,
+                    hoje.strftime("%d/%m/%Y"), exp.strftime("%d/%m/%Y"), qr_base64, foto_base64,
+                ),
+            )
+
             if email:
                 temp_pass = secrets.token_urlsafe(12)
                 pwd_hash = generate_password_hash(temp_pass)
-                conn.execute("INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
-                             (email, pwd_hash, 'USUARIO', cnf, 'PENDENTE'))
-                
-                # Envio do welcome email com diagnóstico
-                user_data = {'nome': nome, 'cnf': cnf, 'rgf': rgf, 'email': email, 'temp_pass': temp_pass}
+                conn.execute(
+                    "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
+                    (email, pwd_hash, "USUARIO", cnf, "PENDENTE"),
+                )
+
+                user_data = {"nome": nome, "cnf": cnf, "rgf": rgf, "email": email, "temp_pass": temp_pass}
                 success, mail_err = send_welcome_email(user_data)
                 if not success:
-                    print(f"[SMTP FAIL] Emissão CGRF enviou falha: {mail_err}")
-                
-                # Criar conta na rede social PawSteps
+                    print(f"[SMTP FAIL] Wallet emission email failed: {mail_err}")
+
                 create_pre_account_social(email, nome)
-                
+
             conn.commit()
             flash(f"Carteira de {nome} emitida com sucesso! CNF: {cnf}", "success")
         except Exception as e:
-            print(f"[DATABASE ERROR] Falha na emissão CGRF: {e}")
+            print(f"[DATABASE ERROR] CGRF emission failed: {e}")
             flash(f"Erro na emissão: {e}", "danger")
         finally:
             conn.close()
-        return redirect(url_for('cgrf_manage_records'))
-        
-    return render_template('cgrf_emitir.html')
+        return redirect(url_for("cgrf_manage_records"))
 
-@app.route('/cgrf/records')
+    return render_template("cgrf_emitir.html")
+
+
+@app.route("/cgrf/records")
 @login_required
 def cgrf_manage_records():
-    db_path = DB_PATHS['cgrf']
+    db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     registros = conn.execute("SELECT * FROM cidadaos WHERE is_valido = 1 ORDER BY id DESC").fetchall()
     conn.close()
-    return render_template('cgrf_registros.html', registros=registros)
+    return render_template("cgrf_registros.html", registros=registros)
 
-@app.route('/cgrf/privacy')
+
+@app.route("/cgrf/privacy")
 @login_required
 def cgrf_manage_privacy():
-    db_path = DB_PATHS['cgrf']
+    db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     query = """
-    SELECT s.*, c.nome as nome_cidadao 
+    SELECT s.*, c.nome as nome_cidadao
     FROM solicitacoes_privacidade s
     JOIN cidadaos c ON s.cnf_solicitante = c.cnf
     WHERE s.status = 'PENDENTE'
@@ -358,48 +434,44 @@ def cgrf_manage_privacy():
     """
     solicitacoes = conn.execute(query).fetchall()
     conn.close()
-    return render_template('cgrf_privacidade.html', solicitacoes=solicitacoes, active_page='cgrf_privacy')
+    return render_template("cgrf_privacidade.html", solicitacoes=solicitacoes, active_page="cgrf_privacy")
 
-@app.route('/cgrf/delete/<cnf>')
+
+@app.route("/cgrf/delete/<cnf>", methods=["POST"])
 @login_required
 def cgrf_delete_record(cnf):
-    db_path = DB_PATHS['cgrf']
+    db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     try:
-        # Soft Delete do Cidadão
         conn.execute("UPDATE cidadaos SET is_valido = 0 WHERE cnf = ?", (cnf,))
-        
-        # Sincronização: Desativar acessos vinculados
         reg = conn.execute("SELECT email FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
         if reg and reg[0]:
             deactivate_account_everywhere(reg[0])
-            
         conn.commit()
         flash(f"Registro {cnf} e acessos vinculados inativados com sucesso.", "success")
     except Exception as e:
         flash(f"Erro ao inativar registro: {e}", "danger")
     finally:
         conn.close()
-    return redirect(url_for('cgrf_manage_records'))
+    return redirect(url_for("cgrf_manage_records"))
 
-@app.route('/cgrf/resend_email/<cnf>')
+
+@app.route("/cgrf/resend_email/<cnf>")
 @login_required
 def cgrf_resend_email(cnf):
-    db_path = DB_PATHS['cgrf']
+    db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     reg = conn.execute("SELECT * FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
     conn.close()
-    
-    if reg and reg['email']:
-        # Tenta reenviar usando a lógica do welcome email
-        # No Dashboard não temos a senha temporária original, então enviamos apenas informando sucesso da emissão
+
+    if reg and reg["email"]:
         user_data = {
-            'nome': reg['nome'],
-            'cnf': reg['cnf'],
-            'rgf': reg['rgf'],
-            'email': reg['email'],
-            'temp_pass': 'Consulte sua senha anterior'
+            "nome": reg["nome"],
+            "cnf": reg["cnf"],
+            "rgf": reg["rgf"],
+            "email": reg["email"],
+            "temp_pass": "Consulte sua senha anterior",
         }
         success, mail_err = send_welcome_email(user_data)
         if success:
@@ -408,24 +480,25 @@ def cgrf_resend_email(cnf):
             flash(f"Falha ao reenviar e-mail: {mail_err}", "danger")
     else:
         flash("Registro não encontrado ou e-mail ausente.", "warning")
-    return redirect(url_for('cgrf_manage_records'))
+    return redirect(url_for("cgrf_manage_records"))
 
-@app.route('/cgrf/resend_user_email/<email>')
+
+@app.route("/cgrf/resend_user_email/<email>")
 @login_required
 def cgrf_resend_user_email(email):
-    db_path = DB_PATHS['cgrf']
+    db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     reg = conn.execute("SELECT * FROM cidadaos WHERE email = ?", (email,)).fetchone()
     conn.close()
-    
+
     if reg:
         user_data = {
-            'nome': reg['nome'],
-            'cnf': reg['cnf'],
-            'rgf': reg['rgf'],
-            'email': reg['email'],
-            'temp_pass': 'Consulte sua senha anterior'
+            "nome": reg["nome"],
+            "cnf": reg["cnf"],
+            "rgf": reg["rgf"],
+            "email": reg["email"],
+            "temp_pass": "Consulte sua senha anterior",
         }
         success, mail_err = send_welcome_email(user_data)
         if success:
@@ -433,76 +506,90 @@ def cgrf_resend_user_email(email):
         else:
             flash(f"Falha ao reenviar: {mail_err}", "danger")
     else:
-        # Se não encontrar no cidadaos, talvez seja apenas um usuário de sistema
-        flash(f"Registro detalhado não encontrado para {email}. Somente usuários vinculados a um CNF podem receber o e-mail de boas-vindas completo.", "warning")
-    
-    return redirect(url_for('cgrf_manage_users'))
+        flash(
+            f"Registro detalhado não encontrado para {email}. Somente usuários vinculados a um CNF podem receber o e-mail de boas-vindas completo.",
+            "warning",
+        )
 
-@app.route('/cgrf/edit/<cnf>', methods=['GET', 'POST'])
+    return redirect(url_for("cgrf_manage_users"))
+
+
+@app.route("/cgrf/edit/<cnf>", methods=["GET", "POST"])
 @login_required
 def cgrf_edit_record(cnf):
-    db_path = DB_PATHS['cgrf']
+    db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        especie = request.form.get('especie')
-        cidade = request.form.get('cidade')
-        pais = request.form.get('pais')
+
+    if request.method == "POST":
+        nome = request.form.get("nome")
+        especie = request.form.get("especie")
+        cidade = request.form.get("cidade")
+        pais = request.form.get("pais")
         try:
-            conn.execute("UPDATE cidadaos SET nome = ?, especie = ?, cidade = ?, pais = ? WHERE cnf = ?",
-                         (nome, especie, cidade, pais, cnf))
+            conn.execute(
+                "UPDATE cidadaos SET nome = ?, especie = ?, cidade = ?, pais = ? WHERE cnf = ?",
+                (nome, especie, cidade, pais, cnf),
+            )
             conn.commit()
             flash(f"Dados do registro {cnf} atualizados.", "success")
-            return redirect(url_for('cgrf_manage_records'))
+            return redirect(url_for("cgrf_manage_records"))
         except Exception as e:
             flash(f"Erro ao atualizar: {e}", "danger")
-            
+
     reg = conn.execute("SELECT * FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
     conn.close()
     if not reg:
         flash("Registro não encontrado.", "danger")
-        return redirect(url_for('cgrf_manage_records'))
-        
-    return render_template('cgrf_editar.html', reg=reg)
+        return redirect(url_for("cgrf_manage_records"))
 
-@app.route('/database/delete/<app_name>/<table_name>/<int:row_id>')
+    return render_template("cgrf_editar.html", reg=reg)
+
+
+@app.route("/database/delete/<app_name>/<table_name>/<int:row_id>", methods=["POST"])
 @login_required
 def generic_delete(app_name, table_name, row_id):
-    if app_name not in DB_PATHS:
+    if app_name not in ALLOWED_TABLES:
         flash("Aplicação inválida.", "danger")
-        return redirect(url_for('index'))
-        
-    db_path = DB_PATHS[app_name]
+        return redirect(url_for("index"))
+
+    if table_name not in ALLOWED_TABLES[app_name]:
+        flash("Tabela não autorizada.", "danger")
+        return redirect(url_for("index"))
+
+    db_path = Config.get_db_path(app_name)
     conn = sqlite3.connect(db_path)
     try:
-        # Tenta identificar o nome da chave primária
-        cursor = conn.execute(f"PRAGMA table_info({table_name})")
+        cursor = conn.execute(f"PRAGMA table_info([{table_name}])")
         columns_info = cursor.fetchall()
         columns = [c[1] for c in columns_info]
-        pk_col = next((c[1] for c in columns_info if c[5] == 1), 'id') # c[5] é o flag pk
-        
+        pk_col = next((c[1] for c in columns_info if c[5] == 1), "id")
+
         soft_delete_col = None
-        for col in ['is_valido', 'status', 'ativo', 'active', 'is_uninstalled']:
+        for col in ["is_valido", "status", "ativo", "active", "is_uninstalled"]:
             if col in columns:
                 soft_delete_col = col
                 break
-        
+
         if soft_delete_col:
-            val = 0 if soft_delete_col in ['is_valido', 'ativo', 'active'] else 'INATIVO'
-            if soft_delete_col == 'is_uninstalled': val = 1
-            conn.execute(f"UPDATE {table_name} SET {soft_delete_col} = ? WHERE {pk_col} = ?", (val, row_id))
+            val = 0 if soft_delete_col in ["is_valido", "ativo", "active"] else "INATIVO"
+            if soft_delete_col == "is_uninstalled":
+                val = 1
+            conn.execute(f"UPDATE [{table_name}] SET [{soft_delete_col}] = ? WHERE [{pk_col}] = ?", (val, row_id))
             flash(f"Registro inativado via Soft Delete (Tabela: {table_name}).", "success")
         else:
-            flash(f"A tabela {table_name} não possui suporte para Soft Delete. Operação negada por segurança.", "warning")
-            
+            flash(
+                f"A tabela {table_name} não possui suporte para Soft Delete. Operação negada por segurança.",
+                "warning",
+            )
+
         conn.commit()
     except Exception as e:
         flash(f"Erro na operação: {e}", "danger")
     finally:
         conn.close()
-    return redirect(url_for('view_table', app_name=app_name, table_name=table_name))
+    return redirect(url_for("view_table", app_name=app_name, table=table_name))
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=29999, debug=True)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=29999, debug=Config.DEBUG)

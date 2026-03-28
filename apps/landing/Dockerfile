@@ -13,4 +13,4 @@ COPY shared/ ./shared/
 
 EXPOSE 20000
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:20000", "--workers", "2", "--timeout", "120", "app:app"]
