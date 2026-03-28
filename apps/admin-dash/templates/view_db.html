@@ -3,33 +3,57 @@
 
 {% block title %}Banco de Dados: {{ app_name }}{% endblock %}
 
+{% block head %}
+<style>
+    .table-card {
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+    }
+    .table-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent) !important;
+        box-shadow: 0 8px 25px rgba(0, 242, 255, 0.1);
+    }
+    .table-card .table-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 242, 255, 0.08);
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-5">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <h2 class="fw-bold text-uppercase neon-glow"><i class="bi bi-database me-2"></i> {{ app_name }} Explorer</h2>
-        <p class="text-white-50">Exploração de tabelas e registros brutos.</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 small">
+                <li class="breadcrumb-item"><a href="/" class="text-info text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active text-white-50">{{ app_name }}</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-uppercase neon-glow mb-0"><i class="bi bi-database me-2"></i>{{ app_name }} Explorer</h2>
+        <p class="text-white-50 mt-1 mb-0">Exploração de tabelas e registros brutos.</p>
     </div>
-    <a href="/" class="btn btn-outline-secondary btn-sm">Voltar</a>
+    <a href="/" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
 </div>
 
-<div class="row g-4">
+<div class="row g-3">
     {% for table in tables %}
-    <div class="col-md-3">
-        <a href="/database/{{ app_name }}/{{ table }}" class="text-decoration-none">
-            <div class="cyber-card text-center py-4 bg-dark-subtle border-secondary hover-lift" style="transition: 0.3s;">
-                <i class="bi bi-table fs-2 text-info d-block mb-2"></i>
-                <h6 class="fw-bold mb-0 text-white">{{ table }}</h6>
+    <div class="col-6 col-md-4 col-lg-3">
+        <a href="/database/{{ app_name }}/{{ table }}" class="table-card cyber-card text-center p-4">
+            <div class="table-icon mx-auto">
+                <i class="bi {% if 'user' in table %}bi-people-fill{% elif 'order' in table %}bi-receipt{% elif 'product' in table %}bi-box-seam{% elif 'cidadao' in table %}bi-person-vcard{% elif 'post' in table or 'stor' in table %}bi-chat-square-text{% elif 'message' in table %}bi-envelope{% elif 'follow' in table %}bi-person-plus{% elif 'event' in table %}bi-calendar-event{% elif 'solicitac' in table %}bi-shield-lock{% else %}bi-table{% endif %} fs-4 text-info"></i>
             </div>
+            <h6 class="fw-bold mb-0 text-white">{{ table }}</h6>
         </a>
     </div>
     {% endfor %}
 </div>
-
-<style>
-    .hover-lift:hover {
-        transform: translateY(-5px);
-        border-color: var(--accent) !important;
-        box-shadow: 0 5px 15px rgba(0, 242, 255, 0.1);
-    }
-</style>
 {% endblock %}

@@ -3,152 +3,258 @@
 
 {% block title %}Visão Geral{% endblock %}
 
+{% block head %}
+<style>
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 242, 255, 0.1);
+    }
+    .stat-card .stat-icon {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 4rem;
+        opacity: 0.06;
+    }
+    .stat-value {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .pulse-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+    .pulse-dot.online { background: #39ff14; box-shadow: 0 0 8px rgba(57,255,20,0.6); }
+    .pulse-dot.offline { background: #ff003c; box-shadow: 0 0 8px rgba(255,0,60,0.6); animation: none; }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .quick-action {
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    .quick-action:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent) !important;
+    }
+    .service-row {
+        transition: background 0.3s;
+    }
+    .service-row:hover {
+        background: rgba(0, 242, 255, 0.05) !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-5">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <h1 class="fw-bold neon-glow">Visão Geral</h1>
-        <p class="text-white-50">Status do ecossistema e monitoramento em tempo real.</p>
+        <h1 class="fw-bold neon-glow mb-1" style="font-family: 'Outfit';">Centro de Comando</h1>
+        <p class="text-white-50 mb-0">Monitoramento global do ecossistema FurryCore Network.</p>
     </div>
     <div class="text-end">
-        <div class="small text-white-50" id="current-time"></div>
+        <div class="small text-white-50 mb-1" id="current-time"></div>
         <div class="badge-cyber border-success neon-green">
             <i class="bi bi-cpu-fill me-1"></i> SISTEMA OPERACIONAL
         </div>
     </div>
 </div>
 
-<div class="row g-4 mb-5">
-    <div class="col-md-3">
-        <div class="cyber-card text-center">
-            <div class="text-white-50 small mb-2 uppercase">Total de Requisições</div>
-            <h2 class="fw-bold neon-glow" id="total-req">-</h2>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="cyber-card stat-card p-3 p-md-4">
+            <i class="bi bi-globe2 stat-icon"></i>
+            <div class="text-white-50 small mb-2 text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Requisições</div>
+            <div class="stat-value neon-glow" id="total-req">—</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="cyber-card text-center">
-            <div class="text-white-50 small mb-2 uppercase">Acessos OK (200)</div>
-            <h2 class="fw-bold text-info" id="status-200">-</h2>
+    <div class="col-6 col-lg-3">
+        <div class="cyber-card stat-card p-3 p-md-4">
+            <i class="bi bi-check-circle stat-icon"></i>
+            <div class="text-white-50 small mb-2 text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Sucesso (200)</div>
+            <div class="stat-value" style="color: #39ff14;" id="status-200">—</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="cyber-card text-center">
-            <div class="text-white-50 small mb-2 uppercase">Páginas Não Enc. (404)</div>
-            <h2 class="fw-bold text-warning" id="status-404">-</h2>
+    <div class="col-6 col-lg-3">
+        <div class="cyber-card stat-card p-3 p-md-4">
+            <i class="bi bi-exclamation-triangle stat-icon"></i>
+            <div class="text-white-50 small mb-2 text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Not Found (404)</div>
+            <div class="stat-value text-warning" id="status-404">—</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="cyber-card text-center">
-            <div class="text-white-50 small mb-2 uppercase">Erros de Sistema (500)</div>
-            <h2 class="fw-bold neon-red" id="status-500">-</h2>
+    <div class="col-6 col-lg-3">
+        <div class="cyber-card stat-card p-3 p-md-4">
+            <i class="bi bi-bug stat-icon"></i>
+            <div class="text-white-50 small mb-2 text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Erros (500)</div>
+            <div class="stat-value neon-red" id="status-500">—</div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="cyber-card mb-4">
-            <h5 class="fw-bold mb-4 text-info"><i class="bi bi-gear-wide-connected"></i> Monitoramento de Serviços</h5>
-            <div class="table-responsive">
-                <table class="cyber-table">
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="cyber-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-hdd-network me-2 text-info"></i>Status dos Serviços</h5>
+                <button class="btn btn-outline-info btn-sm border-0" onclick="updateHealth()" title="Atualizar"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div class="table-responsive" id="health-table">
+                <table class="cyber-table small mb-0">
                     <thead>
                         <tr>
                             <th>Serviço</th>
                             <th>Domínio</th>
-                            <th>Porta</th>
-                            <th>Status BD</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Registros BD</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>Portal CGRF</td>
-                            <td>cgrf.com.br</td>
-                            <td>20002</td>
-                            <td><span class="badge-cyber border-success neon-green">CONECTADO</span></td>
-                        </tr>
-                        <tr>
-                            <td>PawSteps Social</td>
-                            <td>pawsteps.social</td>
-                            <td>20001</td>
-                            <td><span class="badge-cyber border-success neon-green">CONECTADO</span></td>
-                        </tr>
-                        <tr>
-                            <td>FurryCore Shop</td>
-                            <td>furrycore.com.br/shop</td>
-                            <td>20003</td>
-                            <td><span class="badge-cyber border-success neon-green">CONECTADO</span></td>
-                        </tr>
+                    <tbody id="services-body">
+                        <tr><td colspan="4" class="text-center text-white-50 py-4"><i class="bi bi-arrow-repeat spin me-2"></i>Verificando serviços...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
-        <div class="cyber-card">
-            <h5 class="fw-bold mb-4 text-warning"><i class="bi bi-shield-exclamation"></i> Alertar de Segurança</h5>
-            <div id="security-alerts" class="small">
-                <p class="text-white-50">Carregando auditoria...</p>
+    </div>
+    <div class="col-lg-4">
+        <div class="cyber-card p-4 h-100">
+            <h5 class="fw-bold mb-4"><i class="bi bi-lightning-charge me-2 text-warning"></i>Atalhos Rápidos</h5>
+            <div class="d-grid gap-2">
+                <a href="/cgrf/emit" class="quick-action cyber-card p-3 d-flex align-items-center gap-3 border-secondary">
+                    <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background: rgba(0,242,255,0.1); width: 40px; height: 40px; min-width: 40px;">
+                        <i class="bi bi-card-heading text-info"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-white small">Emitir Carteira</div>
+                        <div class="text-white-50" style="font-size: 0.7rem;">Gerar nova identidade CGRF</div>
+                    </div>
+                </a>
+                <a href="/cgrf/records" class="quick-action cyber-card p-3 d-flex align-items-center gap-3 border-secondary">
+                    <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background: rgba(57,255,20,0.1); width: 40px; height: 40px; min-width: 40px;">
+                        <i class="bi bi-database-check" style="color: #39ff14;"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-white small">Registros Ativos</div>
+                        <div class="text-white-50" style="font-size: 0.7rem;">Gerenciar identidades</div>
+                    </div>
+                </a>
+                <a href="/security" class="quick-action cyber-card p-3 d-flex align-items-center gap-3 border-secondary">
+                    <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background: rgba(255,0,60,0.1); width: 40px; height: 40px; min-width: 40px;">
+                        <i class="bi bi-shield-exclamation" style="color: #ff003c;"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-white small">Logs de Segurança</div>
+                        <div class="text-white-50" style="font-size: 0.7rem;">Verificar tentativas de invasão</div>
+                    </div>
+                </a>
+                <a href="/cgrf/privacy" class="quick-action cyber-card p-3 d-flex align-items-center gap-3 border-secondary">
+                    <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background: rgba(188,19,254,0.1); width: 40px; height: 40px; min-width: 40px;">
+                        <i class="bi bi-shield-lock" style="color: #bc13fe;"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-white small">LGPD / Privacidade</div>
+                        <div class="text-white-50" style="font-size: 0.7rem;">Solicitações de exclusão</div>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="cyber-card">
-            <h5 class="fw-bold mb-4 text-info"><i class="bi bi-activity"></i> Network Health</h5>
-            <div class="mb-4">
-                <div class="d-flex justify-content-between small mb-2">
-                    <span class="text-white-50">CPU Usage</span>
-                    <span class="neon-glow">12%</span>
-                </div>
-                <div class="progress bg-dark" style="height: 6px; border: 1px solid rgba(255,255,255,0.05)">
-                    <div class="progress-bar bg-info" style="width: 12%"></div>
-                </div>
-            </div>
-            
-            <div class="mb-2">
-                <div class="d-flex justify-content-between small mb-2">
-                    <span class="text-white-50">Memory Usage</span>
-                    <span style="color: #bc13fe; text-shadow: 0 0 10px rgba(188, 19, 254, 0.3);">45%</span>
-                </div>
-                <div class="progress bg-dark" style="height: 6px; border: 1px solid rgba(255,255,255,0.05)">
-                    <div class="progress-bar" style="width: 45%; background: #bc13fe;"></div>
-                </div>
-            </div>
-        </div>
+</div>
+
+<div class="cyber-card p-4">
+    <h5 class="fw-bold mb-4 text-warning"><i class="bi bi-shield-exclamation me-2"></i>Alertas de Segurança</h5>
+    <div id="security-alerts" class="small">
+        <p class="text-white-50">Carregando auditoria...</p>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    const svcNames = {
+        cgrf: {icon: 'bi-shield-check', label: 'Portal CGRF'},
+        pawsteps: {icon: 'bi-chat-heart', label: 'PawSteps Social'},
+        shop: {icon: 'bi-bag-check', label: 'FurryCore Shop'},
+        landing: {icon: 'bi-globe2', label: 'Landing Page'}
+    };
+    let dbCounts = {};
+
     function updateStats() {
         fetch('/api/stats')
             .then(r => r.json())
             .then(data => {
-                document.getElementById('total-req').innerText = data.total_requests;
-                document.getElementById('status-200').innerText = data.status_200;
-                document.getElementById('status-404').innerText = data.status_404;
-                document.getElementById('status-500').innerText = data.status_500;
-                
+                document.getElementById('total-req').innerText = data.total_requests.toLocaleString();
+                document.getElementById('status-200').innerText = data.status_200.toLocaleString();
+                document.getElementById('status-404').innerText = data.status_404.toLocaleString();
+                document.getElementById('status-500').innerText = data.status_500.toLocaleString();
+                dbCounts = data.db_counts || {};
+                renderServices();
+
                 const alertsDiv = document.getElementById('security-alerts');
                 if (data.security_alerts.length > 0) {
-                    alertsDiv.innerHTML = data.security_alerts.map(a => `
-                        <div class="mb-2 p-3 rounded-3 bg-danger-subtle border border-danger shadow-sm">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i> ${a}
+                    alertsDiv.innerHTML = data.security_alerts.slice(0, 5).map(a => `
+                        <div class="mb-2 p-3 rounded-3" style="background: rgba(255,0,60,0.05); border: 1px solid rgba(255,0,60,0.15);">
+                            <i class="bi bi-exclamation-triangle-fill me-2 neon-red"></i>
+                            <span class="text-white-50 font-monospace" style="font-size: 0.8rem;">${a}</span>
                         </div>
                     `).join('');
                 } else {
                     alertsDiv.innerHTML = `
-                        <div class="p-3 text-center border border-success-subtle rounded-3 bg-success-subtle opacity-75">
-                            <i class="bi bi-check-circle-fill me-2 neon-green"></i> 
-                            <span class="text-white">Nenhum incidente detectado nas últimas requisições.</span>
+                        <div class="p-4 text-center rounded-3" style="background: rgba(57,255,20,0.03); border: 1px solid rgba(57,255,20,0.1);">
+                            <i class="bi bi-shield-check fs-2 d-block mb-2" style="color: #39ff14;"></i>
+                            <span class="text-white-50">Nenhum incidente detectado nas últimas 500 requisições.</span>
                         </div>
                     `;
                 }
             });
     }
-    setInterval(updateStats, 5000);
+
+    let healthData = {};
+    function updateHealth() {
+        fetch('/api/health')
+            .then(r => r.json())
+            .then(data => {
+                healthData = data;
+                renderServices();
+            });
+    }
+
+    function renderServices() {
+        const body = document.getElementById('services-body');
+        if (!Object.keys(healthData).length) return;
+        body.innerHTML = Object.entries(healthData).map(([name, svc]) => {
+            const info = svcNames[name] || {icon: 'bi-app', label: name};
+            const online = svc.status === 'online';
+            const count = dbCounts[name] !== undefined ? dbCounts[name] : '—';
+            return `<tr class="service-row">
+                <td><i class="bi ${info.icon} me-2 text-info"></i>${info.label}</td>
+                <td class="text-white-50 small">${svc.domain}</td>
+                <td class="text-center">
+                    <span class="pulse-dot ${online ? 'online' : 'offline'} me-2"></span>
+                    <span class="${online ? 'neon-green' : 'neon-red'} small fw-bold">${online ? 'ONLINE' : 'OFFLINE'}</span>
+                </td>
+                <td class="text-center"><span class="badge-cyber border-info">${count >= 0 ? count : 'ERRO'}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    setInterval(updateStats, 8000);
+    setInterval(updateHealth, 15000);
     updateStats();
+    updateHealth();
 
     function updateClock() {
-        document.getElementById('current-time').innerText = new Date().toLocaleString();
+        document.getElementById('current-time').innerText = new Date().toLocaleString('pt-BR');
     }
     setInterval(updateClock, 1000);
     updateClock();

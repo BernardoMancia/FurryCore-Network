@@ -1,6 +1,7 @@
 import os
 import sys
 import sqlite3
+import urllib.request
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -154,6 +155,7 @@ def get_stats():
         "status_500": 0,
         "recent_ips": [],
         "security_alerts": [],
+        "db_counts": {},
     }
 
     if os.path.exists(LOG_PATH):
@@ -174,7 +176,46 @@ def get_stats():
         except Exception:
             pass
 
+    for app_name in DB_PATHS:
+        db_path = Config.get_db_path(app_name)
+        if os.path.exists(db_path):
+            try:
+                conn = sqlite3.connect(db_path)
+                tables = [t[0] for t in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+                count = 0
+                for t in tables:
+                    if t != "sqlite_sequence":
+                        try:
+                            count += conn.execute(f"SELECT COUNT(*) FROM [{t}]").fetchone()[0]
+                        except Exception:
+                            pass
+                stats["db_counts"][app_name] = count
+                conn.close()
+            except Exception:
+                stats["db_counts"][app_name] = -1
+
     return jsonify(stats)
+
+
+@app.route("/api/health")
+@login_required
+def get_health():
+    services = {
+        "cgrf": {"host": "furry_cgrf", "port": 20002, "domain": "cgrf.com.br"},
+        "pawsteps": {"host": "furry_pawsteps", "port": 20001, "domain": "pawsteps.social"},
+        "shop": {"host": "furry_shop", "port": 20003, "domain": "furrycore.com.br/shop"},
+        "landing": {"host": "furry_landing", "port": 20000, "domain": "furrycore.com.br"},
+    }
+    result = {}
+    for name, svc in services.items():
+        try:
+            url = f"http://{svc['host']}:{svc['port']}/"
+            req = urllib.request.Request(url, method="HEAD")
+            resp = urllib.request.urlopen(req, timeout=3)
+            result[name] = {"status": "online", "code": resp.getcode(), "domain": svc["domain"]}
+        except Exception:
+            result[name] = {"status": "offline", "code": 0, "domain": svc["domain"]}
+    return jsonify(result)
 
 
 @app.route("/database/<app_name>")
@@ -546,6 +587,52 @@ def cgrf_edit_record(cnf):
     return render_template("cgrf_editar.html", reg=reg)
 
 
+@app.route("/database/edit/<app_name>/<table_name>/<int:row_id>", methods=["GET", "POST"])
+@login_required
+def generic_edit(app_name, table_name, row_id):
+    if app_name not in ALLOWED_TABLES:
+        flash("Aplicação inválida.", "danger")
+        return redirect(url_for("index"))
+    if table_name not in ALLOWED_TABLES[app_name]:
+        flash("Tabela não autorizada.", "danger")
+        return redirect(url_for("view_db", app_name=app_name))
+
+    db_path = Config.get_db_path(app_name)
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.execute(f"PRAGMA table_info([{table_name}])")
+    columns_info = cursor.fetchall()
+    pk_col = next((c[1] for c in columns_info if c[5] == 1), "id")
+    editable_cols = [c[1] for c in columns_info if c[1] != pk_col and c[1] not in ("password", "senha_hash", "qrcode_base64", "foto_base64")]
+
+    if request.method == "POST":
+        try:
+            updates = []
+            values = []
+            for col in editable_cols:
+                val = request.form.get(col)
+                if val is not None:
+                    updates.append(f"[{col}] = ?")
+                    values.append(val)
+            values.append(row_id)
+            conn.execute(f"UPDATE [{table_name}] SET {', '.join(updates)} WHERE [{pk_col}] = ?", values)
+            conn.commit()
+            flash(f"Registro #{row_id} atualizado com sucesso.", "success")
+        except Exception as e:
+            flash(f"Erro ao atualizar: {e}", "danger")
+        finally:
+            conn.close()
+        return redirect(url_for("view_table", app_name=app_name, table=table_name))
+
+    row = conn.execute(f"SELECT * FROM [{table_name}] WHERE [{pk_col}] = ?", (row_id,)).fetchone()
+    conn.close()
+    if not row:
+        flash("Registro não encontrado.", "danger")
+        return redirect(url_for("view_table", app_name=app_name, table=table_name))
+
+    return render_template("generic_edit.html", app_name=app_name, table=table_name, row_id=row_id, row=row, columns=editable_cols, pk_col=pk_col)
+
+
 @app.route("/database/delete/<app_name>/<table_name>/<int:row_id>", methods=["POST"])
 @login_required
 def generic_delete(app_name, table_name, row_id):
@@ -589,6 +676,52 @@ def generic_delete(app_name, table_name, row_id):
     finally:
         conn.close()
     return redirect(url_for("view_table", app_name=app_name, table=table_name))
+
+
+@app.route("/cgrf/privacy/approve/<int:request_id>", methods=["POST"])
+@login_required
+def cgrf_privacy_approve(request_id):
+    db_path = Config.get_db_path("cgrf")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        sol = conn.execute("SELECT * FROM solicitacoes_privacidade WHERE id = ?", (request_id,)).fetchone()
+        if not sol:
+            flash("Solicitação não encontrada.", "danger")
+        else:
+            tipo = sol["tipo_solicitacao"]
+            cnf = sol["cnf_solicitante"]
+            if tipo == "EXCLUSAO":
+                conn.execute("UPDATE cidadaos SET is_valido = 0 WHERE cnf = ?", (cnf,))
+                reg = conn.execute("SELECT email FROM cidadaos WHERE cnf = ?", (cnf,)).fetchone()
+                if reg and reg["email"]:
+                    deactivate_account_everywhere(reg["email"])
+            elif tipo == "ANONIMIZACAO":
+                conn.execute("UPDATE cidadaos SET nome = 'ANONIMIZADO', email = NULL, cidade = NULL WHERE cnf = ?", (cnf,))
+            conn.execute("UPDATE solicitacoes_privacidade SET status = 'APROVADA', data_processamento = ? WHERE id = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
+            conn.commit()
+            flash(f"Solicitação #{request_id} ({tipo}) aprovada com sucesso.", "success")
+    except Exception as e:
+        flash(f"Erro ao processar: {e}", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for("cgrf_manage_privacy"))
+
+
+@app.route("/cgrf/privacy/reject/<int:request_id>", methods=["POST"])
+@login_required
+def cgrf_privacy_reject(request_id):
+    db_path = Config.get_db_path("cgrf")
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute("UPDATE solicitacoes_privacidade SET status = 'REJEITADA', data_processamento = ? WHERE id = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
+        conn.commit()
+        flash(f"Solicitação #{request_id} rejeitada.", "info")
+    except Exception as e:
+        flash(f"Erro ao rejeitar: {e}", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for("cgrf_manage_privacy"))
 
 
 if __name__ == "__main__":

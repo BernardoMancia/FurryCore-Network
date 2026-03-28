@@ -3,29 +3,137 @@
 
 {% block title %}Logs de Segurança{% endblock %}
 
+{% block head %}
+<style>
+    .terminal {
+        background: #0a0a0a;
+        border: 1px solid rgba(0, 255, 0, 0.15);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .terminal-header {
+        background: rgba(0, 255, 0, 0.05);
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(0, 255, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .terminal-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+    .terminal-body {
+        padding: 16px;
+        max-height: 600px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.8rem;
+        line-height: 1.8;
+    }
+    .terminal-body::-webkit-scrollbar { width: 6px; }
+    .terminal-body::-webkit-scrollbar-track { background: transparent; }
+    .terminal-body::-webkit-scrollbar-thumb { background: rgba(0,255,0,0.2); border-radius: 3px; }
+    .log-line {
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background 0.2s;
+        word-break: break-all;
+    }
+    .log-line:hover {
+        background: rgba(0, 255, 0, 0.05);
+    }
+    .log-tag {
+        font-weight: 700;
+        margin-right: 8px;
+    }
+    .filter-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        color: var(--text-mid);
+        padding: 5px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 0.8rem;
+    }
+    .filter-btn:hover, .filter-btn.active {
+        background: rgba(0,242,255,0.1);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-5">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <h2 class="fw-bold neon-red"><i class="bi bi-shield-slash me-2"></i> Logs de Invasão & Auditoria</h2>
-        <p class="text-white-50">Detecção de tentativas de acesso não autorizado e exploração de vulnerabilidades.</p>
+        <h2 class="fw-bold neon-red mb-1"><i class="bi bi-shield-slash me-2"></i>Auditoria de Segurança</h2>
+        <p class="text-white-50 mb-0">Detecção de tentativas de acesso não autorizado e exploração de vulnerabilidades.</p>
     </div>
-    <a href="/" class="btn btn-outline-secondary btn-sm">Voltar</a>
+    <div class="d-flex gap-2">
+        <span class="badge-cyber border-info"><i class="bi bi-list-ul me-1"></i>{{ logs|length }} entradas</span>
+    </div>
 </div>
 
-<div class="cyber-card p-4">
-    <h5 class="fw-bold mb-4 text-danger"><i class="bi bi-bug me-2"></i> Requisições Suspeitas Recentes</h5>
-    <div class="bg-black p-3 rounded-3 border border-secondary" style="max-height: 600px; overflow-y: auto;">
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <button class="filter-btn active" onclick="filterLogs('all', this)">Todos</button>
+    <button class="filter-btn" onclick="filterLogs('.env', this)">.env</button>
+    <button class="filter-btn" onclick="filterLogs('wp-admin', this)">wp-admin</button>
+    <button class="filter-btn" onclick="filterLogs('config', this)">config</button>
+    <button class="filter-btn" onclick="filterLogs('phpinfo', this)">phpinfo</button>
+    <button class="filter-btn" onclick="filterLogs('404', this)">404</button>
+    <button class="filter-btn" onclick="filterLogs('403', this)">403</button>
+</div>
+
+<div class="terminal">
+    <div class="terminal-header">
+        <div class="terminal-dot" style="background: #ff5f57;"></div>
+        <div class="terminal-dot" style="background: #ffbd2e;"></div>
+        <div class="terminal-dot" style="background: #27c93f;"></div>
+        <span class="text-white-50 small ms-2">security_audit.log — furrycore.com.br</span>
+    </div>
+    <div class="terminal-body" id="logContainer">
         {% for log in logs %}
-            <div class="mb-2 p-2 border-bottom border-dark font-monospace small" style="color: #00ff00;">
-                <span class="text-danger fw-bold">[ALERTA]</span> {{ log }}
+            <div class="log-line log-entry" data-content="{{ log|lower }}">
+                {% if '.env' in log or 'config' in log %}
+                    <span class="log-tag" style="color: #ff003c;">[CRITICAL]</span>
+                {% elif 'wp-admin' in log or 'phpinfo' in log %}
+                    <span class="log-tag" style="color: #ff9800;">[WARNING]</span>
+                {% elif '404' in log %}
+                    <span class="log-tag" style="color: #ffeb3b;">[404]</span>
+                {% elif '403' in log %}
+                    <span class="log-tag" style="color: #e91e63;">[BLOCKED]</span>
+                {% else %}
+                    <span class="log-tag" style="color: #00e5ff;">[INFO]</span>
+                {% endif %}
+                <span style="color: #00ff00;">{{ log }}</span>
             </div>
         {% endfor %}
         {% if not logs %}
-            <div class="text-center py-5 text-success">
-                <i class="bi bi-shield-check fs-1 d-block mb-2"></i>
-                Nenhuma atividade suspeita detectada recentemente.
+            <div class="text-center py-5">
+                <i class="bi bi-shield-check fs-1 d-block mb-3" style="color: #39ff14; opacity: 0.5;"></i>
+                <div style="color: #39ff14;" class="fw-bold">SISTEMA LIMPO</div>
+                <div class="text-white-50 small mt-1">Nenhuma atividade suspeita detectada recentemente.</div>
             </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function filterLogs(keyword, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.log-entry').forEach(entry => {
+            if (keyword === 'all') {
+                entry.style.display = '';
+            } else {
+                entry.style.display = entry.dataset.content.includes(keyword.toLowerCase()) ? '' : 'none';
+            }
+        });
+    }
+</script>
 {% endblock %}

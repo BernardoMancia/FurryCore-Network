@@ -3,50 +3,121 @@
 
 {% block title %}Tabela: {{ table }}{% endblock %}
 
+{% block head %}
+<style>
+    .search-box {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 16px;
+        color: var(--text-high);
+        width: 100%;
+        max-width: 300px;
+        transition: border-color 0.3s;
+    }
+    .search-box:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 10px rgba(0, 242, 255, 0.15);
+    }
+    .pagination-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        color: var(--text-mid);
+        padding: 6px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 0.85rem;
+    }
+    .pagination-btn:hover, .pagination-btn.active {
+        background: rgba(0,242,255,0.1);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .pagination-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+    .status-active { color: #39ff14; }
+    .status-inactive { color: #ff003c; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex align-items-center gap-3">
-        <a href="/database/{{ app_name }}" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-arrow-left"></i> Voltar</a>
-        <h3 class="fw-bold mb-0 text-uppercase" style="letter-spacing: 1px;">
-            <span class="text-white-50">{{ app_name }}</span> <i class="bi bi-chevron-right small mx-1"></i> <span class="neon-glow">{{ table }}</span>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 small">
+                <li class="breadcrumb-item"><a href="/" class="text-info text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/database/{{ app_name }}" class="text-info text-decoration-none">{{ app_name }}</a></li>
+                <li class="breadcrumb-item active text-white-50">{{ table }}</li>
+            </ol>
+        </nav>
+        <h3 class="fw-bold mb-0">
+            <span class="text-white-50">{{ app_name }}</span> <i class="bi bi-chevron-right small mx-1 text-white-50"></i> <span class="neon-glow">{{ table }}</span>
         </h3>
     </div>
-    <button class="btn btn-neon btn-sm"><i class="bi bi-plus-lg"></i> Novo Registro</button>
+    <div class="d-flex gap-2 align-items-center">
+        <input type="text" class="search-box" id="searchInput" placeholder="Buscar..." oninput="filterTable()">
+    </div>
 </div>
 
-<div class="cyber-card p-4">
+<div class="cyber-card p-3 p-md-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div class="small text-white-50">
+            <span id="rowCount">{{ data|length }}</span> registros encontrados
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="small text-white-50 me-1">Por página:</span>
+            <select class="form-select form-select-sm" style="width: auto; background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-high);" id="pageSizeSelect" onchange="changePageSize()">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
+
     <div class="table-responsive">
-        <table class="cyber-table small">
+        <table class="cyber-table small" id="dataTable">
             <thead>
                 <tr>
                     {% for col in columns %}
                     <th>{{ col }}</th>
                     {% endfor %}
-                    <th class="text-center">Ações</th>
+                    <th class="text-center" style="min-width: 100px;">Ações</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tableBody">
                 {% for row in data %}
-                <tr>
+                <tr class="data-row">
                     {% for col in columns %}
                     <td class="text-truncate" style="max-width: 200px;" title="{{ row[col] }}">
                         {% if row[col] is none %}
-                            <span class="opacity-25 italic">null</span>
+                            <span class="opacity-25 fst-italic">null</span>
                         {% elif col == 'foto_base64' or col == 'qrcode_base64' %}
-                            <span class="badge-cyber border-info text-info py-0">BLOB/BASE64</span>
+                            <span class="badge-cyber border-info text-info py-0">BLOB</span>
+                        {% elif col == 'is_valido' or col == 'ativo' or col == 'active' %}
+                            {% if row[col] %}
+                                <span class="status-active fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Ativo</span>
+                            {% else %}
+                                <span class="status-inactive fw-bold"><i class="bi bi-x-circle-fill me-1"></i>Inativo</span>
+                            {% endif %}
+                        {% elif col == 'status' %}
+                            <span class="badge-cyber {% if row[col] == 'ATIVO' %}border-success text-success{% elif row[col] == 'PENDENTE' %}border-warning text-warning{% else %}border-danger text-danger{% endif %}">{{ row[col] }}</span>
+                        {% elif col == 'password' or col == 'senha_hash' %}
+                            <span class="opacity-25">••••••••</span>
                         {% else %}
                             {{ row[col] }}
                         {% endif %}
                     </td>
                     {% endfor %}
                     <td class="text-center">
-                        <div class="btn-group shadow-sm">
-                            <a href="/database/edit/{{ app_name }}/{{ table }}/{{ row['id'] }}" class="btn btn-outline-info btn-sm py-1 border-0" title="Editar"><i class="bi bi-pencil-square"></i></a>
-                            <form action="/database/delete/{{ app_name }}/{{ table }}/{{ row['id'] }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja aplicar Soft Delete neste registro?')">
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="/database/edit/{{ app_name }}/{{ table }}/{{ row['id'] }}" class="btn btn-outline-info btn-sm py-1 px-2 border-0" title="Editar"><i class="bi bi-pencil-square"></i></a>
+                            <form action="/database/delete/{{ app_name }}/{{ table }}/{{ row['id'] }}" method="POST" class="d-inline" onsubmit="return confirm('Aplicar Soft Delete neste registro?')">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm py-1 border-0" title="Excluir">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </button>
+                                <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2 border-0" title="Excluir"><i class="bi bi-trash3-fill"></i></button>
                             </form>
                         </div>
                     </td>
@@ -55,5 +126,76 @@
             </tbody>
         </table>
     </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2" id="paginationControls">
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentPage = 1;
+    let pageSize = 50;
+    let allRows = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        allRows = Array.from(document.querySelectorAll('.data-row'));
+        renderPage();
+    });
+
+    function filterTable() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        allRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.dataset.hidden = text.includes(q) ? '0' : '1';
+        });
+        currentPage = 1;
+        renderPage();
+    }
+
+    function changePageSize() {
+        pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+        currentPage = 1;
+        renderPage();
+    }
+
+    function goToPage(p) {
+        currentPage = p;
+        renderPage();
+    }
+
+    function renderPage() {
+        const visible = allRows.filter(r => r.dataset.hidden !== '1');
+        const total = visible.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        allRows.forEach(r => r.style.display = 'none');
+        visible.forEach((r, i) => {
+            r.style.display = (i >= start && i < end) ? '' : 'none';
+        });
+
+        document.getElementById('rowCount').innerText = total;
+
+        const controls = document.getElementById('paginationControls');
+        if (totalPages <= 1) {
+            controls.innerHTML = `<div class="small text-white-50">Mostrando ${total} registros</div>`;
+            return;
+        }
+        let btns = `<div class="small text-white-50">Página ${currentPage} de ${totalPages}</div><div class="d-flex gap-1">`;
+        btns += `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>`;
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                btns += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                btns += `<span class="text-white-50 px-1">…</span>`;
+            }
+        }
+        btns += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>`;
+        btns += `</div>`;
+        controls.innerHTML = btns;
+    }
+</script>
 {% endblock %}

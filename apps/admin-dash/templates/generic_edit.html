@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% set active_page = 'database' %}
+
+{% block title %}Editar Registro #{{ row_id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2 small">
+                <li class="breadcrumb-item"><a href="/" class="text-info text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/database/{{ app_name }}" class="text-info text-decoration-none">{{ app_name }}</a></li>
+                <li class="breadcrumb-item"><a href="/database/{{ app_name }}/{{ table }}" class="text-info text-decoration-none">{{ table }}</a></li>
+                <li class="breadcrumb-item active text-white-50">Editar #{{ row_id }}</li>
+            </ol>
+        </nav>
+        <h3 class="fw-bold neon-glow mb-0"><i class="bi bi-pencil-square me-2"></i>Editar Registro</h3>
+    </div>
+    <a href="/database/{{ app_name }}/{{ table }}" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+
+<div class="cyber-card p-4">
+    <form method="POST" action="/database/edit/{{ app_name }}/{{ table }}/{{ row_id }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="row g-3">
+            {% for col in columns %}
+            <div class="col-md-6">
+                <label class="form-label small text-white-50 text-uppercase fw-bold" style="letter-spacing: 0.5px;">{{ col }}</label>
+                {% if row[col] is none %}
+                    <input type="text" name="{{ col }}" class="form-control" value="" placeholder="null">
+                {% elif row[col]|string|length > 200 %}
+                    <textarea name="{{ col }}" class="form-control" rows="4">{{ row[col] }}</textarea>
+                {% else %}
+                    <input type="text" name="{{ col }}" class="form-control" value="{{ row[col] }}">
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex gap-3 mt-4 pt-3 border-top border-secondary">
+            <button type="submit" class="btn btn-neon px-4"><i class="bi bi-check-lg me-2"></i>Salvar Alterações</button>
+            <a href="/database/{{ app_name }}/{{ table }}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

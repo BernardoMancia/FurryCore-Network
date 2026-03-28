@@ -4,15 +4,19 @@
 {% block title %}Privacidade & LGPD{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-5">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <h2 class="fw-bold neon-glow"><i class="bi bi-shield-lock me-2"></i> Solicitações de Privacidade</h2>
-        <p class="text-white-50">Gestão de pedidos de exclusão e anonimização (LGPD).</p>
+        <h2 class="fw-bold neon-glow mb-1"><i class="bi bi-shield-lock me-2"></i>Solicitações de Privacidade</h2>
+        <p class="text-white-50 mb-0">Gestão de pedidos de exclusão e anonimização (LGPD Art. 18).</p>
     </div>
-    <a href="/" class="btn btn-outline-secondary btn-sm">Voltar</a>
+    <div>
+        <span class="badge-cyber border-warning text-warning">
+            <i class="bi bi-hourglass-split me-1"></i>{{ solicitacoes|length }} pendente(s)
+        </span>
+    </div>
 </div>
 
-<div class="cyber-card p-4">
+<div class="cyber-card p-3 p-md-4">
     <div class="table-responsive">
         <table class="cyber-table">
             <thead>
@@ -27,26 +31,45 @@
             <tbody>
                 {% for s in solicitacoes %}
                 <tr>
-                    <td class="small">{{ s.data_solicitacao }}</td>
+                    <td class="small text-white-50">{{ s.data_solicitacao }}</td>
                     <td>
                         <div class="fw-bold">{{ s.nome_cidadao }}</div>
-                        <div class="x-small text-info">{{ s.cnf_solicitante }}</div>
+                        <div class="text-info" style="font-size: 0.7rem;">{{ s.cnf_solicitante }}</div>
                     </td>
-                    <td><span class="badge-cyber border-warning text-warning uppercase small">{{ s.tipo_solicitacao }}</span></td>
-                    <td class="small" style="max-width: 300px;">{{ s.mensagem }}</td>
+                    <td>
+                        {% if s.tipo_solicitacao == 'EXCLUSAO' %}
+                            <span class="badge-cyber border-danger text-danger small">EXCLUSÃO</span>
+                        {% elif s.tipo_solicitacao == 'ANONIMIZACAO' %}
+                            <span class="badge-cyber border-warning text-warning small">ANONIMIZAÇÃO</span>
+                        {% else %}
+                            <span class="badge-cyber border-info text-info small">{{ s.tipo_solicitacao }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="small" style="max-width: 300px;">{{ s.mensagem or '—' }}</td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-neon btn-sm py-1 border-0" title="Atender Solicitação"><i class="bi bi-check-lg"></i></button>
-                            <button class="btn btn-neon-danger btn-sm py-1 border-0" title="Rejeitar"><i class="bi bi-x-lg"></i></button>
+                            <form action="/cgrf/privacy/approve/{{ s.id }}" method="POST" class="d-inline" onsubmit="return confirm('Aprovar esta solicitação? A ação é irreversível.')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-neon btn-sm py-1 px-3" title="Aprovar Solicitação">
+                                    <i class="bi bi-check-lg me-1"></i>Aprovar
+                                </button>
+                            </form>
+                            <form action="/cgrf/privacy/reject/{{ s.id }}" method="POST" class="d-inline" onsubmit="return confirm('Rejeitar esta solicitação?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-neon-danger btn-sm py-1 px-3" title="Rejeitar Solicitação">
+                                    <i class="bi bi-x-lg me-1"></i>Rejeitar
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% if not solicitacoes %}
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-white-50 italic">
-                        <i class="bi bi-patch-check fs-2 d-block mb-3 opacity-25"></i>
-                        Nenhuma solicitação pendente no momento.
+                    <td colspan="5" class="text-center py-5">
+                        <i class="bi bi-patch-check fs-1 d-block mb-3" style="color: #39ff14; opacity: 0.3;"></i>
+                        <div class="fw-bold text-white-50">Nenhuma solicitação pendente</div>
+                        <div class="text-white-50 small mt-1">Todas as requisições LGPD foram processadas.</div>
                     </td>
                 </tr>
                 {% endif %}
