@@ -41,6 +41,25 @@
     }
     .status-active { color: #39ff14; }
     .status-inactive { color: #ff003c; }
+    .toggle-filter {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        color: var(--text-mid);
+        padding: 5px 14px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: 0.3s;
+    }
+    .toggle-filter:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .toggle-filter.active-filter {
+        background: rgba(255,0,60,0.1);
+        border-color: rgba(255,0,60,0.3);
+        color: #ff003c;
+    }
 </style>
 {% endblock %}
 
@@ -58,7 +77,14 @@
             <span class="text-white-50">{{ app_name }}</span> <i class="bi bi-chevron-right small mx-1 text-white-50"></i> <span class="neon-glow">{{ table }}</span>
         </h3>
     </div>
-    <div class="d-flex gap-2 align-items-center">
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        {% if soft_col %}
+        <a href="/database/{{ app_name }}/{{ table }}{% if not show_deleted %}?show_deleted=1{% endif %}"
+           class="toggle-filter {% if show_deleted %}active-filter{% endif %}">
+            <i class="bi bi-{% if show_deleted %}eye-slash{% else %}eye{% endif %} me-1"></i>
+            {% if show_deleted %}Ocultar Deletados{% else %}Mostrar Deletados{% endif %}
+        </a>
+        {% endif %}
         <input type="text" class="search-box" id="searchInput" placeholder="Buscar..." oninput="filterTable()">
     </div>
 </div>
@@ -66,7 +92,8 @@
 <div class="cyber-card p-3 p-md-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div class="small text-white-50">
-            <span id="rowCount">{{ data|length }}</span> registros encontrados
+            <span id="rowCount">{{ data|length }}</span> registros
+            {% if show_deleted %}<span class="text-warning">(incluindo deletados)</span>{% endif %}
         </div>
         <div class="d-flex gap-2 align-items-center">
             <span class="small text-white-50 me-1">Por página:</span>
@@ -85,7 +112,7 @@
                     {% for col in columns %}
                     <th>{{ col }}</th>
                     {% endfor %}
-                    <th class="text-center" style="min-width: 100px;">Ações</th>
+                    <th class="text-center" style="min-width: 130px;">Ações</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -101,10 +128,10 @@
                             {% if row[col] %}
                                 <span class="status-active fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Ativo</span>
                             {% else %}
-                                <span class="status-inactive fw-bold"><i class="bi bi-x-circle-fill me-1"></i>Inativo</span>
+                                <span class="status-inactive fw-bold"><i class="bi bi-x-circle-fill me-1"></i>Deletado</span>
                             {% endif %}
                         {% elif col == 'status' %}
-                            <span class="badge-cyber {% if row[col] == 'ATIVO' %}border-success text-success{% elif row[col] == 'PENDENTE' %}border-warning text-warning{% else %}border-danger text-danger{% endif %}">{{ row[col] }}</span>
+                            <span class="badge-cyber {% if row[col] == 'ATIVO' %}border-success text-success{% elif row[col] == 'PENDENTE' %}border-warning text-warning{% elif row[col] == 'INATIVO' %}border-danger text-danger{% else %}border-info text-info{% endif %}">{{ row[col] }}</span>
                         {% elif col == 'password' or col == 'senha_hash' %}
                             <span class="opacity-25">••••••••</span>
                         {% else %}
@@ -115,14 +142,47 @@
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-1">
                             <a href="/database/edit/{{ app_name }}/{{ table }}/{{ row['id'] }}" class="btn btn-outline-info btn-sm py-1 px-2 border-0" title="Editar"><i class="bi bi-pencil-square"></i></a>
-                            <form action="/database/delete/{{ app_name }}/{{ table }}/{{ row['id'] }}" method="POST" class="d-inline" onsubmit="return confirm('Aplicar Soft Delete neste registro?')">
+                            {% if soft_col and soft_col in ('status', 'ativo', 'active') %}
+                            <form action="/database/toggle/{{ app_name }}/{{ table }}/{{ row['id'] }}" method="POST" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2 border-0" title="Excluir"><i class="bi bi-trash3-fill"></i></button>
+                                {% if soft_col == 'status' %}
+                                    {% if row[soft_col] == 'ATIVO' %}
+                                        <button type="submit" class="btn btn-outline-warning btn-sm py-1 px-2 border-0" title="Desativar"><i class="bi bi-pause-circle"></i></button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-success btn-sm py-1 px-2 border-0" title="Ativar"><i class="bi bi-play-circle"></i></button>
+                                    {% endif %}
+                                {% else %}
+                                    {% if row[soft_col] %}
+                                        <button type="submit" class="btn btn-outline-warning btn-sm py-1 px-2 border-0" title="Desativar"><i class="bi bi-pause-circle"></i></button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-success btn-sm py-1 px-2 border-0" title="Ativar"><i class="bi bi-play-circle"></i></button>
+                                    {% endif %}
+                                {% endif %}
+                            </form>
+                            {% endif %}
+                            <form action="/database/delete/{{ app_name }}/{{ table }}/{{ row['id'] }}" method="POST" class="d-inline" onsubmit="return confirm('Soft Delete: este registro ficará INVISÍVEL no painel. Deseja continuar?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2 border-0" title="Soft Delete (ocultar)"><i class="bi bi-trash3-fill"></i></button>
                             </form>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
+                {% if not data %}
+                <tr>
+                    <td colspan="{{ columns|length + 1 }}" class="text-center py-5">
+                        <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                        <div class="text-white-50 fw-bold">Nenhum registro encontrado</div>
+                        <div class="text-white-50 small mt-1">
+                            {% if soft_col and not show_deleted %}
+                                Registros deletados estão ocultos. <a href="?show_deleted=1" class="text-info">Mostrar todos</a>
+                            {% else %}
+                                Esta tabela está vazia.
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>

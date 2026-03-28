@@ -251,10 +251,35 @@ def view_table(app_name, table):
     db_path = Config.get_db_path(app_name)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    data = conn.execute(f"SELECT * FROM [{table}] ORDER BY rowid DESC LIMIT 100").fetchall()
-    columns = data[0].keys() if data else []
+
+    show_deleted = request.args.get("show_deleted", "0") == "1"
+
+    cursor_info = conn.execute(f"PRAGMA table_info([{table}])")
+    cols_info = cursor_info.fetchall()
+    col_names = [c[1] for c in cols_info]
+
+    soft_col = None
+    for sc in ["is_valido", "status", "ativo", "active", "is_uninstalled"]:
+        if sc in col_names:
+            soft_col = sc
+            break
+
+    if soft_col and not show_deleted:
+        if soft_col in ("is_valido", "ativo", "active"):
+            query = f"SELECT * FROM [{table}] WHERE [{soft_col}] = 1 ORDER BY rowid DESC LIMIT 200"
+        elif soft_col == "is_uninstalled":
+            query = f"SELECT * FROM [{table}] WHERE [{soft_col}] = 0 ORDER BY rowid DESC LIMIT 200"
+        elif soft_col == "status":
+            query = f"SELECT * FROM [{table}] WHERE [{soft_col}] != 'INATIVO' ORDER BY rowid DESC LIMIT 200"
+        else:
+            query = f"SELECT * FROM [{table}] ORDER BY rowid DESC LIMIT 200"
+    else:
+        query = f"SELECT * FROM [{table}] ORDER BY rowid DESC LIMIT 200"
+
+    data = conn.execute(query).fetchall()
+    columns = data[0].keys() if data else col_names
     conn.close()
-    return render_template("view_table.html", app_name=app_name, table=table, columns=columns, data=data)
+    return render_template("view_table.html", app_name=app_name, table=table, columns=columns, data=data, show_deleted=show_deleted, soft_col=soft_col)
 
 
 @app.route("/security")
@@ -673,6 +698,50 @@ def generic_delete(app_name, table_name, row_id):
         conn.commit()
     except Exception as e:
         flash(f"Erro na operação: {e}", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for("view_table", app_name=app_name, table=table_name))
+
+
+@app.route("/database/toggle/<app_name>/<table_name>/<int:row_id>", methods=["POST"])
+@login_required
+def generic_toggle(app_name, table_name, row_id):
+    if app_name not in ALLOWED_TABLES or table_name not in ALLOWED_TABLES[app_name]:
+        flash("Operação não autorizada.", "danger")
+        return redirect(url_for("index"))
+
+    db_path = Config.get_db_path(app_name)
+    conn = sqlite3.connect(db_path)
+    try:
+        cursor = conn.execute(f"PRAGMA table_info([{table_name}])")
+        columns_info = cursor.fetchall()
+        columns = [c[1] for c in columns_info]
+        pk_col = next((c[1] for c in columns_info if c[5] == 1), "id")
+
+        toggle_col = None
+        for col in ["status", "ativo", "active"]:
+            if col in columns:
+                toggle_col = col
+                break
+
+        if toggle_col:
+            current = conn.execute(f"SELECT [{toggle_col}] FROM [{table_name}] WHERE [{pk_col}] = ?", (row_id,)).fetchone()
+            if current:
+                cur_val = current[0]
+                if toggle_col == "status":
+                    new_val = "INATIVO" if cur_val == "ATIVO" else "ATIVO"
+                else:
+                    new_val = 0 if cur_val else 1
+                conn.execute(f"UPDATE [{table_name}] SET [{toggle_col}] = ? WHERE [{pk_col}] = ?", (new_val, row_id))
+                conn.commit()
+                label = "ativado" if (new_val == "ATIVO" or new_val == 1) else "desativado"
+                flash(f"Registro #{row_id} {label} com sucesso.", "success")
+            else:
+                flash("Registro não encontrado.", "danger")
+        else:
+            flash(f"Tabela {table_name} não suporta ativação/desativação.", "warning")
+    except Exception as e:
+        flash(f"Erro: {e}", "danger")
     finally:
         conn.close()
     return redirect(url_for("view_table", app_name=app_name, table=table_name))
