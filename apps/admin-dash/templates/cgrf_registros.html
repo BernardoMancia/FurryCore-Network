@@ -64,9 +64,12 @@
                             <a href="/cgrf/edit/{{ reg.cnf }}" class="btn btn-outline-info btn-sm border-0" title="Editar Registro">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <a href="/cgrf/delete/{{ reg.cnf }}" class="btn btn-outline-danger btn-sm border-0" title="Inativar/Excluir" onclick="return confirm('Tem certeza que deseja inativar este registro?')">
-                                <i class="bi bi-trash3-fill"></i>
-                            </a>
+                            <form action="/cgrf/delete/{{ reg.cnf }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja inativar este registro?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm border-0" title="Inativar/Excluir">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
