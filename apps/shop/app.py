@@ -12,7 +12,7 @@ from database.db_shop import ShopDatabaseManager
 
 load_dotenv()
 
-app = Flask(__name__, static_url_path="/shop/static", static_folder="static")
+app = Flask(__name__)
 configure_i18n(app)
 app.config["SECRET_KEY"] = Config.SECRET_KEY_SHOP
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=2)
@@ -31,15 +31,14 @@ def add_security_headers(response):
     return response
 
 
-@app.route("/shop")
-@app.route("/shop/")
+@app.route("/")
 def index():
     products = db.execute_query("SELECT * FROM products WHERE stock > 0", fetchall=True)
     cart_count = sum(item["quantity"] for item in session.get("cart", []))
     return render_template("shop_index.html", products=products, cart_count=cart_count)
 
 
-@app.route("/shop/product/<int:product_id>")
+@app.route("/product/<int:product_id>")
 def product_detail(product_id):
     product = db.execute_query("SELECT * FROM products WHERE id = ?", (product_id,), fetchone=True)
     if not product:
@@ -49,7 +48,7 @@ def product_detail(product_id):
     return render_template("product_detail.html", product=product, cart_count=cart_count)
 
 
-@app.route("/shop/cart")
+@app.route("/cart")
 def cart():
     cart_items = session.get("cart", [])
     total = sum(item["price"] * item["quantity"] for item in cart_items)
@@ -57,7 +56,7 @@ def cart():
     return render_template("cart.html", cart_items=cart_items, total=total, cart_count=cart_count)
 
 
-@app.route("/shop/add_to_cart", methods=["POST"])
+@app.route("/add_to_cart", methods=["POST"])
 def add_to_cart():
     product_id = int(request.form.get("product_id"))
     product = db.execute_query("SELECT * FROM products WHERE id = ?", (product_id,), fetchone=True)
@@ -80,7 +79,7 @@ def add_to_cart():
     return redirect(url_for("cart"))
 
 
-@app.route("/shop/checkout")
+@app.route("/checkout")
 def checkout():
     cart_items = session.get("cart", [])
     if not cart_items:
@@ -92,13 +91,13 @@ def checkout():
     return render_template("checkout_success.html", total=total)
 
 
-@app.route("/shop/calculate_shipping", methods=["POST"])
+@app.route("/calculate_shipping", methods=["POST"])
 def calculate_shipping():
     zip_code = request.form.get("zip_code")
     return jsonify({"status": "success", "cost": 15.90, "deadline": "5 dias úteis"})
 
 
-@app.route("/shop/lang/<lang>")
+@app.route("/lang/<lang>")
 def set_language(lang):
     if lang in ["pt", "en", "es"]:
         session["lang"] = lang
