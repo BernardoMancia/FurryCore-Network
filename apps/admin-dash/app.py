@@ -767,6 +767,10 @@ def cgrf_privacy_approve(request_id):
                     deactivate_account_everywhere(reg["email"])
             elif tipo == "ANONIMIZACAO":
                 conn.execute("UPDATE cidadaos SET nome = 'ANONIMIZADO', email = NULL, cidade = NULL WHERE cnf = ?", (cnf,))
+            try:
+                conn.execute("ALTER TABLE solicitacoes_privacidade ADD COLUMN data_processamento TEXT")
+            except Exception:
+                pass
             conn.execute("UPDATE solicitacoes_privacidade SET status = 'APROVADA', data_processamento = ? WHERE rowid = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
             conn.commit()
             flash(f"Solicitação #{request_id} ({tipo}) aprovada com sucesso.", "success")
@@ -783,6 +787,10 @@ def cgrf_privacy_reject(request_id):
     db_path = Config.get_db_path("cgrf")
     conn = sqlite3.connect(db_path)
     try:
+        try:
+            conn.execute("ALTER TABLE solicitacoes_privacidade ADD COLUMN data_processamento TEXT")
+        except Exception:
+            pass
         conn.execute("UPDATE solicitacoes_privacidade SET status = 'REJEITADA', data_processamento = ? WHERE rowid = ?", (datetime.now().strftime("%d/%m/%Y %H:%M"), request_id))
         conn.commit()
         flash(f"Solicitação #{request_id} rejeitada.", "info")
