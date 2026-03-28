@@ -15,10 +15,63 @@
             {% endif %}
             <h4 class="neon-text">{{ cidadao.nome }}</h4>
             <p class="text-secondary small">{{ cidadao.cnf }}</p>
+
+            {% if cidadao.estado_civil and cidadao.estado_civil != 'Solteiro(a)' and parceiro %}
+            <div class="mt-2 mb-3">
+                {% if cidadao.estado_civil == 'Namorando' %}
+                <p class="small mb-0" style="color: #ff6b9d;">
+                    <i class="bi bi-heart-fill me-1"></i>Namorando com
+                    <a href="{{ url_for('perfil', cnf=parceiro.cnf) }}" class="neon-text text-decoration-none fw-bold">{{ parceiro.nome }}</a>
+                </p>
+                {% elif cidadao.estado_civil == 'Casado(a)' %}
+                <p class="small mb-0" style="color: #ffd700;">
+                    <i class="bi bi-gem me-1"></i>Casado(a) com
+                    <a href="{{ url_for('perfil', cnf=parceiro.cnf) }}" class="neon-text text-decoration-none fw-bold">{{ parceiro.nome }}</a>
+                </p>
+                {% endif %}
+            </div>
+            {% elif cidadao.estado_civil == 'Solteiro(a)' or not cidadao.estado_civil %}
+            <p class="text-secondary x-small mb-3"><i class="bi bi-emoji-sunglasses me-1"></i>Solteiro(a)</p>
+            {% endif %}
+
             <div class="mt-3 p-2 bg-white rounded d-inline-block">
                 <img src="data:image/png;base64,{{ cidadao.qrcode_base64 }}" alt="QR Code" style="width: 100px;">
             </div>
             <p class="text-secondary x-small mt-2">RGF: {{ cidadao.rgf }}</p>
+
+            {% if cidadao.discord or cidadao.telegram or cidadao.twitter or pawsteps_username %}
+            <hr class="border-secondary my-3">
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                {% if cidadao.discord %}
+                <a href="https://discord.com/users/{{ cidadao.discord }}" target="_blank" rel="noopener" class="text-decoration-none" title="Discord: {{ cidadao.discord }}">
+                    <i class="bi bi-discord fs-4" style="color: #5865F2;"></i>
+                </a>
+                {% endif %}
+                {% if cidadao.telegram %}
+                <a href="https://t.me/{{ cidadao.telegram | replace('@', '') }}" target="_blank" rel="noopener" class="text-decoration-none" title="Telegram: {{ cidadao.telegram }}">
+                    <i class="bi bi-telegram fs-4" style="color: #229ED9;"></i>
+                </a>
+                {% endif %}
+                {% if cidadao.twitter %}
+                <a href="https://x.com/{{ cidadao.twitter | replace('@', '') }}" target="_blank" rel="noopener" class="text-decoration-none" title="X: {{ cidadao.twitter }}">
+                    <i class="bi bi-twitter-x fs-4" style="color: #ffffff;"></i>
+                </a>
+                {% endif %}
+                {% if pawsteps_username %}
+                <a href="https://pawsteps.social/profile/{{ pawsteps_username }}" target="_blank" rel="noopener" class="text-decoration-none" title="PawSteps: @{{ pawsteps_username }}">
+                    <i class="bi bi-paw fs-4 neon-text"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if pawsteps_username %}
+            <div class="mt-3">
+                <a href="https://pawsteps.social/profile/{{ pawsteps_username }}" target="_blank" class="btn btn-outline-info btn-sm w-100 rounded-3">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Ver Perfil no PawSteps
+                </a>
+            </div>
+            {% endif %}
         </div>
         {% if current_user.is_authenticated %}
         <div class="d-grid gap-2">
@@ -114,7 +167,6 @@
 </div>
 
 {% if exibir_tudo and current_user.cnf_vinculado == cidadao.cnf %}
-<!-- Modal LGPD (Posicionamento Global - Previne Clipping) -->
 <div class="modal fade" id="modalPrivacidade" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content glass-card border-white/10">
@@ -139,7 +191,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Nome -->
                                 <tr>
                                     <td>Nome</td>
                                     <td class="text-secondary">{{ cidadao.nome }}</td>
@@ -152,7 +203,6 @@
                                         <input type="text" name="value_nome" class="form-control form-control-sm mt-2 bg-dark text-white border-white/20 d-none" placeholder="Novo valor">
                                     </td>
                                 </tr>
-                                <!-- Espécie -->
                                 <tr>
                                     <td>Espécie</td>
                                     <td class="text-secondary">{{ cidadao.especie }}</td>
@@ -165,7 +215,6 @@
                                         <input type="text" name="value_especie" class="form-control form-control-sm mt-2 bg-dark text-white border-white/20 d-none" placeholder="Nova espécie">
                                     </td>
                                 </tr>
-                                <!-- Região -->
                                 <tr>
                                     <td>Região</td>
                                     <td class="text-secondary">{{ cidadao.regiao }}</td>
@@ -178,7 +227,6 @@
                                         <input type="text" name="value_regiao" class="form-control form-control-sm mt-2 bg-dark text-white border-white/20 d-none" placeholder="Nova região">
                                     </td>
                                 </tr>
-                                <!-- Foto -->
                                 <tr>
                                     <td>Foto de Perfil</td>
                                     <td class="text-secondary small">Imagem atual</td>

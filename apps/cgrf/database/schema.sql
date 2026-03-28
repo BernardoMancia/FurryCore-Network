@@ -17,6 +17,11 @@ CREATE TABLE IF NOT EXISTS cidadaos (
     cidade TEXT,
     idiomas TEXT,
     pais TEXT,
+    estado_civil TEXT DEFAULT 'Solteiro(a)',
+    parceiro_cnf TEXT,
+    discord TEXT,
+    telegram TEXT,
+    twitter TEXT,
     campos_sob_revisao TEXT -- JSON listando campos ocultos temporariamente
 );
 

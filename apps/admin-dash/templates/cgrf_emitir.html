@@ -22,6 +22,30 @@
     #preview-foto-container img { width: 100%; height: 100%; object-fit: cover; }
     .img-container { max-height: 500px; width: 100%; background: #000; }
     #image-to-crop { display: block; max-width: 100%; }
+    .form-select {
+        background-color: rgba(255,255,255,0.05) !important;
+        border: 1px solid var(--border) !important;
+        color: var(--text-high) !important;
+        border-radius: 10px;
+    }
+    .form-select option { background: #0a0b10; color: #fff; }
+    .form-select:focus { border-color: var(--accent) !important; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2) !important; }
+    .partner-search-results {
+        position: absolute; z-index: 100; width: 100%;
+        background: #0d0e14; border: 1px solid var(--border); border-radius: 10px;
+        max-height: 200px; overflow-y: auto; display: none;
+    }
+    .partner-result {
+        padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+        transition: 0.2s;
+    }
+    .partner-result:hover { background: rgba(0, 242, 255, 0.08); }
+    .partner-result:last-child { border-bottom: none; }
+    .partner-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(0, 242, 255, 0.08); border: 1px solid var(--accent);
+        border-radius: 8px; padding: 6px 12px; margin-top: 6px;
+    }
 </style>
 {% endblock %}
 
@@ -73,6 +97,25 @@
                         <label class="form-label small text-info uppercase fw-bold">País</label>
                         <input type="text" name="pais" class="form-control" required value="Brasil">
                     </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small text-info uppercase fw-bold">Estado Civil</label>
+                        <select name="estado_civil" id="estado_civil" class="form-select">
+                            <option value="Solteiro(a)">Solteiro(a)</option>
+                            <option value="Namorando">Namorando</option>
+                            <option value="Casado(a)">Casado(a)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8" id="partner-section" style="display:none;">
+                        <label class="form-label small text-info uppercase fw-bold">Parceiro(a)</label>
+                        <div class="position-relative">
+                            <input type="text" id="partner-search" class="form-control" placeholder="Buscar cidadão pelo nome..." autocomplete="off">
+                            <input type="hidden" name="parceiro_cnf" id="parceiro_cnf">
+                            <div id="partner-results" class="partner-search-results"></div>
+                        </div>
+                        <div id="partner-selected" style="display:none;"></div>
+                    </div>
+
                     <div class="col-md-6">
                         <label class="form-label small text-info uppercase fw-bold mb-3">Idiomas de Fluência</label>
                         <div class="d-flex gap-4">
@@ -109,7 +152,6 @@
     </form>
 </div>
 
-<!-- Modal de Recorte -->
 <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content glass-card border-secondary" style="background: #0a0b0f !important;">
@@ -177,6 +219,77 @@ document.getElementById('crop-button').addEventListener('click', function() {
         previewContainer.innerHTML = `<img src="${base64}">`;
         hiddenInput.value = base64;
         cropModal.hide();
+    }
+});
+
+const estadoCivilSelect = document.getElementById('estado_civil');
+const partnerSection = document.getElementById('partner-section');
+const partnerSearch = document.getElementById('partner-search');
+const partnerResults = document.getElementById('partner-results');
+const partnerCnfInput = document.getElementById('parceiro_cnf');
+const partnerSelected = document.getElementById('partner-selected');
+
+estadoCivilSelect.addEventListener('change', function() {
+    if (this.value === 'Namorando' || this.value === 'Casado(a)') {
+        partnerSection.style.display = '';
+    } else {
+        partnerSection.style.display = 'none';
+        partnerCnfInput.value = '';
+        partnerSelected.style.display = 'none';
+        partnerSearch.value = '';
+    }
+});
+
+let searchTimeout;
+partnerSearch.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const q = this.value.trim();
+    if (q.length < 2) { partnerResults.style.display = 'none'; return; }
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/search_cidadao?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    partnerResults.innerHTML = '<div class="partner-result text-white-50">Nenhum resultado</div>';
+                } else {
+                    partnerResults.innerHTML = data.map(c =>
+                        `<div class="partner-result" data-cnf="${c.cnf}" data-nome="${c.nome}">
+                            <span class="fw-bold">${c.nome}</span>
+                            <span class="text-info ms-2" style="font-size:0.7rem;">${c.cnf}</span>
+                            <span class="text-white-50 ms-1" style="font-size:0.7rem;">• ${c.especie}</span>
+                        </div>`
+                    ).join('');
+                }
+                partnerResults.style.display = 'block';
+            });
+    }, 300);
+});
+
+partnerResults.addEventListener('click', function(e) {
+    const item = e.target.closest('.partner-result');
+    if (!item || !item.dataset.cnf) return;
+    partnerCnfInput.value = item.dataset.cnf;
+    partnerSearch.value = '';
+    partnerResults.style.display = 'none';
+    const label = estadoCivilSelect.value === 'Casado(a)' ? 'Casado(a) com' : 'Namorando com';
+    partnerSelected.innerHTML = `
+        <div class="partner-badge">
+            <i class="bi bi-heart-fill text-danger"></i>
+            <span>${label} <strong>${item.dataset.nome}</strong></span>
+            <span class="text-info" style="font-size:0.7rem;">${item.dataset.cnf}</span>
+            <button type="button" class="btn btn-sm p-0 ms-2 text-danger" onclick="clearPartner()">&times;</button>
+        </div>`;
+    partnerSelected.style.display = '';
+});
+
+function clearPartner() {
+    partnerCnfInput.value = '';
+    partnerSelected.style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+    if (!partnerSearch.contains(e.target) && !partnerResults.contains(e.target)) {
+        partnerResults.style.display = 'none';
     }
 });
 </script>

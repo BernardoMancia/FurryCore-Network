@@ -3,20 +3,57 @@
 
 {% block title %}Editar Registro: {{ reg.cnf }}{% endblock %}
 
+{% block head %}
+<style>
+    .form-select {
+        background-color: rgba(255,255,255,0.05) !important;
+        border: 1px solid var(--border) !important;
+        color: var(--text-high) !important;
+        border-radius: 10px;
+    }
+    .form-select option { background: #0a0b10; color: #fff; }
+    .form-select:focus { border-color: var(--accent) !important; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2) !important; }
+    .partner-search-results {
+        position: absolute; z-index: 100; width: 100%;
+        background: #0d0e14; border: 1px solid var(--border); border-radius: 10px;
+        max-height: 200px; overflow-y: auto; display: none;
+    }
+    .partner-result {
+        padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+        transition: 0.2s;
+    }
+    .partner-result:hover { background: rgba(0, 242, 255, 0.08); }
+    .partner-result:last-child { border-bottom: none; }
+    .partner-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(0, 242, 255, 0.08); border: 1px solid var(--accent);
+        border-radius: 8px; padding: 6px 12px; margin-top: 6px;
+    }
+    .social-icon { font-size: 1.3rem; opacity: 0.7; }
+    .section-label {
+        font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
+        color: var(--accent); font-weight: 700; padding-bottom: 8px;
+        border-bottom: 1px solid rgba(0, 242, 255, 0.15); margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-5">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <h2 class="fw-bold neon-glow"><i class="bi bi-pencil-square me-2"></i> Editar Identidade</h2>
-        <p class="text-white-50">Alteração de dados cadastrais para o CNF {{ reg.cnf }}</p>
+        <h2 class="fw-bold neon-glow mb-1"><i class="bi bi-pencil-square me-2"></i>Editar Identidade</h2>
+        <p class="text-white-50 mb-0">Alteração de dados cadastrais para o CNF <span class="text-info">{{ reg.cnf }}</span></p>
     </div>
-    <a href="/cgrf/records" class="btn btn-outline-secondary btn-sm">Cancelar</a>
+    <a href="/cgrf/records" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-arrow-left me-1"></i>Cancelar</a>
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="cyber-card p-4">
-            <form method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="col-lg-10">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="cyber-card p-4 mb-4">
+                <div class="section-label"><i class="bi bi-person-vcard me-1"></i> Dados de Identidade</div>
                 <div class="row g-4">
                     <div class="col-md-6">
                         <label class="form-label small text-info uppercase fw-bold">Nome Completo</label>
@@ -34,12 +71,141 @@
                         <label class="form-label small text-info uppercase fw-bold">País</label>
                         <input type="text" name="pais" class="form-control" value="{{ reg.pais or 'Brasil' }}">
                     </div>
-                    <div class="col-12 mt-5">
-                        <button type="submit" class="btn btn-neon w-100 py-3">SALVAR ALTERAÇÕES</button>
+                </div>
+            </div>
+
+            <div class="cyber-card p-4 mb-4">
+                <div class="section-label"><i class="bi bi-heart me-1"></i> Estado Civil</div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label small text-info uppercase fw-bold">Status</label>
+                        <select name="estado_civil" id="estado_civil" class="form-select">
+                            <option value="Solteiro(a)" {% if reg.estado_civil == 'Solteiro(a)' or not reg.estado_civil %}selected{% endif %}>Solteiro(a)</option>
+                            <option value="Namorando" {% if reg.estado_civil == 'Namorando' %}selected{% endif %}>Namorando</option>
+                            <option value="Casado(a)" {% if reg.estado_civil == 'Casado(a)' %}selected{% endif %}>Casado(a)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8" id="partner-section" style="{% if reg.estado_civil not in ['Namorando', 'Casado(a)'] %}display:none;{% endif %}">
+                        <label class="form-label small text-info uppercase fw-bold">Parceiro(a)</label>
+                        <div class="position-relative">
+                            <input type="text" id="partner-search" class="form-control" placeholder="Buscar cidadão pelo nome..." autocomplete="off">
+                            <input type="hidden" name="parceiro_cnf" id="parceiro_cnf" value="{{ reg.parceiro_cnf or '' }}">
+                            <div id="partner-results" class="partner-search-results"></div>
+                        </div>
+                        <div id="partner-selected" {% if not reg.parceiro_cnf %}style="display:none;"{% endif %}>
+                            {% if reg.parceiro_cnf %}
+                            <div class="partner-badge">
+                                <i class="bi bi-heart-fill text-danger"></i>
+                                <span>Vinculado a <strong>{{ reg.parceiro_cnf }}</strong></span>
+                                <button type="button" class="btn btn-sm p-0 ms-2 text-danger" onclick="clearPartner()">&times;</button>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="cyber-card p-4 mb-4">
+                <div class="section-label"><i class="bi bi-globe me-1"></i> Redes Sociais</div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label small text-white-50 fw-bold d-flex align-items-center gap-2">
+                            <i class="bi bi-discord social-icon" style="color: #5865F2;"></i> Discord
+                        </label>
+                        <input type="text" name="discord" class="form-control" value="{{ reg.discord or '' }}" placeholder="username">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-white-50 fw-bold d-flex align-items-center gap-2">
+                            <i class="bi bi-telegram social-icon" style="color: #229ED9;"></i> Telegram
+                        </label>
+                        <input type="text" name="telegram" class="form-control" value="{{ reg.telegram or '' }}" placeholder="@username">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-white-50 fw-bold d-flex align-items-center gap-2">
+                            <i class="bi bi-twitter-x social-icon" style="color: #fff;"></i> X (Twitter)
+                        </label>
+                        <input type="text" name="twitter" class="form-control" value="{{ reg.twitter or '' }}" placeholder="@username">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-neon w-100 py-3 shadow-lg"><i class="bi bi-check-lg me-2"></i>SALVAR ALTERAÇÕES</button>
+        </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const estadoCivilSelect = document.getElementById('estado_civil');
+const partnerSection = document.getElementById('partner-section');
+const partnerSearch = document.getElementById('partner-search');
+const partnerResults = document.getElementById('partner-results');
+const partnerCnfInput = document.getElementById('parceiro_cnf');
+const partnerSelected = document.getElementById('partner-selected');
+
+estadoCivilSelect.addEventListener('change', function() {
+    if (this.value === 'Namorando' || this.value === 'Casado(a)') {
+        partnerSection.style.display = '';
+    } else {
+        partnerSection.style.display = 'none';
+        partnerCnfInput.value = '';
+        partnerSelected.style.display = 'none';
+        partnerSearch.value = '';
+    }
+});
+
+let searchTimeout;
+partnerSearch.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const q = this.value.trim();
+    if (q.length < 2) { partnerResults.style.display = 'none'; return; }
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/search_cidadao?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    partnerResults.innerHTML = '<div class="partner-result text-white-50">Nenhum resultado</div>';
+                } else {
+                    partnerResults.innerHTML = data.map(c =>
+                        `<div class="partner-result" data-cnf="${c.cnf}" data-nome="${c.nome}">
+                            <span class="fw-bold">${c.nome}</span>
+                            <span class="text-info ms-2" style="font-size:0.7rem;">${c.cnf}</span>
+                            <span class="text-white-50 ms-1" style="font-size:0.7rem;">• ${c.especie}</span>
+                        </div>`
+                    ).join('');
+                }
+                partnerResults.style.display = 'block';
+            });
+    }, 300);
+});
+
+partnerResults.addEventListener('click', function(e) {
+    const item = e.target.closest('.partner-result');
+    if (!item || !item.dataset.cnf) return;
+    partnerCnfInput.value = item.dataset.cnf;
+    partnerSearch.value = '';
+    partnerResults.style.display = 'none';
+    const label = estadoCivilSelect.value === 'Casado(a)' ? 'Casado(a) com' : 'Namorando com';
+    partnerSelected.innerHTML = `
+        <div class="partner-badge">
+            <i class="bi bi-heart-fill text-danger"></i>
+            <span>${label} <strong>${item.dataset.nome}</strong></span>
+            <span class="text-info" style="font-size:0.7rem;">${item.dataset.cnf}</span>
+            <button type="button" class="btn btn-sm p-0 ms-2 text-danger" onclick="clearPartner()">&times;</button>
+        </div>`;
+    partnerSelected.style.display = '';
+});
+
+function clearPartner() {
+    partnerCnfInput.value = '';
+    partnerSelected.style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+    if (!partnerSearch.contains(e.target) && !partnerResults.contains(e.target)) {
+        partnerResults.style.display = 'none';
+    }
+});
+</script>
 {% endblock %}

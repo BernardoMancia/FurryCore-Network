@@ -156,6 +156,28 @@ def perfil(cnf):
 
     cidadao = dict(cidadao)
 
+    parceiro = None
+    if cidadao.get("parceiro_cnf"):
+        parceiro = db.execute_query(
+            "SELECT cnf, nome FROM cidadaos WHERE cnf = ? AND is_valido = 1",
+            (cidadao["parceiro_cnf"],), fetchone=True
+        )
+
+    pawsteps_username = None
+    if cidadao.get("email"):
+        try:
+            import sqlite3 as _sql
+            ps_db = Config.get_db_path("pawsteps")
+            if os.path.exists(ps_db):
+                ps_conn = _sql.connect(ps_db)
+                ps_conn.row_factory = _sql.Row
+                ps_user = ps_conn.execute("SELECT username FROM users WHERE email = ? AND status != 'INATIVO'", (cidadao["email"],)).fetchone()
+                if ps_user:
+                    pawsteps_username = ps_user["username"]
+                ps_conn.close()
+        except Exception:
+            pass
+
     exibir_tudo = False
     if current_user.is_authenticated:
         if current_user.cargo in ["ADMIN", "ANALISTA"]:
@@ -177,7 +199,10 @@ def perfil(cnf):
             if campo == "foto":
                 cidadao["foto_base64"] = None
 
-    return render_template("perfil.html", cidadao=cidadao, exibir_tudo=exibir_tudo, sob_revisao=sob_revisao)
+    return render_template(
+        "perfil.html", cidadao=cidadao, exibir_tudo=exibir_tudo,
+        sob_revisao=sob_revisao, parceiro=parceiro, pawsteps_username=pawsteps_username
+    )
 
 
 @app.route("/admin/usuarios", methods=["GET", "POST"])

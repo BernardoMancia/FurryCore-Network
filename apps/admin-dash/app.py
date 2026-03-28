@@ -80,6 +80,31 @@ def init_admin_db():
 init_admin_db()
 
 
+def run_cgrf_migrations():
+    db_path = Config.get_db_path("cgrf")
+    if not os.path.exists(db_path):
+        return
+    conn = sqlite3.connect(db_path)
+    new_cols = [
+        ("estado_civil", "TEXT DEFAULT 'Solteiro(a)'"),
+        ("parceiro_cnf", "TEXT"),
+        ("discord", "TEXT"),
+        ("telegram", "TEXT"),
+        ("twitter", "TEXT"),
+    ]
+    for col_name, col_type in new_cols:
+        try:
+            conn.execute(f"ALTER TABLE cidadaos ADD COLUMN {col_name} {col_type}")
+            print(f"[MIGRATION] Coluna '{col_name}' adicionada à cidadaos.")
+        except Exception:
+            pass
+    conn.commit()
+    conn.close()
+
+
+run_cgrf_migrations()
+
+
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_admin_db()
@@ -429,6 +454,23 @@ def cgrf_toggle_user(user_id):
     return redirect(url_for("cgrf_manage_users"))
 
 
+@app.route("/api/search_cidadao")
+@login_required
+def api_search_cidadao():
+    q = request.args.get("q", "").strip()
+    if len(q) < 2:
+        return jsonify([])
+    db_path = Config.get_db_path("cgrf")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    results = conn.execute(
+        "SELECT cnf, nome, especie FROM cidadaos WHERE is_valido = 1 AND nome LIKE ? ORDER BY nome LIMIT 10",
+        (f"%{q}%",),
+    ).fetchall()
+    conn.close()
+    return jsonify([{"cnf": r["cnf"], "nome": r["nome"], "especie": r["especie"]} for r in results])
+
+
 @app.route("/cgrf/emit", methods=["GET", "POST"])
 @login_required
 def cgrf_emit_wallet():
@@ -442,6 +484,10 @@ def cgrf_emit_wallet():
         idiomas = ", ".join(idiomas_list) if idiomas_list else "Não Informado"
         email = request.form.get("email")
         foto_base64_raw = request.form.get("foto_base64")
+        estado_civil = request.form.get("estado_civil", "Solteiro(a)")
+        parceiro_cnf = request.form.get("parceiro_cnf") or None
+        if estado_civil == "Solteiro(a)":
+            parceiro_cnf = None
         confirmed_link = request.form.get("confirmed_link") == "true"
 
         if email and not confirmed_link:
@@ -468,11 +514,12 @@ def cgrf_emit_wallet():
         conn = sqlite3.connect(db_path)
         try:
             conn.execute(
-                """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, cidade, pais, idiomas, email, data_emissao, data_expiracao, qrcode_base64, foto_base64)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                """INSERT INTO cidadaos (cnf, rgf, nome, especie, regiao, cidade, pais, idiomas, email, data_emissao, data_expiracao, qrcode_base64, foto_base64, estado_civil, parceiro_cnf)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     cnf, rgf, nome, especie, regiao, cidade, pais, idiomas, email,
                     hoje.strftime("%d/%m/%Y"), exp.strftime("%d/%m/%Y"), qr_base64, foto_base64,
+                    estado_civil, parceiro_cnf,
                 ),
             )
 
@@ -629,10 +676,19 @@ def cgrf_edit_record(cnf):
         especie = request.form.get("especie")
         cidade = request.form.get("cidade")
         pais = request.form.get("pais")
+        estado_civil = request.form.get("estado_civil", "Solteiro(a)")
+        parceiro_cnf = request.form.get("parceiro_cnf") or None
+        discord = request.form.get("discord") or None
+        telegram = request.form.get("telegram") or None
+        twitter = request.form.get("twitter") or None
+        if estado_civil == "Solteiro(a)":
+            parceiro_cnf = None
         try:
             conn.execute(
-                "UPDATE cidadaos SET nome = ?, especie = ?, cidade = ?, pais = ? WHERE cnf = ?",
-                (nome, especie, cidade, pais, cnf),
+                """UPDATE cidadaos SET nome = ?, especie = ?, cidade = ?, pais = ?,
+                   estado_civil = ?, parceiro_cnf = ?, discord = ?, telegram = ?, twitter = ?
+                   WHERE cnf = ?""",
+                (nome, especie, cidade, pais, estado_civil, parceiro_cnf, discord, telegram, twitter, cnf),
             )
             conn.commit()
             flash(f"Dados do registro {cnf} atualizados.", "success")
