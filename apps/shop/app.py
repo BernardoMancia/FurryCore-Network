@@ -12,7 +12,7 @@ from database.db_shop import ShopDatabaseManager
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path="/shop/static")
 configure_i18n(app)
 app.config["SECRET_KEY"] = Config.SECRET_KEY_SHOP
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=2)
