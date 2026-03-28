@@ -3,31 +3,50 @@
 
 {% block title %}Usuários CGRF{% endblock %}
 
+{% block head %}
+<style>
+    .form-select {
+        background-color: rgba(255,255,255,0.05) !important;
+        border: 1px solid var(--border) !important;
+        color: var(--text-high) !important;
+        border-radius: 10px;
+    }
+    .form-select option {
+        background: #0a0b10;
+        color: #ffffff;
+    }
+    .form-select:focus {
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 10px rgba(0, 242, 255, 0.2) !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-5">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <h2 class="fw-bold neon-glow"><i class="bi bi-people-fill me-2"></i> Usuários do Sistema CGRF</h2>
-        <p class="text-white-50">Controle de acesso e cargos para o portal cgrf.com.br</p>
+        <h2 class="fw-bold neon-glow mb-1"><i class="bi bi-people-fill me-2"></i>Usuários do Sistema CGRF</h2>
+        <p class="text-white-50 mb-0">Controle de acesso e cargos para o portal cgrf.com.br</p>
     </div>
-    <a href="/" class="btn btn-outline-secondary btn-sm">Voltar ao Painel</a>
+    <a href="/" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
 </div>
 
 <div class="row g-4">
-    <div class="col-md-4">
-        <div class="cyber-card">
-            <h5 class="fw-bold mb-4 text-info">Novo Usuário CGRF</h5>
+    <div class="col-lg-4">
+        <div class="cyber-card p-4">
+            <h5 class="fw-bold mb-4 text-info"><i class="bi bi-person-plus me-2"></i>Novo Usuário</h5>
             <form action="/cgrf/users" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
-                    <label class="form-label small text-white-50 uppercase fw-bold">E-mail</label>
+                    <label class="form-label small text-white-50 text-uppercase fw-bold" style="letter-spacing: 0.5px;">E-mail</label>
                     <input type="email" name="email" class="form-control" placeholder="usuario@provedor.com" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small text-white-50 uppercase fw-bold">Senha Inicial</label>
+                    <label class="form-label small text-white-50 text-uppercase fw-bold" style="letter-spacing: 0.5px;">Senha Inicial</label>
                     <input type="password" name="password" class="form-control" placeholder="••••••••" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small text-white-50 uppercase fw-bold">Cargo / Permissão</label>
+                    <label class="form-label small text-white-50 text-uppercase fw-bold" style="letter-spacing: 0.5px;">Cargo / Permissão</label>
                     <select name="cargo" class="form-select">
                         <option value="USUARIO">Usuário Comum</option>
                         <option value="ANALISTA">Analista de Dados</option>
@@ -35,17 +54,17 @@
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="form-label small text-white-50 uppercase fw-bold">Vincular CNF (Opcional)</label>
+                    <label class="form-label small text-white-50 text-uppercase fw-bold" style="letter-spacing: 0.5px;">Vincular CNF (Opcional)</label>
                     <input type="text" name="cnf" class="form-control" placeholder="000.00.0000-XX">
                 </div>
-                <button type="submit" class="btn btn-neon w-100 py-2">CRIAR ACESSO</button>
+                <button type="submit" class="btn btn-neon w-100 py-2"><i class="bi bi-plus-lg me-2"></i>CRIAR ACESSO</button>
             </form>
         </div>
     </div>
-    
-    <div class="col-md-8">
-        <div class="cyber-card">
-            <h5 class="fw-bold mb-4 text-info">Acessos Cadastrados</h5>
+
+    <div class="col-lg-8">
+        <div class="cyber-card p-4">
+            <h5 class="fw-bold mb-4 text-info"><i class="bi bi-key me-2"></i>Acessos Cadastrados</h5>
             <div class="table-responsive">
                 <table class="cyber-table">
                     <thead>
@@ -61,20 +80,54 @@
                         {% for u in usuarios %}
                         <tr>
                             <td class="fw-bold">{{ u.email }}</td>
-                            <td><span class="badge-cyber border-info text-info">{{ u.cargo }}</span></td>
-                            <td class="small">{{ u.cnf_vinculado or '<span class="text-white-50 italic">Nenhum</span>'|safe }}</td>
+                            <td>
+                                {% if u.cargo == 'ADMIN' %}
+                                    <span class="badge-cyber border-danger text-danger">ADMIN</span>
+                                {% elif u.cargo == 'ANALISTA' %}
+                                    <span class="badge-cyber border-warning text-warning">ANALISTA</span>
+                                {% else %}
+                                    <span class="badge-cyber border-info text-info">{{ u.cargo }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ u.cnf_vinculado or '<span class="text-white-50 fst-italic">Nenhum</span>'|safe }}</td>
                             <td class="text-center">
-                                <span class="badge-cyber {% if u.status == 'ATIVO' %}border-success neon-green{% else %}border-warning text-warning{% endif %}">
-                                    {{ u.status }}
-                                </span>
+                                {% if u.status == 'ATIVO' %}
+                                    <span class="badge-cyber border-success neon-green">ATIVO</span>
+                                {% elif u.status == 'PENDENTE' %}
+                                    <span class="badge-cyber border-warning text-warning">PENDENTE</span>
+                                {% else %}
+                                    <span class="badge-cyber border-danger text-danger">INATIVO</span>
+                                {% endif %}
                             </td>
                             <td class="text-center">
-                                <a href="/cgrf/resend_user_email/{{ u.email }}" class="btn btn-outline-warning btn-sm border-0" title="Reenviar E-mail de Boas-vindas">
-                                    <i class="bi bi-envelope-at-fill"></i>
-                                </a>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="/cgrf/resend_user_email/{{ u.email }}" class="btn btn-outline-warning btn-sm border-0 py-1" title="Reenviar E-mail">
+                                        <i class="bi bi-envelope-at-fill"></i>
+                                    </a>
+                                    <form action="/cgrf/user/toggle/{{ u.id }}" method="POST" class="d-inline" onsubmit="return confirm('{{ 'Desativar' if u.status == 'ATIVO' else 'Reativar' }} acesso de {{ u.email }}?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {% if u.status == 'ATIVO' %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm border-0 py-1" title="Desativar Acesso">
+                                                <i class="bi bi-person-x-fill"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-outline-success btn-sm border-0 py-1" title="Reativar Acesso">
+                                                <i class="bi bi-person-check-fill"></i>
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
+                        {% if not usuarios %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-white-50">
+                                <i class="bi bi-people fs-1 d-block mb-3 opacity-25"></i>
+                                Nenhum usuário cadastrado.
+                            </td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>

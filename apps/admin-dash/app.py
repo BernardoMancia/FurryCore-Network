@@ -384,20 +384,49 @@ def cgrf_manage_users():
         cargo = request.form.get("cargo")
         cnf = request.form.get("cnf")
         try:
-            conn.execute(
-                "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, 'ATIVO')",
-                (email, password, cargo, cnf or None),
-            )
-            conn.commit()
-            flash(f"Usuário {email} criado no CGRF.", "success")
+            existing = conn.execute("SELECT id FROM usuarios_sistema WHERE email = ?", (email,)).fetchone()
+            if existing:
+                flash(f"E-mail {email} já possui uma conta no CGRF. Use a edição para alterar.", "warning")
+            else:
+                conn.execute(
+                    "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, 'ATIVO')",
+                    (email, password, cargo, cnf or None),
+                )
+                conn.commit()
+                flash(f"Usuário {email} criado no CGRF.", "success")
         except Exception as e:
             flash(f"Erro ao criar usuário: {e}", "danger")
 
     usuarios = conn.execute(
-        "SELECT * FROM usuarios_sistema WHERE cargo IN ('ADMIN', 'ANALISTA') AND status = 'ATIVO'"
+        "SELECT * FROM usuarios_sistema ORDER BY CASE status WHEN 'ATIVO' THEN 0 WHEN 'PENDENTE' THEN 1 ELSE 2 END, id DESC"
     ).fetchall()
     conn.close()
     return render_template("cgrf_users.html", usuarios=usuarios)
+
+
+@app.route("/cgrf/user/toggle/<int:user_id>", methods=["POST"])
+@login_required
+def cgrf_toggle_user(user_id):
+    db_path = Config.get_db_path("cgrf")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        user = conn.execute("SELECT * FROM usuarios_sistema WHERE id = ?", (user_id,)).fetchone()
+        if user:
+            new_status = "INATIVO" if user["status"] == "ATIVO" else "ATIVO"
+            conn.execute("UPDATE usuarios_sistema SET status = ? WHERE id = ?", (new_status, user_id))
+            conn.commit()
+            if new_status == "INATIVO" and user["email"]:
+                deactivate_account_everywhere(user["email"])
+            label = "desativado" if new_status == "INATIVO" else "reativado"
+            flash(f"Acesso de {user['email']} {label}.", "success")
+        else:
+            flash("Usuário não encontrado.", "danger")
+    except Exception as e:
+        flash(f"Erro: {e}", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for("cgrf_manage_users"))
 
 
 @app.route("/cgrf/emit", methods=["GET", "POST"])
@@ -450,10 +479,17 @@ def cgrf_emit_wallet():
             if email:
                 temp_pass = secrets.token_urlsafe(12)
                 pwd_hash = generate_password_hash(temp_pass)
-                conn.execute(
-                    "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
-                    (email, pwd_hash, "USUARIO", cnf, "PENDENTE"),
-                )
+                existing = conn.execute("SELECT id FROM usuarios_sistema WHERE email = ?", (email,)).fetchone()
+                if existing:
+                    conn.execute(
+                        "UPDATE usuarios_sistema SET senha_hash = ?, cnf_vinculado = ?, status = 'PENDENTE' WHERE email = ?",
+                        (pwd_hash, cnf, email),
+                    )
+                else:
+                    conn.execute(
+                        "INSERT INTO usuarios_sistema (email, senha_hash, cargo, cnf_vinculado, status) VALUES (?, ?, ?, ?, ?)",
+                        (email, pwd_hash, "USUARIO", cnf, "PENDENTE"),
+                    )
 
                 user_data = {"nome": nome, "cnf": cnf, "rgf": rgf, "email": email, "temp_pass": temp_pass}
                 success, mail_err = send_welcome_email(user_data)
