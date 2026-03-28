@@ -1,66 +1,54 @@
 {% extends "base_social.html" %}
 
 {% block content %}
-<!-- Capa do Perfil -->
-<div class="profile-cover w-100 rounded-top" style="height: 200px; background-color: #1c2331; background-image: url('{{ user_profile.profile_cover_url if user_profile.profile_cover_url else 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop' }}'); background-size: cover; background-position: center;">
-</div>
+<div class="profile-cover" style="background-image: url('{{ user_profile.profile_cover_url or 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop' }}'); background-color: var(--bg-elevated);"></div>
 
-<div class="glass-card rounded-bottom mb-4 position-relative border-top-0" style="padding-top: 60px;">
-    <!-- Avatar (Overlay na Capa) -->
-    <img src="{{ user_profile.avatar_url or 'https://i.pravatar.cc/300?u=' ~ user_profile.username }}" class="position-absolute rounded-circle border border-4 border-dark object-fit-cover shadow-lg" style="width: 120px; height: 120px; top: -60px; left: 30px; background-color: #1a1e29;">
-    
-    <div class="d-flex justify-content-between align-items-start px-4">
-        <div>
-            <h3 class="fw-bold mb-0 d-flex align-items-center gap-2">
-                {{ user_profile.display_name }}
-                {% if user_profile.cnf_vinculado %}
-                <i class="bi bi-patch-check-fill text-info fs-5" title="Furry Verificado (CGRF)"></i>
-                {% endif %}
-            </h3>
-            <p class="text-white-50 mb-2">@{{ user_profile.username }}</p>
-            
-            <p class="mb-3">{{ user_profile.bio or 'O que fazer quando não tem bio? Miau!' }}</p>
-            
-            <div class="d-flex gap-4 text-white-50 small mb-3">
-                <span><strong class="text-white">{{ user_profile.created_at.split(' ')[0] }}</strong> Entrada</span>
-                <span><strong class="text-white">{{ following }}</strong> Seguindo</span>
-                <span><strong class="text-white">{{ followers }}</strong> Seguidores</span>
-            </div>
-        </div>
-        
-        <div>
+<div style="padding: 0 20px; position: relative;">
+    <div class="d-flex justify-content-between align-items-start" style="margin-top: -40px;">
+        <img src="{{ user_profile.avatar_url or 'https://api.dicebear.com/7.x/big-ears/svg?seed=' ~ user_profile.username }}" class="profile-avatar {{ 'verified' if user_profile.cnf_vinculado }}">
+        <div class="d-flex gap-2 mt-3">
             {% if is_owner %}
-            <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-info rounded-pill px-4 fw-bold">Editar Perfil</a>
+            <a href="{{ url_for('edit_profile') }}" class="btn-ghost px-4 py-2" style="font-size:0.85rem;">Editar Perfil</a>
             {% else %}
-            <button class="btn btn-neon rounded-pill px-4 fw-bold" onclick="followUser('{{ user_profile.username }}', this)"><i class="bi bi-person-plus-fill"></i> Seguir</button>
-            <a href="{{ url_for('chat', username=user_profile.username) }}" class="btn btn-outline-secondary rounded-circle ms-2 d-inline-flex justify-content-center align-items-center" style="width:40px;height:40px;" title="Enviar Mensagem DM"><i class="bi bi-envelope"></i></a>
+            <button class="neon-btn px-4 py-2" style="font-size:0.85rem;" onclick="followUser('{{ user_profile.username }}', this)"><i class="bi bi-person-plus-fill me-1"></i>Seguir</button>
+            <a href="{{ url_for('chat', username=user_profile.username) }}" class="btn-ghost d-flex align-items-center justify-content-center" style="width:38px;height:38px;padding:0;border-radius:50%;" title="DM">
+                <i class="bi bi-envelope"></i>
+            </a>
             {% endif %}
         </div>
     </div>
-    
-    <!-- Abas -->
-    <ul class="nav nav-pills mt-3 px-3 d-flex justify-content-between border-bottom border-secondary pb-1" style="font-size: 1.1rem; flex-wrap: nowrap; overflow-x: auto;">
-        <li class="nav-item">
-            <a class="nav-link fw-bold px-4 {{ 'active bg-transparent text-info border-bottom border-info border-3 rounded-0' if tab == 'posts' else 'text-white-50' }}" href="{{ url_for('profile', username=user_profile.username, tab='posts') }}">Posts</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link fw-bold px-4 {{ 'active bg-transparent text-info border-bottom border-info border-3 rounded-0' if tab == 'replies' else 'text-white-50' }}" href="{{ url_for('profile', username=user_profile.username, tab='replies') }}">Respostas</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link fw-bold px-4 {{ 'active bg-transparent text-info border-bottom border-info border-3 rounded-0' if tab == 'media' else 'text-white-50' }}" href="{{ url_for('profile', username=user_profile.username, tab='media') }}">Mídias</a>
-        </li>
-        {% if is_owner %}
-        <li class="nav-item">
-            <a class="nav-link fw-bold px-4 {{ 'active bg-transparent text-info border-bottom border-info border-3 rounded-0' if tab == 'likes' else 'text-white-50' }}" href="{{ url_for('profile', username=user_profile.username, tab='likes') }}"><i class="bi bi-heart-fill text-danger me-1"></i> Curtidas</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link fw-bold px-4 {{ 'active bg-transparent text-info border-bottom border-info border-3 rounded-0' if tab == 'saves' else 'text-white-50' }}" href="{{ url_for('profile', username=user_profile.username, tab='saves') }}"><i class="bi bi-bookmark-fill text-warning me-1"></i> Salvos</a>
-        </li>
-        {% endif %}
-    </ul>
+
+    <div class="mt-3 mb-3">
+        <h4 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            {{ user_profile.display_name }}
+            {% if user_profile.cnf_vinculado %}
+            <i class="bi bi-patch-check-fill badge-verified" title="Furry Verificado (CGRF)"></i>
+            {% endif %}
+        </h4>
+        <p class="text-low mb-2" style="font-size:0.9rem;">@{{ user_profile.username }}</p>
+        <p class="mb-3" style="font-size:0.93rem; line-height:1.5;">{{ user_profile.bio or '' }}</p>
+
+        <div class="d-flex gap-4 text-low" style="font-size:0.85rem;">
+            <span><i class="bi bi-calendar3 me-1"></i>{{ user_profile.created_at.split(' ')[0] }}</span>
+        </div>
+
+        <div class="d-flex gap-4 mt-2" style="font-size:0.88rem;">
+            <span><strong class="text-high">{{ following }}</strong> <span class="text-low">Seguindo</span></span>
+            <span><strong class="text-high">{{ followers }}</strong> <span class="text-low">Seguidores</span></span>
+        </div>
+    </div>
 </div>
 
-<!-- Render Motor de Posts (Similar ao Feed) -->
+<div class="profile-tabs">
+    <a class="profile-tab {{ 'active' if tab == 'posts' }}" href="{{ url_for('profile', username=user_profile.username, tab='posts') }}">Posts</a>
+    <a class="profile-tab {{ 'active' if tab == 'replies' }}" href="{{ url_for('profile', username=user_profile.username, tab='replies') }}">Respostas</a>
+    <a class="profile-tab {{ 'active' if tab == 'media' }}" href="{{ url_for('profile', username=user_profile.username, tab='media') }}">Mídias</a>
+    {% if is_owner %}
+    <a class="profile-tab {{ 'active' if tab == 'likes' }}" href="{{ url_for('profile', username=user_profile.username, tab='likes') }}">Curtidas</a>
+    <a class="profile-tab {{ 'active' if tab == 'saves' }}" href="{{ url_for('profile', username=user_profile.username, tab='saves') }}">Salvos</a>
+    {% endif %}
+</div>
+
 <div id="feed">
     {% for p in posts %}
     {% set is_rp = p.is_repost %}
@@ -70,152 +58,72 @@
     {% set p_content = p.orig_content if is_rp else p.content %}
     {% set p_media = p.orig_media_url if is_rp else p.media_url %}
     {% set actual_post_id = p.original_post_id if is_rp else p.id %}
-    
-    <div class="post-card mb-3">
+
+    <div class="post-card">
         {% if is_rp %}
-        <div class="text-white-50 small mb-2 ms-5">
+        <div class="text-low x-small mb-2 ms-5 d-flex align-items-center gap-1">
             <i class="bi bi-arrow-repeat"></i> {{ p.display_name }} repostou
         </div>
         {% endif %}
         <div class="d-flex gap-3">
-            <a href="{{ url_for('profile', username=p_username) }}">
-                <img src="{{ p_avatar or 'https://i.pravatar.cc/150?u=' ~ p_username }}" class="rounded-circle object-fit-cover" style="width: 50px; height: 50px;">
+            <a href="{{ url_for('profile', username=p_username) }}" class="flex-shrink-0">
+                <img src="{{ p_avatar or 'https://api.dicebear.com/7.x/big-ears/svg?seed=' ~ p_username }}" class="avatar-md">
             </a>
-            <div class="flex-grow-1">
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <a href="{{ url_for('profile', username=p_username) }}" class="text-white text-decoration-none fw-bold hover-info">{{ p_display }}</a>
+            <div class="flex-grow-1 min-width-0">
+                <div class="d-flex align-items-center gap-1 mb-1 flex-wrap">
+                    <a href="{{ url_for('profile', username=p_username) }}" class="text-high text-decoration-none fw-bold" style="font-size:0.93rem;">{{ p_display }}</a>
                     {% if p.cnf_vinculado and not is_rp %}
-                    <i class="bi bi-patch-check-fill text-info" title="Furry Verificado (CGRF)"></i>
+                    <i class="bi bi-patch-check-fill badge-verified"></i>
                     {% endif %}
-                    <span class="text-white-50 small">@{{ p_username }} · {{ p.created_at.split(' ')[0] }}</span>
+                    <span class="text-low" style="font-size:0.82rem;">@{{ p_username }} · {{ p.created_at.split(' ')[0] }}</span>
                 </div>
-                
                 {% if p.location and not is_rp %}
-                <small class="text-info mb-2 d-block"><i class="bi bi-geo-alt-fill"></i> {{ p.location }}</small>
+                <div class="text-accent x-small mb-1"><i class="bi bi-geo-alt-fill me-1"></i>{{ p.location }}</div>
                 {% endif %}
-                
-                <p class="mb-3" style="white-space: pre-wrap;">{{ p_content }}</p>
-                
+                <div class="mb-2" style="white-space:pre-wrap;font-size:0.93rem;">{{ p_content }}</div>
                 {% if p_media %}
-                <div class="rounded-4 overflow-hidden border border-secondary mb-3">
+                <div style="border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);margin-bottom:8px;">
                     {% if p_media.endswith('.mp4') or p_media.endswith('.webm') %}
-                        <video src="{{ p_media }}" class="img-fluid w-100" controls></video>
+                    <video src="{{ p_media }}" class="w-100" style="max-height:500px;display:block;" controls></video>
                     {% else %}
-                        <img src="{{ p_media }}" class="img-fluid w-100">
+                    <img src="{{ p_media }}" class="w-100" style="max-height:500px;object-fit:contain;display:block;">
                     {% endif %}
                 </div>
                 {% endif %}
-                
-                <div class="d-flex justify-content-between text-white-50 mt-2" style="max-width: 400px; font-size: 1.1rem;">
-                    <div class="d-flex align-items-center gap-2 action-btn" onclick="toggleReply('{{ actual_post_id }}')" style="cursor: pointer;">
-                        <i class="bi bi-chat"></i> <span class="fs-6">{{ p.replies_count }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 action-btn {{ 'text-success' if p.user_reposted else '' }}" onclick="toggleRepost('{{ actual_post_id }}', this)" style="cursor: pointer;">
-                        <i class="bi bi-arrow-repeat"></i> <span class="fs-6 repost-count">{{ p.reposts_count }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 action-btn {{ 'text-danger' if p.user_liked else '' }}" onclick="toggleLike('{{ actual_post_id }}', this)" style="cursor: pointer;">
-                        <i class="bi {{ 'bi-heart-fill text-danger' if p.user_liked else 'bi-heart' }} like-icon"></i> <span class="fs-6 like-count">{{ p.likes_count }}</span>
-                    </div>
-                    {% if is_owner %}
-                    <div class="d-flex align-items-center gap-2 action-btn {{ 'text-warning' if p.user_saved else '' }}" onclick="toggleSave('{{ actual_post_id }}', this)" style="cursor: pointer;">
-                        <i class="bi {{ 'bi-bookmark-fill text-warning' if p.user_saved else 'bi-bookmark' }} save-icon"></i>
-                    </div>
-                    {% else %}
-                    <!-- Outras pessoas tbm podem salvar posts no painel, então mesmo botão serve -->
-                    <div class="d-flex align-items-center gap-2 action-btn {{ 'text-warning' if p.user_saved else '' }}" onclick="toggleSave('{{ actual_post_id }}', this)" style="cursor: pointer;">
-                        <i class="bi {{ 'bi-bookmark-fill text-warning' if p.user_saved else 'bi-bookmark' }} save-icon"></i>
-                    </div>
-                    {% endif %}
+                <div class="action-bar">
+                    <div class="action-btn reply-btn" onclick="toggleReply('{{ actual_post_id }}')"><i class="bi bi-chat"></i> <span>{{ p.replies_count }}</span></div>
+                    <div class="action-btn repost-btn {{ 'text-success' if p.user_reposted }}" onclick="toggleRepost('{{ actual_post_id }}', this)"><i class="bi bi-arrow-repeat"></i> <span class="repost-count">{{ p.reposts_count }}</span></div>
+                    <div class="action-btn like-btn {{ 'text-danger' if p.user_liked }}" onclick="toggleLike('{{ actual_post_id }}', this)"><i class="bi {{ 'bi-heart-fill' if p.user_liked else 'bi-heart' }} like-icon"></i> <span class="like-count">{{ p.likes_count }}</span></div>
+                    <div class="action-btn save-btn {{ 'text-warning' if p.user_saved }}" onclick="toggleSave('{{ actual_post_id }}', this)"><i class="bi {{ 'bi-bookmark-fill' if p.user_saved else 'bi-bookmark' }} save-icon"></i></div>
                 </div>
-                
-                <!-- Inline Reply Box -->
-                <div id="replyBox-{{ actual_post_id }}" class="mt-3" style="display: none;">
+                <div id="replyBox-{{ actual_post_id }}" class="mt-3" style="display:none;">
                     <form action="{{ url_for('create_post') }}" method="POST" class="d-flex gap-2">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="reply_to_post_id" value="{{ actual_post_id }}">
-                        <input type="text" name="content" class="form-control bg-dark border-secondary text-white rounded-pill px-3" placeholder="Sua resposta..." required>
-                        <button class="btn btn-info btn-sm rounded-pill px-3 neon-btn">Responder</button>
+                        <input type="text" name="content" class="form-control" style="border-radius:var(--radius-full);padding:8px 16px;font-size:0.88rem;" placeholder="Sua resposta..." required>
+                        <button class="neon-btn px-3 py-1" style="font-size:0.82rem;">Responder</button>
                     </form>
                 </div>
-                
             </div>
         </div>
     </div>
     {% else %}
-    <div class="text-center py-5 glass-card">
-        <i class="bi bi-emoji-dizzy fs-1 text-white-50"></i>
-        <h5 class="text-white-50 mt-3">Nada encontrado nesta aba.</h5>
+    <div class="empty-state">
+        <i class="bi bi-emoji-dizzy"></i>
+        <h5>Nada encontrado nesta aba</h5>
+        <p class="small">Aqui aparecerão os conteúdos de cada categoria.</p>
     </div>
     {% endfor %}
 </div>
+{% endblock %}
 
-<!-- Mesmos scripts de curtir/salvar do Index para o Perfil -->
+{% block scripts %}
 <script>
-    const csrfToken = "{{ csrf_token() }}";
-    
-    function toggleReply(postId) {
-        const box = document.getElementById('replyBox-' + postId);
-        box.style.display = box.style.display === 'none' ? 'block' : 'none';
-        if(box.style.display === 'block') box.querySelector('input').focus();
-    }
-    
-    async function toggleLike(postId, element) {
-        try {
-            const res = await fetch(`/api/toggle_like/${postId}`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
-            const data = await res.json();
-            const icon = element.querySelector('.like-icon');
-            const count = element.querySelector('.like-count');
-            
-            if(data.liked) {
-                element.classList.add('text-danger');
-                icon.className = 'bi bi-heart-fill text-danger like-icon';
-            } else {
-                element.classList.remove('text-danger');
-                icon.className = 'bi bi-heart like-icon';
-            }
-            count.innerText = data.count;
-        } catch(e) {}
-    }
-    
-    async function toggleRepost(postId, element) {
-        try {
-            const res = await fetch(`/api/toggle_repost/${postId}`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
-            const data = await res.json();
-            if(data.reposted) location.reload();
-        } catch(e) {}
-    }
-    
-    async function toggleSave(postId, element) {
-        try {
-            const res = await fetch(`/api/toggle_save/${postId}`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
-            const data = await res.json();
-            const icon = element.querySelector('.save-icon');
-            if(data.saved) {
-                element.classList.add('text-warning');
-                icon.className = 'bi bi-bookmark-fill text-warning save-icon';
-            } else {
-                element.classList.remove('text-warning');
-                icon.className = 'bi bi-bookmark save-icon';
-            }
-        } catch(e) {}
-    }
-    
-    async function followUser(username, btn) {
-        try {
-            const res = await fetch(`/api/toggle_follow/${username}`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrfToken }
-            });
-            const data = await res.json();
-            if(data.following) {
-                btn.classList.replace('btn-neon', 'btn-outline-info');
-                btn.innerHTML = '<i class="bi bi-person-check-fill"></i> Seguindo';
-            } else {
-                btn.classList.replace('btn-outline-info', 'btn-neon');
-                btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> Seguir';
-            }
-        } catch(e) { console.error('Error', e); }
-    }
+const csrfToken = "{{ csrf_token() }}";
+function toggleReply(id) { const b = document.getElementById('replyBox-'+id); b.style.display = b.style.display==='none'?'block':'none'; if(b.style.display==='block') b.querySelector('input').focus(); }
+async function toggleLike(id,el) { try { const r=await fetch(`/api/toggle_like/${id}`,{method:'POST',headers:{'X-CSRFToken':csrfToken}}); const d=await r.json(); el.classList.toggle('text-danger',d.liked); el.querySelector('.like-icon').className=`bi ${d.liked?'bi-heart-fill':'bi-heart'} like-icon`; el.querySelector('.like-count').innerText=d.count; } catch(e){} }
+async function toggleRepost(id,el) { try { const r=await fetch(`/api/toggle_repost/${id}`,{method:'POST',headers:{'X-CSRFToken':csrfToken}}); const d=await r.json(); if(d.reposted) location.reload(); } catch(e){} }
+async function toggleSave(id,el) { try { const r=await fetch(`/api/toggle_save/${id}`,{method:'POST',headers:{'X-CSRFToken':csrfToken}}); const d=await r.json(); el.classList.toggle('text-warning',d.saved); el.querySelector('.save-icon').className=`bi ${d.saved?'bi-bookmark-fill':'bi-bookmark'} save-icon`; } catch(e){} }
+async function followUser(u,btn) { try { const r=await fetch(`/api/toggle_follow/${u}`,{method:'POST',headers:{'X-CSRFToken':csrfToken}}); const d=await r.json(); if(d.following){btn.className='btn-ghost px-4 py-2';btn.style.fontSize='0.85rem';btn.innerHTML='<i class="bi bi-person-check-fill me-1"></i>Seguindo';} else{btn.className='neon-btn px-4 py-2';btn.style.fontSize='0.85rem';btn.innerHTML='<i class="bi bi-person-plus-fill me-1"></i>Seguir';} } catch(e){} }
 </script>
-
 {% endblock %}

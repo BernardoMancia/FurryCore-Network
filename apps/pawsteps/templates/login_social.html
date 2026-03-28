@@ -1,47 +1,33 @@
 {% extends "base_social.html" %}
-
-{% block title %}Login - PawSteps.social{% endblock %}
+{% block title %}Login — PawSteps{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="col-11 col-md-6 col-lg-5 col-xl-4">
+<div class="auth-wrapper" style="margin-left: calc(-1 * var(--sidebar-w)); margin-right: calc(-1 * var(--sidebar-right-w)); min-height: 100vh;">
+    <div class="auth-card">
         <div class="text-center mb-4">
-            <div class="d-inline-flex align-items-center justify-content-center rounded-4 mb-3"
-                 style="width: 72px; height: 72px; background: linear-gradient(135deg, rgba(0,243,255,0.1), rgba(188,19,254,0.1)); border: 1px solid rgba(0,243,255,0.15);">
-                <i class="bi bi-chat-heart display-5" style="color: var(--neon-cyan);"></i>
-            </div>
+            <div class="auth-logo">PawSteps</div>
+            <p class="text-low small">Entre na comunidade furry</p>
         </div>
-
-        <div style="background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0,243,255,0.1); border-radius: 24px; padding: 40px 36px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-            <h2 class="text-center fw-bold mb-1" style="font-family: 'Outfit'; background: linear-gradient(45deg, var(--neon-cyan), var(--neon-violet)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Bem-vindo de volta!</h2>
-            <p class="text-center text-white-50 small mb-4">Entre na sua conta PawSteps</p>
-
-            <form method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <div class="mb-3">
-                    <label class="form-label text-white-50 small fw-bold"><i class="bi bi-at me-1"></i>Username</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-0" style="background: rgba(0,243,255,0.08); color: var(--neon-cyan);">@</span>
-                        <input type="text" name="username" required autocomplete="username"
-                               class="form-control py-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 0 12px 12px 0;">
-                    </div>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">Usuário ou E-mail</label>
+                <div class="position-relative">
+                    <input type="text" name="username" class="form-control" style="padding-left:40px;" placeholder="@username" required>
+                    <i class="bi bi-person position-absolute text-low" style="top:50%;left:14px;transform:translateY(-50%);"></i>
                 </div>
-
-                <div class="mb-4">
-                    <label class="form-label text-white-50 small fw-bold"><i class="bi bi-key me-1"></i>Senha</label>
-                    <input type="password" name="password" required autocomplete="current-password"
-                           class="form-control py-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 12px;">
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Senha</label>
+                <div class="position-relative">
+                    <input type="password" name="password" class="form-control" style="padding-left:40px;" placeholder="••••••••" required>
+                    <i class="bi bi-lock position-absolute text-low" style="top:50%;left:14px;transform:translateY(-50%);"></i>
                 </div>
-
-                <button type="submit" class="neon-btn w-100 py-3 fs-5 mb-3">Entrar</button>
-
-                <div class="text-center">
-                    <p class="text-white-50 small mb-0">Não tem uma conta?
-                        <a href="{{ url_for('register') }}" class="text-decoration-none fw-bold" style="color: var(--neon-cyan);">Cadastre-se</a>
-                    </p>
-                </div>
-            </form>
+            </div>
+            <button type="submit" class="neon-btn w-100 py-3 mb-3">Entrar</button>
+        </form>
+        <div class="text-center">
+            <p class="text-low small">Não tem conta? <a href="{{ url_for('register') }}" class="text-accent fw-bold">Cadastre-se</a></p>
         </div>
     </div>
 </div>

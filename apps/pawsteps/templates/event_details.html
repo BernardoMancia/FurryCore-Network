@@ -1,388 +1,104 @@
-{% extends 'base_social.html' %}
-{% block title %}PawSteps - {{ event_name }}{% endblock %}
+{% extends "base_social.html" %}
+{% block title %}{{ event_name }} — PawSteps{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+{% endblock %}
 
 {% block content %}
-<div class="row min-vh-75">
-    <div class="col-12 mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <a href="{{ url_for('events') }}" class="btn btn-outline-secondary btn-sm mb-2"><i class="bi bi-arrow-left"></i> Voltar</a>
-                <h2 class="display-6 fw-bold neon-text">{{ event_name }}</h2>
-                <p class="text-white-50">Álbum e Galeria de Mídias</p>
-            </div>
-            {% if current_user.is_authenticated %}
-            <div>
-                <button class="btn btn-primary rounded-pill neon-btn" data-bs-toggle="modal" data-bs-target="#uploadMediaModal">
-                    <i class="bi bi-plus-circle"></i> Adicionar Mídia
-                </button>
-            </div>
-            {% endif %}
-        </div>
+<div style="padding:20px;border-bottom:1px solid var(--border);">
+    <a href="{{ url_for('events') }}" class="text-low small d-inline-flex align-items-center gap-1 mb-2"><i class="bi bi-arrow-left"></i> Eventos</a>
+    <h4 class="fw-bold mb-1">{{ event_name }}</h4>
+    {% if years_with_media %}
+    <div class="d-flex gap-2 mt-3 flex-wrap">
+        {% for y in years_with_media %}
+        <a href="{{ url_for('event_details', slug=slug, year=y) }}" class="chip {{ 'active' if current_year == y|string }}">{{ y }}</a>
+        {% endfor %}
     </div>
-
-    <div class="col-12 mb-4">
-        <!-- Abas de Anos -->
-        <ul class="nav nav-pills gap-2" id="yearTabs" role="tablist">
-            {% for y in years_with_media %}
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {{ 'active bg-info' if y|string == current_year|string else 'text-white border border-secondary' }} tab-year-btn" 
-                        data-year="{{ y }}" type="button">
-                    {{ y }}
-                </button>
-            </li>
-            {% else %}
-            <li class="nav-item">
-                <span class="text-white-50">Nenhuma mídia ainda foi postada para este evento.</span>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div class="col-12 mb-3 d-flex justify-content-between align-items-center">
-        <h4 class="fw-bold" id="currentYearTitle">Galeria de {{ current_year }}</h4>
-        
-        <!-- Toggle NSFW Condicional (Apenas +18) -->
-        {% if current_user.is_authenticated and current_user.is_plus18 %}
-        <div class="form-check form-switch p-3 border border-secondary rounded-3 glass-card" style="min-width: 200px;">
-            <input class="form-check-input" type="checkbox" role="switch" id="nsfwToggle" style="width: 40px; height: 20px;">
-            <label class="form-check-label ms-2 text-danger fw-bold" for="nsfwToggle">+18 (Conteúdo Sensível)</label>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Galeria de Posts -->
-    <div class="col-12">
-        <div class="row g-4" id="galleryContainer">
-            {% for post in posts %}
-            <div class="col-md-6 col-lg-4 post-item" data-year="{{ post.year }}" data-nsfw="{{ post.is_nsfw }}" style="display: none;">
-                <div class="glass-card post-card h-100 d-flex flex-column p-0 overflow-hidden">
-                    <!-- Media Header -->
-                    <div class="position-relative media-expand-btn cursor-pointer" data-media-url="{{ post.media_url }}" data-media-type="{{ 'video' if post.media_url and (post.media_url.endswith('.mp4') or post.media_url.endswith('.webm')) else 'image' }}" data-title="{{ post.title or '' }}" data-content="{{ post.content | replace('\n', '<br>') }}" data-author="{{ post.username }}" data-avatar="{{ post.avatar_url or '/static/img/default_avatar.png' }}">
-                        {% if post.media_url %}
-                            {% if post.media_url.endswith('.mp4') or post.media_url.endswith('.webm') %}
-                                <!-- Removido atributo controls para facilitar o click do lightbox -->
-                                <video src="{{ post.media_url }}" class="w-100 object-fit-cover" style="height: 250px; border-top-left-radius: 19px; border-top-right-radius: 19px;"></video>
-                            {% else %}
-                                <img src="{{ post.media_url }}" class="w-100 object-fit-cover" style="height: 250px; border-top-left-radius: 19px; border-top-right-radius: 19px;">
-                            {% endif %}
-                        {% endif %}
-
-                        
-                        {% if post.is_nsfw %}
-                        <div class="position-absolute top-0 end-0 m-2 badge bg-danger fs-6">
-                            NSFW
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Content -->
-                    <div class="p-3 d-flex flex-column flex-grow-1">
-                        {% if post.title %}
-                        <h5 class="fw-bold mb-2 text-info">{{ post.title }}</h5>
-                        {% endif %}
-                        <p class="text-white-50 mb-3 flex-grow-1" style="white-space: pre-wrap;">{{ post.content }}</p>
-                        
-                        <!-- Author -->
-                        <div class="d-flex align-items-center mt-auto border-top border-glass pt-3">
-                            <img src="{{ post.avatar_url if post.avatar_url else '/static/img/default_avatar.png' }}" class="bg-secondary rounded-circle me-2 object-fit-cover" style="width: 30px; height: 30px;" alt="Avatar">
-                            <span class="small fw-semibold text-white">@{{ post.username }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        <div id="noPostsMessage" class="text-center py-5" style="display: none;">
-            <p class="text-white-50">Nenhuma mídia foi encontrada para este ano e filtro.</p>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Lightbox (Expansão de Mídia) -->
-<div class="modal fade" id="lightboxModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-body p-0 position-relative">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3" data-bs-dismiss="modal" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; opacity: 1;"></button>
-                <div class="row g-0 rounded-4 overflow-hidden shadow-lg glass-card border border-secondary" style="background: rgba(10, 11, 16, 0.95);">
-                    <div class="col-lg-8 bg-black d-flex align-items-center justify-content-center" style="min-height: 500px; max-height: 80vh;">
-                        <img id="lightboxImage" src="" class="img-fluid" style="display: none; max-height: 80vh; object-fit: contain;">
-                        <video id="lightboxVideo" src="" class="w-100" style="display: none; max-height: 80vh; outline: none;" controls></video>
-                    </div>
-                    <div class="col-lg-4 p-4 d-flex flex-column" style="max-height: 80vh; overflow-y: auto;">
-                        <div class="d-flex align-items-center mb-4 border-bottom border-glass pb-3">
-                            <div id="lightboxAvatar" class="bg-secondary rounded-circle me-3" style="width: 45px; height: 45px; background-size: cover;"></div>
-                            <span id="lightboxAuthor" class="fw-bold fs-5 neon-text"></span>
-                        </div>
-                        <h4 id="lightboxTitle" class="fw-bold mb-3 text-info"></h4>
-                        <p id="lightboxContent" class="text-white-50 fs-5" style="white-space: pre-wrap; line-height: 1.6;"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% endif %}
 </div>
 
 {% if current_user.is_authenticated %}
-<!-- Modal de Upload -->
-<div class="modal fade" id="uploadMediaModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-info">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title neon-text">Adicionar Mídia ao Evento</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div style="padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-surface);">
+    <h6 class="fw-bold text-mid mb-3" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;">Enviar mídia</h6>
+    <form action="{{ url_for('post_event_media', slug=slug) }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="cropped_image_base64" id="croppedBase64">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <select name="event_id" class="form-select" style="font-size:0.85rem;">
+                    <option value="">Escolher ano...</option>
+                    {% for yr in years_available_for_upload %}
+                    <option value="{{ yr.id }}">{{ yr.year }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <form action="{{ url_for('post_event_media', name=slug) }}" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="modal-body">
-                    
-                    <div class="mb-3">
-                        <label class="form-label text-info">Ano do Evento</label>
-                        <div class="input-group">
-                            <select name="event_id" class="form-select bg-dark text-white border-secondary" id="eventYearSelect">
-                                <option value="">Selecione a edição/ano...</option>
-                                {% for y in years_available_for_upload %}
-                                <option value="{{ y.id }}">{{ y.year }}</option>
-                                {% endfor %}
-                            </select>
-                            <input type="number" name="manual_year" class="form-control bg-dark text-white border-secondary" placeholder="Ou digite o ano..." id="manualYearInput">
-                        </div>
-                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle"></i> Se o ano não existir na lista, digite para criar automaticamente.</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-info">Mídia (Foto ou Vídeo)</label>
-                        <input type="file" name="media_file" id="mediaInput" class="form-control bg-dark text-white border-secondary" accept="image/*,video/*" required>
-                    </div>
-
-                    <!-- Sandbox de Edição de Imagem Padrão -->
-                    <div id="imageEditorContainer" class="mb-3" style="display: none;">
-                        <div class="text-center mb-2">
-                            <span class="badge bg-secondary">Ajuste o Recorte (Apenas Imagens)</span>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-md-8">
-                                <div class="bg-black rounded border border-secondary p-2 d-flex justify-content-center align-items-center" style="height: 300px; overflow: hidden;">
-                                    <img id="imagePreview" src="" style="max-width: 100%; max-height: 100%; display: block;">
-                                </div>
-                            </div>
-                            <div class="col-md-4 d-flex flex-column gap-2 justify-content-center">
-                                <div class="w-100 bg-black rounded border border-secondary p-1 cropper-preview overflow-hidden" style="height: 150px;"></div>
-                                <button type="button" class="btn btn-outline-info btn-sm mt-auto" onclick="rotateImage(-90)"><i class="bi bi-arrow-counterclockwise"></i> Rodar Esq.</button>
-                                <button type="button" class="btn btn-outline-info btn-sm" onclick="rotateImage(90)"><i class="bi bi-arrow-clockwise"></i> Rodar Dir.</button>
-                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="cropConfirmBtn">Aplicar Recorte</button>
-                            </div>
-                        </div>
-                        <input type="hidden" name="cropped_image_base64" id="croppedImageBase64">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-info">Título (Opcional)</label>
-                        <input type="text" name="title" class="form-control bg-dark text-white border-secondary" placeholder="Dê um título para sua lembrança...">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-info">Mensagem (Com marcações @ e #)</label>
-                        <textarea name="content" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Conte o que achou! Pode incluir #hashtags ou marcar amigos @username..."></textarea>
-                    </div>
-                    
-                    {% if current_user.is_plus18 %}
-                    <div class="form-check p-3 border border-danger rounded-3 bg-danger bg-opacity-10 mb-3">
-                        <input class="form-check-input ms-1" type="checkbox" name="is_nsfw" id="nsfwUploadCheck" value="1">
-                        <label class="form-check-label ms-2 text-danger fw-bold" for="nsfwUploadCheck">
-                            Marcar mídia como NSFW (+18 / Sensível)
-                        </label>
-                    </div>
-                    {% else %}
-                    <!-- Usuários menores de 18 não podem upar NSFW -->
-                    <div class="alert alert-secondary small py-2 mb-3">
-                        <i class="bi bi-info-circle"></i> O envio de conteúdos NSFW é restrito a maiores de 18 anos confirmados.
-                    </div>
-                    {% endif %}
-
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary neon-btn">Enviar para Galeria</button>
-                </div>
-            </form>
+            <div class="col-md-6">
+                <input type="number" name="manual_year" class="form-control" placeholder="Ou digitar ano" style="font-size:0.85rem;">
+            </div>
+            <div class="col-md-6">
+                <input type="text" name="title" class="form-control" placeholder="Título (opcional)" style="font-size:0.85rem;">
+            </div>
+            <div class="col-md-6">
+                <input type="file" name="media_file" class="form-control" accept="image/*,video/*" id="mediaFileInput" style="font-size:0.85rem;">
+            </div>
+            <div class="col-12">
+                <textarea name="content" class="form-control" rows="2" placeholder="Legenda..." style="font-size:0.85rem;"></textarea>
+            </div>
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <label class="d-flex align-items-center gap-2 text-low small" style="cursor:pointer;">
+                    <input type="checkbox" name="is_nsfw" class="form-check-input" style="width:16px;height:16px;"> Conteúdo +18
+                </label>
+                <button type="submit" class="neon-btn px-4 py-2" style="font-size:0.85rem;">Enviar</button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endif %}
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Lightbox Logic
-    const lbImg = document.getElementById('lightboxImage');
-    const lbVid = document.getElementById('lightboxVideo');
-    const mediaBtns = document.querySelectorAll('.media-expand-btn');
-    
-    mediaBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const mediaUrl = this.getAttribute('data-media-url');
-            const mediaType = this.getAttribute('data-media-type');
-            
-            if (mediaType === 'video') {
-                lbImg.style.display = 'none';
-                lbVid.style.display = 'block';
-                lbVid.src = mediaUrl;
-            } else {
-                lbVid.style.display = 'none';
-                lbVid.pause();
-                lbImg.style.display = 'block';
-                lbImg.src = mediaUrl;
-            }
-            
-            document.getElementById('lightboxTitle').innerText = this.getAttribute('data-title') || '';
-            document.getElementById('lightboxContent').innerHTML = this.getAttribute('data-content') || '';
-            document.getElementById('lightboxAuthor').innerText = '@' + this.getAttribute('data-author');
-            document.getElementById('lightboxAvatar').style.backgroundImage = `url('${this.getAttribute('data-avatar')}')`;
-            
-            new bootstrap.Modal(document.getElementById('lightboxModal')).show();
-        });
-    });
-    
-    let currentActiveYear = '{{ current_year }}';
-    const nsfwToggle = document.getElementById('nsfwToggle');
-    const posts = document.querySelectorAll('.post-item');
-    const tabButtons = document.querySelectorAll('.tab-year-btn');
-    const noPostsMsg = document.getElementById('noPostsMessage');
+<div style="padding:16px 20px;">
+    {% set filtered_posts = [] %}
+    {% for p in posts %}
+        {% if current_year == '' or p.year|string == current_year %}
+            {% set _ = filtered_posts.append(p) %}
+        {% endif %}
+    {% endfor %}
 
-    function updateGallery() {
-        if (!currentActiveYear) return;
-        
-        const showNsfw = nsfwToggle ? nsfwToggle.checked : false;
-        let visibleCount = 0;
+    {% if filtered_posts or (current_year == '' and posts) %}
+    <div class="row g-3">
+        {% for p in (filtered_posts if filtered_posts else posts) %}
+        {% if current_year == '' or p.year|string == current_year %}
+        <div class="col-6 col-md-4">
+            <div style="border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border);aspect-ratio:1;position:relative;background:var(--bg-elevated);">
+                {% if p.media_url %}
+                    {% if p.media_url.endswith('.mp4') or p.media_url.endswith('.webm') %}
+                    <video src="{{ p.media_url }}" class="w-100 h-100" style="object-fit:cover;" muted></video>
+                    <i class="bi bi-play-fill text-white position-absolute" style="top:8px;right:8px;font-size:1.2rem;text-shadow:0 0 4px rgba(0,0,0,0.8);"></i>
+                    {% else %}
+                    <img src="{{ p.media_url }}" class="w-100 h-100" style="object-fit:cover;">
+                    {% endif %}
+                {% endif %}
+                <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="{{ p.avatar_url or 'https://api.dicebear.com/7.x/big-ears/svg?seed=' ~ p.username }}" class="avatar-xs">
+                        <span class="text-white x-small fw-bold">{{ p.username }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-camera"></i>
+        <h5>Nenhuma mídia ainda</h5>
+        <p class="small">Seja o primeiro a compartilhar uma mídia deste evento!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
 
-        posts.forEach(post => {
-            const postYear = post.getAttribute('data-year');
-            const isNsfw = post.getAttribute('data-nsfw') === '1' || post.getAttribute('data-nsfw') === 'True';
-            
-            // Lógica: Tem que ser do ano selecionado
-            let show = (postYear === currentActiveYear);
-            
-            // E respeitar o toggle NSFW (Se for NSFW, só mostra se o switch estiver ativado)
-            if (show && isNsfw && !showNsfw) {
-                show = false;
-            }
-
-            post.style.display = show ? 'block' : 'none';
-            if (show) visibleCount++;
-        });
-
-        noPostsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
-    }
-
-    // Inicialização
-    updateGallery();
-
-    // Eventos nos botões de ano
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            // Atualizar visuais dos botões
-            tabButtons.forEach(b => {
-                b.classList.remove('active', 'bg-info');
-                b.classList.add('text-white', 'border', 'border-secondary');
-            });
-            e.target.classList.add('active', 'bg-info');
-            e.target.classList.remove('text-white', 'border', 'border-secondary');
-            
-            currentActiveYear = e.target.getAttribute('data-year');
-            document.getElementById('currentYearTitle').innerText = `Galeria de ${currentActiveYear}`;
-            updateGallery();
-        });
-    });
-
-    // Evento no switch NSFW
-    if (nsfwToggle) {
-        nsfwToggle.addEventListener('change', updateGallery);
-    }
-    
-    // Parar vídeo ao fechar modal
-    document.getElementById('lightboxModal').addEventListener('hidden.bs.modal', function () {
-        document.getElementById('lightboxVideo').pause();
-    });
-});
-</script>
-
-<!-- Cropper.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
-<script>
-    let cropper = null;
-    const mediaInput = document.getElementById('mediaInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const editorContainer = document.getElementById('imageEditorContainer');
-    const croppedImageInput = document.getElementById('croppedImageBase64');
-    const cropConfirmBtn = document.getElementById('cropConfirmBtn');
-
-    mediaInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Se for vídeo, esconde o editor
-        if (file.type.startsWith('video/')) {
-            editorContainer.style.display = 'none';
-            if (cropper) cropper.destroy();
-            croppedImageInput.value = '';
-            return;
-        }
-
-        // Se for imagem, ativa o editor CropperJS
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                imagePreview.src = event.target.result;
-                editorContainer.style.display = 'block';
-                
-                if (cropper) cropper.destroy();
-                
-                // Dar um pequeno delay para a imagem renderizar na Box
-                setTimeout(() => {
-                    cropper = new Cropper(imagePreview, {
-                        viewMode: 2,
-                        background: false,
-                        autoCropArea: 0.9,
-                        responsive: true,
-                        preview: '.cropper-preview'
-                    });
-                }, 100);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    function rotateImage(degree) {
-        if (cropper) {
-            cropper.rotate(degree);
-        }
-    }
-
-    cropConfirmBtn.addEventListener('click', function() {
-        if (cropper) {
-            const canvas = cropper.getCroppedCanvas({
-                maxWidth: 1920,
-                maxHeight: 1080
-            });
-            croppedImageInput.value = canvas.toDataURL('image/jpeg', 0.9);
-            
-            // Alterar cor do botão para mostrar feedback visual
-            this.classList.replace('btn-outline-primary', 'btn-success');
-            this.innerHTML = '<i class="bi bi-check-circle"></i> Recorte Aplicado';
-        }
-    });
-
-    // Resetar estado ao fechar modal
-    document.getElementById('uploadMediaModal').addEventListener('hidden.bs.modal', function () {
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
-        }
-        editorContainer.style.display = 'none';
-        mediaInput.value = '';
-        croppedImageInput.value = '';
-        cropConfirmBtn.classList.replace('btn-success', 'btn-outline-primary');
-        cropConfirmBtn.innerText = 'Aplicar Recorte';
-    });
-</script>
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 {% endblock %}

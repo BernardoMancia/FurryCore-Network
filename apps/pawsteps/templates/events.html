@@ -1,111 +1,47 @@
 {% extends "base_social.html" %}
-
-{% block title %}Eventos - PawSteps.social{% endblock %}
+{% block title %}Eventos — PawSteps{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="neon-text">Central de Eventos</h2>
-        <p class="text-white-50">Convenções, encontros e meetups da comunidade.</p>
-    </div>
-    <button class="btn btn-neon" data-bs-toggle="modal" data-bs-target="#addEventModal">+ Sugerir Evento</button>
-</div>
-
-<!-- Filtros e Toggle NSFW -->
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <div class="d-flex gap-2 overflow-x-auto pb-1" id="eventFilters">
-        <button class="btn btn-outline-info active rounded-pill px-4" onclick="filterEvents('all')">Todos</button>
-        {% for category in categories %}
-        <button class="btn btn-outline-info rounded-pill px-4" onclick="filterEvents('{{ category }}')">{{ category }}</button>
+<div style="padding:20px 20px 12px;border-bottom:1px solid var(--border);">
+    <h5 class="fw-bold mb-2">Eventos Furry</h5>
+    <div class="d-flex gap-2 flex-wrap pb-2">
+        <a href="{{ url_for('events') }}" class="chip {{ 'active' if not request.args.get('category') }}">Todos</a>
+        {% for cat in categories %}
+        <a href="{{ url_for('events', category=cat) }}" class="chip {{ 'active' if request.args.get('category') == cat }}">{{ cat }}</a>
         {% endfor %}
     </div>
+</div>
 
-    {% if current_user.is_authenticated and current_user.is_plus18 %}
-    <div class="form-check form-switch bg-dark p-3 rounded border border-secondary" style="min-width: 250px;">
-        <input class="form-check-input ms-0 me-3" type="checkbox" id="nsfwGlobalToggle" onchange="toggleNSFWContent()">
-        <label class="form-check-label text-warning small fw-bold" for="nsfwGlobalToggle">
-            Deseja ver conteúdo explícito?
-        </label>
+<div style="padding:16px 20px;">
+    {% if events %}
+    <div class="row g-3">
+        {% for e in events %}
+        <div class="col-md-6">
+            <a href="{{ url_for('event_details', slug=e.slug or e.name|replace(' ','-')|lower) }}" class="text-decoration-none">
+                <div class="event-card">
+                    <div class="event-card-img" style="background-image:url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop');"></div>
+                    <div class="p-3">
+                        <h6 class="fw-bold text-high mb-1">{{ e.name }}</h6>
+                        <div class="text-low small d-flex align-items-center gap-2">
+                            <span><i class="bi bi-geo-alt me-1"></i>{{ e.city or e.country or 'Online' }}</span>
+                            <span>·</span>
+                            <span>{{ e.year }}</span>
+                        </div>
+                        {% if e.is_nsfw %}
+                        <span class="chip mt-2" style="font-size:0.65rem;padding:3px 8px;border-color:var(--danger);color:var(--danger);">+18</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-calendar-x"></i>
+        <h5>Nenhum evento encontrado</h5>
+        <p class="small">Tente remover os filtros ou volte mais tarde.</p>
     </div>
     {% endif %}
 </div>
-
-<div class="row g-4">
-    {% for e in events %}
-    <div class="col-md-6">
-        <div class="post-card h-100 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <h4 class="fw-bold mb-0 text-info">{{ e.name }}</h4>
-                <span class="badge bg-secondary">
-                    Ecossistema
-                </span>
-            </div>
-            
-            <p class="text-white-50 small flex-grow-1">{{ e.description }}</p>
-            
-            <div class="mt-3 small mb-3">
-                <div class="mb-1"><i class="bi bi-geo-alt text-info"></i> {{ e.city }}, {{ e.country }}</div>
-            </div>
-            
-            <div class="mt-auto">
-                <a href="{{ url_for('event_details', slug=e.slug) }}" class="btn btn-outline-info w-100">Abrir Álbum do Evento</a>
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <div class="col-12 text-center py-5">
-        <i class="bi bi-calendar-x fs-1 text-white-50"></i>
-        <p class="text-white-50 mt-3">Nenhum evento encontrado para os filtros selecionados.</p>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Modal Sugerir Evento -->
-<div class="modal fade" id="addEventModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title neon-text">Sugerir Novo Evento</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label">Nome do Evento</label>
-                        <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Ex: FurryCon 2026">
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Cidade</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary">
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label">País</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Descrição</label>
-                        <textarea class="form-control bg-dark text-white border-secondary" rows="3"></textarea>
-                    </div>
-                    <p class="x-small text-white-50">* Todo evento sugerido passa por aprovação administrativa.</p>
-                </form>
-            </div>
-            <div class="modal-footer border-secondary">
-                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button class="neon-btn">Enviar Sugestão</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Anos do Evento -->
-
-
-<script>
-function filterEvents(cat) {
-    if(cat === 'all') window.location.href = '/events';
-    else window.location.href = `/events?category=${encodeURIComponent(cat)}`;
-}
-</script>
 {% endblock %}

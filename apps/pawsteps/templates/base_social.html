@@ -2,216 +2,136 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}PawSteps{% endblock %}</title>
     <meta name="description" content="PawSteps - Rede social para a comunidade furry. Compartilhe, conecte-se e explore eventos.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_social.css') }}">
-    <style>
-        .mobile-bottom-nav {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1050;
-            background: rgba(10, 11, 16, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding: 8px 0;
-            padding-bottom: env(safe-area-inset-bottom, 8px);
-        }
-        .mobile-bottom-nav .nav-items {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        .mobile-bottom-nav .nav-item-mobile {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: rgba(255,255,255,0.5);
-            font-size: 0.65rem;
-            gap: 2px;
-            padding: 4px 12px;
-            border-radius: 12px;
-            transition: 0.2s;
-        }
-        .mobile-bottom-nav .nav-item-mobile i { font-size: 1.4rem; }
-        .mobile-bottom-nav .nav-item-mobile.active,
-        .mobile-bottom-nav .nav-item-mobile:hover { color: #00f3ff; }
-        .mobile-bottom-nav .post-btn-mobile {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00f3ff, #bc13fe);
-            border: none;
-            color: #fff;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,243,255,0.3);
-            transition: 0.3s;
-        }
-        .mobile-bottom-nav .post-btn-mobile:hover { transform: scale(1.1); }
-
-        .mobile-top-bar {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1040;
-            background: rgba(10, 11, 16, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            padding: 12px 16px;
-        }
-        .mobile-top-bar h1 {
-            font-family: 'Outfit';
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin: 0;
-            background: linear-gradient(45deg, #00f3ff, #bc13fe);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        @media (max-width: 767.98px) {
-            .glass-nav { display: none !important; }
-            .sidebar-right { display: none !important; }
-            .mobile-bottom-nav { display: block; }
-            .mobile-top-bar { display: flex; justify-content: space-between; align-items: center; }
-            .main-feed {
-                margin-left: 0 !important;
-                margin-right: 0 !important;
-                padding: 70px 8px 90px 8px !important;
-                max-width: 100% !important;
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 1023.98px) {
-            .glass-nav {
-                width: 80px !important;
-                padding: 15px 10px !important;
-            }
-            .glass-nav h2,
-            .glass-nav .nav-link span,
-            .glass-nav .neon-btn span { display: none; }
-            .glass-nav .nav-link { justify-content: center; padding: 12px; }
-            .glass-nav .nav-link i { font-size: 1.5rem; margin: 0; }
-            .glass-nav .neon-btn { padding: 12px; text-align: center; }
-            .glass-nav .lang-switcher { display: none; }
-            .main-feed { margin-left: 80px !important; }
-            .sidebar-right { display: none !important; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            * { animation: none !important; transition-duration: 0.01ms !important; }
-        }
-    </style>
+    {% block head %}{% endblock %}
 </head>
 <body>
 
-    <!-- Mobile Top Bar -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-toast flash-{{ category }}" onclick="this.remove()">
+        <i class="bi {{ 'bi-check-circle' if category == 'success' else 'bi-exclamation-triangle' if category in ['error','danger','warning'] else 'bi-info-circle' }} me-2"></i>{{ message }}
+    </div>
+    {% endfor %}
+    <script>setTimeout(() => document.querySelectorAll('.flash-toast').forEach(el => el.remove()), 5000);</script>
+    {% endif %}
+    {% endwith %}
+
     <div class="mobile-top-bar">
-        <h1>PawSteps</h1>
+        <a href="{{ url_for('index') }}" class="text-decoration-none">
+            <span class="nav-logo">PawSteps</span>
+        </a>
         <div class="d-flex align-items-center gap-3">
-            <div class="d-flex gap-2 small">
-                <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'pt' else 'text-white-50' }}">PT</a>
-                <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'en' else 'text-white-50' }}">EN</a>
-                <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'es' else 'text-white-50' }}">ES</a>
+            <div class="d-flex gap-2" style="font-size:0.75rem;">
+                <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none {{ 'text-accent fw-bold' if current_lang == 'pt' else 'text-low' }}">PT</a>
+                <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none {{ 'text-accent fw-bold' if current_lang == 'en' else 'text-low' }}">EN</a>
+                <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none {{ 'text-accent fw-bold' if current_lang == 'es' else 'text-low' }}">ES</a>
             </div>
             {% if current_user.is_authenticated %}
-            <a href="{{ url_for('profile', username=current_user.username) }}" class="text-white-50"><i class="bi bi-gear fs-5"></i></a>
+            <a href="{{ url_for('profile', username=current_user.username) }}">
+                <img src="{{ current_user.avatar_url or 'https://api.dicebear.com/7.x/big-ears/svg?seed=' ~ current_user.username }}" class="avatar-xs">
+            </a>
             {% endif %}
         </div>
     </div>
 
-    <!-- Desktop Sidebar -->
-    <nav class="glass-nav d-none d-md-block">
-        <div class="mb-5">
-            <h2 class="fw-bold" style="font-family: 'Outfit'; background: linear-gradient(45deg, #00f3ff, #bc13fe); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">PawSteps</h2>
+    <nav class="glass-nav d-none d-md-flex">
+        <div class="mb-4">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <span class="nav-logo">PawSteps</span>
+            </a>
         </div>
 
-        <div class="d-flex flex-column gap-2">
-            <a href="{{ url_for('index') }}" class="nav-link">
-                <i class="bi bi-house-door-fill fs-4"></i> <span>{{ t('nav_home') }}</span>
+        <div class="d-flex flex-column gap-1 flex-grow-1">
+            <a href="{{ url_for('index') }}" class="nav-link {{ 'active' if request.endpoint == 'index' }}">
+                <i class="bi {{ 'bi-house-door-fill' if request.endpoint == 'index' else 'bi-house-door' }}"></i>
+                <span>{{ t('nav_home') }}</span>
             </a>
-            <a href="{{ url_for('explore') }}" class="nav-link">
-                <i class="bi bi-hash fs-4"></i> <span>{{ t('nav_explore') }}</span>
+            <a href="{{ url_for('explore') }}" class="nav-link {{ 'active' if request.endpoint == 'explore' }}">
+                <i class="bi {{ 'bi-compass-fill' if request.endpoint == 'explore' else 'bi-compass' }}"></i>
+                <span>{{ t('nav_explore') }}</span>
             </a>
-            <a href="{{ url_for('map_view') }}" class="nav-link">
-                <i class="bi bi-geo-alt-fill fs-4"></i> <span>{{ t('nav_map') }}</span>
+            <a href="{{ url_for('events') }}" class="nav-link {{ 'active' if request.endpoint == 'events' }}">
+                <i class="bi {{ 'bi-calendar-event-fill' if request.endpoint == 'events' else 'bi-calendar-event' }}"></i>
+                <span>Eventos</span>
+            </a>
+            <a href="{{ url_for('map_view') }}" class="nav-link {{ 'active' if request.endpoint == 'map_view' }}">
+                <i class="bi {{ 'bi-geo-alt-fill' if request.endpoint == 'map_view' else 'bi-geo-alt' }}"></i>
+                <span>{{ t('nav_map') }}</span>
             </a>
             {% if current_user.is_authenticated %}
-            <a href="{{ url_for('messages_index') }}" class="nav-link">
-                <i class="bi bi-envelope fs-4"></i> <span>{{ t('nav_messages') }}</span>
+            <a href="{{ url_for('messages_index') }}" class="nav-link {{ 'active' if request.endpoint in ['messages_index', 'chat'] }}">
+                <i class="bi {{ 'bi-envelope-fill' if request.endpoint in ['messages_index', 'chat'] else 'bi-envelope' }}"></i>
+                <span>{{ t('nav_messages') }}</span>
             </a>
-            <a href="{{ url_for('profile', username=current_user.username) }}" class="nav-link">
-                <i class="bi bi-person-fill fs-4"></i> <span>{{ t('nav_profile') }} (@{{ current_user.username }})</span>
-            </a>
-            <a href="{{ url_for('logout_social') }}" class="nav-link text-danger mt-3">
-                <i class="bi bi-box-arrow-right fs-4"></i> <span>{{ t('nav_logout') }}</span>
+            <a href="{{ url_for('profile', username=current_user.username) }}" class="nav-link {{ 'active' if request.endpoint == 'profile' and request.view_args.get('username') == current_user.username }}">
+                <i class="bi {{ 'bi-person-fill' if request.endpoint == 'profile' else 'bi-person' }}"></i>
+                <span>{{ t('nav_profile') }}</span>
             </a>
             {% endif %}
         </div>
 
-        <div class="mt-5">
-            <div class="d-flex justify-content-center gap-3 mb-3 lang-switcher">
-                <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'pt' else 'text-white-50' }}">PT</a>
-                <span class="text-white-50">|</span>
-                <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'en' else 'text-white-50' }}">EN</a>
-                <span class="text-white-50">|</span>
-                <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'es' else 'text-white-50' }}">ES</a>
+        <div class="mt-auto pt-3">
+            <div class="d-flex justify-content-center gap-3 mb-3 lang-switcher" style="font-size:0.78rem;">
+                <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none {{ 'text-accent fw-bold' if current_lang == 'pt' else 'text-low' }}">PT</a>
+                <span class="text-low">·</span>
+                <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none {{ 'text-accent fw-bold' if current_lang == 'en' else 'text-low' }}">EN</a>
+                <span class="text-low">·</span>
+                <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none {{ 'text-accent fw-bold' if current_lang == 'es' else 'text-low' }}">ES</a>
             </div>
             {% if current_user.is_authenticated %}
-            <button class="neon-btn w-100 py-3 fs-5" data-bs-toggle="modal" data-bs-target="#postModal"><span>{{ t('btn_post') }}</span></button>
+            <button class="neon-btn w-100 py-3" data-bs-toggle="modal" data-bs-target="#postModal"><span>{{ t('btn_post') }}</span></button>
+            <a href="{{ url_for('logout_social') }}" class="nav-link text-danger mt-2 justify-content-center" style="font-size:0.8rem;">
+                <i class="bi bi-box-arrow-right"></i> <span>{{ t('nav_logout') }}</span>
+            </a>
             {% else %}
-            <a href="{{ url_for('login_social') }}" class="neon-btn w-100 py-3 fs-5 text-center text-decoration-none d-block"><span>{{ t('nav_login') }}</span></a>
+            <a href="{{ url_for('login_social') }}" class="neon-btn w-100 py-3 text-center text-decoration-none d-block"><span>{{ t('nav_login') }}</span></a>
             {% endif %}
         </div>
     </nav>
 
-    <!-- Feed Principal -->
     <main class="main-feed">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Desktop Right Sidebar -->
     <aside class="sidebar-right d-none d-lg-block">
-        <div class="glass-card p-3 mb-4" style="background: var(--card-bg); border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
-            <h5 class="fw-bold mb-3">O que está acontecendo</h5>
-            <div class="small text-secondary mb-3">#FurryCon2026 - <span class="text-info">Ativo</span></div>
-            <div class="small text-secondary mb-3">Encontro de Lobos - <span class="text-info">Hoje</span></div>
-            <a href="{{ url_for('events') }}" class="text-info text-decoration-none small">Ver mais eventos</a>
+        <div class="glass-card p-3 mb-4">
+            <h6 class="fw-bold mb-3 text-mid" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Em alta</h6>
+            <div class="trend-item px-0">
+                <div class="text-low x-small">Comunidade Furry</div>
+                <div class="fw-bold small">#FurryCon2026</div>
+                <div class="text-low x-small">Trending</div>
+            </div>
+            <div class="trend-item px-0">
+                <div class="text-low x-small">Eventos</div>
+                <div class="fw-bold small">Encontro de Lobos</div>
+                <div class="text-low x-small">Hoje</div>
+            </div>
+            <a href="{{ url_for('events') }}" class="d-block text-accent small mt-2">Ver todos os eventos →</a>
         </div>
 
-        <div class="glass-card p-3" style="background: var(--card-bg); border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
-            <h5 class="fw-bold mb-3">Mapa de Proximidade</h5>
-            <p class="small text-secondary">Encontre amigos por perto! Sua localização exata é protegida.</p>
-            <a href="{{ url_for('map_view') }}" class="btn btn-outline-info btn-sm w-100">Abrir Mapa</a>
+        <div class="glass-card p-3">
+            <h6 class="fw-bold mb-3 text-mid" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Mapa de Proximidade</h6>
+            <p class="text-low small mb-3">Encontre amigos por perto! Sua localização exata é protegida.</p>
+            <a href="{{ url_for('map_view') }}" class="btn-ghost w-100 d-block text-center py-2" style="font-size:0.85rem;"><i class="bi bi-geo-alt me-1"></i>Abrir Mapa</a>
         </div>
     </aside>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <nav class="mobile-bottom-nav">
         <div class="nav-items">
             <a href="{{ url_for('index') }}" class="nav-item-mobile {{ 'active' if request.endpoint == 'index' }}">
-                <i class="bi bi-house-door-fill"></i>
+                <i class="bi {{ 'bi-house-door-fill' if request.endpoint == 'index' else 'bi-house-door' }}"></i>
                 <span>{{ t('nav_home') }}</span>
             </a>
             <a href="{{ url_for('explore') }}" class="nav-item-mobile {{ 'active' if request.endpoint == 'explore' }}">
-                <i class="bi bi-compass"></i>
+                <i class="bi {{ 'bi-compass-fill' if request.endpoint == 'explore' else 'bi-compass' }}"></i>
                 <span>{{ t('nav_explore') }}</span>
             </a>
             {% if current_user.is_authenticated %}
@@ -224,12 +144,12 @@
             </a>
             {% endif %}
             <a href="{{ url_for('map_view') }}" class="nav-item-mobile {{ 'active' if request.endpoint == 'map_view' }}">
-                <i class="bi bi-geo-alt"></i>
+                <i class="bi {{ 'bi-geo-alt-fill' if request.endpoint == 'map_view' else 'bi-geo-alt' }}"></i>
                 <span>{{ t('nav_map') }}</span>
             </a>
             {% if current_user.is_authenticated %}
             <a href="{{ url_for('profile', username=current_user.username) }}" class="nav-item-mobile {{ 'active' if request.endpoint == 'profile' }}">
-                <i class="bi bi-person"></i>
+                <i class="bi {{ 'bi-person-fill' if request.endpoint == 'profile' else 'bi-person' }}"></i>
                 <span>{{ t('nav_profile') }}</span>
             </a>
             {% else %}
@@ -240,6 +160,38 @@
             {% endif %}
         </div>
     </nav>
+
+    {% if current_user.is_authenticated %}
+    <div class="modal fade" id="postModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-xl);">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <form action="{{ url_for('create_post') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="location" id="modalPostLocation">
+                        <div class="d-flex gap-3">
+                            <img src="{{ current_user.avatar_url or 'https://api.dicebear.com/7.x/big-ears/svg?seed=' ~ current_user.username }}" class="avatar-md">
+                            <div class="flex-grow-1">
+                                <textarea name="content" class="form-control bg-transparent border-0 fs-5 p-0" placeholder="O que está acontecendo?" rows="4" style="resize:none;" required></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3" style="border-top: 1px solid var(--border);">
+                            <div class="compose-icons">
+                                <span class="compose-icon"><i class="bi bi-image"></i></span>
+                                <span class="compose-icon" onclick="document.getElementById('modalPostLocation').value = prompt('De onde?') || ''"><i class="bi bi-geo-alt"></i></span>
+                                <span class="compose-icon" onclick="this.closest('form').querySelector('textarea').value += '🐾'"><i class="bi bi-emoji-smile"></i></span>
+                            </div>
+                            <button type="submit" class="neon-btn px-4 py-2">Postar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}

@@ -1,36 +1,30 @@
 {% extends "base_social.html" %}
-
-{% block title %}Vincular Identidade - PawSteps{% endblock %}
+{% block title %}Vincular CNF — PawSteps{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center min-vh-75">
-    <div class="col-md-6">
-        <div class="glass-card p-5 border-info">
-            <h2 class="neon-text text-center fw-bold mb-4">Vincular Identidade CGRF</h2>
-            <div class="alert alert-info bg-dark border-info text-info small mb-4">
-                Você recebeu o convite para vincular a CNF <strong>{{ cnf }}</strong> à sua conta.
-                Entre com seus dados sociais abaixo para confirmar o vínculo.
+<div class="auth-wrapper" style="margin-left:calc(-1 * var(--sidebar-w));margin-right:calc(-1 * var(--sidebar-right-w));min-height:100vh;">
+    <div class="auth-card" style="max-width:460px;">
+        <div class="text-center mb-4">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--gradient-subtle);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <i class="bi bi-link-45deg text-accent" style="font-size:1.8rem;"></i>
             </div>
-            
-            <form method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                
-                <div class="mb-3">
-                    <label class="form-label text-white-50 small">Username Social</label>
-                    <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required>
-                </div>
-                
-                <div class="mb-4">
-                    <label class="form-label text-white-50 small">Senha</label>
-                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required>
-                </div>
-                
-                <button type="submit" class="neon-btn w-100 py-3 fs-5">Confirmar Vínculo</button>
-            </form>
-            
-            <div class="text-center mt-4">
-                <p class="text-white-50 small">Ainda não tem conta? <a href="{{ url_for('register') }}" class="text-info text-decoration-none">Crie uma agora</a></p>
+            <h4 class="fw-bold">Vincular Identidade CGRF</h4>
+            <p class="text-low small">Vincule sua carteira digital <span class="text-accent fw-bold">{{ cnf }}</span> à sua conta PawSteps para receber o selo de verificação.</p>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">Username PawSteps</label>
+                <input type="text" name="username" class="form-control" placeholder="@seu_username" required>
             </div>
+            <div class="mb-4">
+                <label class="form-label">Senha</label>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="neon-btn w-100 py-3"><i class="bi bi-patch-check me-2"></i>Vincular e Verificar</button>
+        </form>
+        <div class="text-center mt-3">
+            <p class="text-low x-small">Não tem conta? <a href="{{ url_for('register') }}" class="text-accent">Crie uma primeiro</a></p>
         </div>
     </div>
 </div>

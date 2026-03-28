@@ -1,107 +1,67 @@
 {% extends "base_social.html" %}
-
-{% block title %}PawSteps - Mensagens{% endblock %}
+{% block title %}Mensagens — PawSteps{% endblock %}
 
 {% block content %}
-<div class="row min-vh-75 h-100 g-0 glass-card rounded-4 border border-secondary overflow-hidden">
-    <!-- Lista de Contatos -->
-    <div class="col-md-4 border-end border-secondary bg-dark bg-opacity-50 d-flex flex-column" style="height: 70vh;">
-        <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold m-0 text-info"><i class="bi bi-chat-dots-fill"></i> DM Furry</h5>
-            <button class="btn btn-sm btn-outline-info rounded-circle" title="Nova Mensagem" onclick="newChatPrompt()"><i class="bi bi-pencil-square"></i></button>
+<div class="d-flex" style="min-height:calc(100vh - 56px);">
+    <div style="width:100%;{% if active_chat %}max-width:320px;border-right:1px solid var(--border);{% endif %}">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+            <h5 class="fw-bold mb-0">{{ t('nav_messages') }}</h5>
         </div>
-        
-        <div class="flex-grow-1 overflow-auto p-2">
-            {% for c in chats %}
-            <a href="{{ url_for('chat', username=c.username) }}" class="d-flex align-items-center gap-3 p-3 text-decoration-none {% if active_chat and active_chat.username == c.username %}bg-info bg-opacity-25 border-start border-info border-3{% else %}text-white hover-bg-dark{% endif %} rounded mb-1 transition-all">
-                <img src="{{ c.avatar_url or 'https://i.pravatar.cc/150?u=' ~ c.username }}" class="rounded-circle object-fit-cover" style="width: 45px; height: 45px;">
-                <div class="overflow-hidden">
-                    <b class="d-block text-truncate">{{ c.display_name }}</b>
-                    <small class="text-white-50 d-block text-truncate">@{{ c.username }}</small>
-                </div>
-            </a>
-            {% else %}
-            <div class="text-center p-4 text-white-50">
-                <i class="bi bi-inbox fs-1"></i>
-                <p class="mt-2">Caixa de entrada vazia. Inicie uma nova conversa!</p>
+        {% for c in chats %}
+        <a href="{{ url_for('chat', username=c.username) }}" class="chat-list-item {{ 'active' if active_chat and active_chat.username == c.username }}">
+            <img src="{{ c.avatar_url or 'https://api.dicebear.com/7.x/big-ears/svg?seed=' ~ c.username }}" class="avatar-md">
+            <div class="min-width-0">
+                <div class="fw-bold" style="font-size:0.9rem;">{{ c.display_name }}</div>
+                <div class="text-low x-small text-truncate">@{{ c.username }}</div>
             </div>
-            {% endfor %}
+        </a>
+        {% else %}
+        <div class="empty-state" style="padding:40px 20px;">
+            <i class="bi bi-envelope-open" style="font-size:2rem;"></i>
+            <p class="small mt-2">Nenhuma conversa ainda.<br>Visite um perfil e envie a primeira mensagem!</p>
         </div>
+        {% endfor %}
     </div>
-    
-    <!-- Painel de Chat Ativo -->
-    <div class="col-md-8 d-flex flex-column" style="height: 70vh; background-color: rgba(10, 11, 16, 0.6);">
-        {% if active_chat %}
-        <!-- Chat Header -->
-        <div class="p-3 border-bottom border-secondary d-flex align-items-center gap-3 bg-dark">
+
+    {% if active_chat %}
+    <div class="flex-grow-1 d-flex flex-column">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--border);" class="d-flex align-items-center gap-3">
             <a href="{{ url_for('profile', username=active_chat.username) }}">
-                <img src="{{ active_chat.avatar_url or 'https://i.pravatar.cc/150?u=' ~ active_chat.username }}" class="rounded-circle object-fit-cover" style="width: 45px; height: 45px;">
+                <img src="{{ active_chat.avatar_url or 'https://api.dicebear.com/7.x/big-ears/svg?seed=' ~ active_chat.username }}" class="avatar-sm">
             </a>
             <div>
-                <b class="d-flex align-items-center gap-1">{{ active_chat.display_name }} {% if active_chat.cnf_vinculado %}<i class="bi bi-patch-check-fill text-info small"></i>{% endif %}</b>
-                <small class="text-white-50">@{{ active_chat.username }}</small>
+                <div class="fw-bold" style="font-size:0.9rem;">{{ active_chat.display_name }}</div>
+                <div class="text-low x-small">@{{ active_chat.username }}</div>
             </div>
         </div>
-        
-        <!-- Messages Area -->
-        <div class="flex-grow-1 overflow-auto p-4 d-flex flex-column gap-3" id="messagesContainer">
+
+        <div class="flex-grow-1" style="padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;" id="chatMessages">
             {% for m in messages %}
-                {% if m.sender_id == current_user.id %}
-                <!-- Minha mensagem -->
-                <div class="align-self-end text-end" style="max-width: 75%;">
-                    <div class="bg-info text-dark rounded-4 p-3 d-inline-block shadow-sm" style="border-bottom-right-radius: 4px !important;">
-                        {{ m.content }}
-                    </div>
-                    <small class="text-white-50 d-block mt-1">{{ m.created_at.split(' ')[1][:5] }}</small>
+            <div class="d-flex {{ 'justify-content-end' if m.sender_id == current_user.id else 'justify-content-start' }}">
+                <div class="msg-bubble {{ 'msg-sent' if m.sender_id == current_user.id else 'msg-received' }}">
+                    {{ m.content }}
                 </div>
-                {% else %}
-                <!-- Mensagem recebida -->
-                <div class="align-self-start text-start" style="max-width: 75%;">
-                    <div class="bg-dark text-white rounded-4 p-3 border border-secondary d-inline-block shadow-sm" style="border-bottom-left-radius: 4px !important;">
-                        {{ m.content }}
-                    </div>
-                    <small class="text-white-50 d-block mt-1">{{ m.created_at.split(' ')[1][:5] }}</small>
-                </div>
-                {% endif %}
-            {% else %}
-            <div class="text-center mt-auto mb-auto text-white-50">
-                <p>Nenhuma mensagem ainda. Dê um 'Miau' ou 'Au Au' para começar!</p>
             </div>
             {% endfor %}
         </div>
-        
-        <!-- Input Area -->
-        <div class="p-3 border-top border-secondary bg-dark">
-            <form action="{{ url_for('chat', username=active_chat.username) }}" method="POST" class="d-flex gap-2">
+
+        <div style="padding:12px 20px;border-top:1px solid var(--border);">
+            <form method="POST" class="d-flex gap-2">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="text" name="content" class="form-control bg-transparent border-secondary text-white rounded-pill px-4" placeholder="Digite uma mensagem..." autocomplete="off" required>
-                <button type="submit" class="btn btn-info rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="bi bi-send-fill text-dark"></i></button>
+                <input type="text" name="content" class="form-control" style="border-radius:var(--radius-full);padding:10px 18px;" placeholder="Mensagem..." required autocomplete="off">
+                <button class="neon-btn px-4" style="border-radius:var(--radius-full);"><i class="bi bi-send"></i></button>
             </form>
         </div>
-        
-        {% else %}
-        <!-- Empty State -->
-        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-white-50">
-            <i class="bi bi-chat-left-heart fs-1 text-info mb-3"></i>
-            <h4>Suas Mensagens</h4>
-            <p>Selecione um contato ao lado para conversar, ou inicie uma nova DM através do perfil de alguém.</p>
-        </div>
-        {% endif %}
     </div>
+    {% endif %}
 </div>
+{% endblock %}
 
+{% block scripts %}
+{% if active_chat %}
 <script>
-    // Scroll para o fim das mensagens ao carregar
-    const container = document.getElementById('messagesContainer');
-    if(container) {
-        container.scrollTop = container.scrollHeight;
-    }
-    
-    function newChatPrompt() {
-        const username = prompt("Digite o @username do usuário que deseja conversar:");
-        if(username) {
-            window.location.href = `/messages/${username.replace('@', '')}`;
-        }
-    }
+const chat = document.getElementById('chatMessages');
+if(chat) chat.scrollTop = chat.scrollHeight;
 </script>
+{% endif %}
 {% endblock %}

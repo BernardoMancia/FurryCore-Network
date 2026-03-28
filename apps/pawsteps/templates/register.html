@@ -1,184 +1,72 @@
 {% extends "base_social.html" %}
-
-{% block title %}Cadastro - PawSteps.social{% endblock %}
+{% block title %}Cadastro — PawSteps{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center min-vh-75">
-    <div class="col-md-7 col-lg-6">
-        <div class="glass-card p-5">
-            <h2 class="neon-text text-center fw-bold mb-4">{{ t('register_title') }}</h2>
-            <form method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-white-50 small">{{ t('lbl_username') }}</label>
-                        <input type="text" name="username" class="form-control bg-dark text-white border-secondary" placeholder="ex: wolfie" pattern="^\S+$" title="Não são permitidos espaços no username" oninput="this.value = this.value.replace(/\s/g, '')" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-white-50 small">{{ t('lbl_display_name') }}</label>
-                        <input type="text" name="display_name" class="form-control bg-dark text-white border-secondary" placeholder="ex: Wolfie the Great" required>
-                    </div>
+<div class="auth-wrapper" style="margin-left: calc(-1 * var(--sidebar-w)); margin-right: calc(-1 * var(--sidebar-right-w)); min-height: 100vh;">
+    <div class="auth-card" style="max-width:480px;">
+        <div class="text-center mb-4">
+            <div class="auth-logo">PawSteps</div>
+            <p class="text-low small">Junte-se à comunidade furry</p>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="lobo_azul" required>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label text-white-50 small">{{ t('lbl_email') }}</label>
-                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" placeholder="seu@email.com" required>
+                <div class="col-md-6">
+                    <label class="form-label">Nome de Exibição</label>
+                    <input type="text" name="display_name" class="form-control" placeholder="Lobo Azul" required>
                 </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-white-50 small">{{ t('lbl_password') }}</label>
-                    <div class="input-group">
-                        <input type="password" name="password" id="passwordInput" class="form-control bg-dark text-white border-secondary" required>
-                        <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn" tabindex="-1">
-                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
-                        </button>
-                    </div>
+                <div class="col-12">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" name="email" class="form-control" placeholder="lobo@email.com" required>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label text-white-50 small">{{ t('lbl_confirm_password') }}</label>
-                    <input type="password" name="confirm_password" id="confirmPasswordInput" class="form-control bg-dark text-white border-secondary" required>
-                    <div id="passwordMismatchWarning" class="text-danger small mt-1 d-none">{{ t('pass_mismatch') }}</div>
+                <div class="col-md-6">
+                    <label class="form-label">Senha</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required id="regPass">
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label text-white-50 small">{{ t('lbl_age') }} / {{ t('lbl_dob') }}</label>
-                    <input type="date" name="dob" id="dobInput" class="form-control bg-dark text-white border-secondary" required onchange="checkAgeByDOB()">
-                    <input type="hidden" name="age" id="ageInput" value="0">
-                    <div id="ageWarning" class="text-warning x-small mt-1 d-none">{{ t('age_warning') }}</div>
+                <div class="col-md-6">
+                    <label class="form-label">Confirmar Senha</label>
+                    <input type="password" name="confirm_password" class="form-control" placeholder="••••••••" required>
                 </div>
-
-                <div id="nsfwPermissionSection" class="form-check form-switch mb-4 p-3 rounded d-none" style="background: rgba(255,100,100,0.05); border: 1px dashed rgba(255,100,100,0.2);">
-                    <input class="form-check-input ms-0 me-2" type="checkbox" name="is_plus18" id="ageCheck">
-                    <label class="form-check-label text-white small" for="ageCheck">
-                        Desejo ter a opção de ver conteúdo **NSFW** (+18)
-                    </label>
-                </div>
-
-                <div class="form-check mb-4">
-                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                    <label class="form-check-label text-white-50 small" for="termsCheck">
-                        Li e aceito os <a href="#" class="text-info text-decoration-none" data-bs-toggle="modal" data-bs-target="#termsModal">Termos de Uso e Serviço da FurryCore Network</a>
-                    </label>
-                </div>
-
-                <script>
-                function checkAge() {
-                    const age = document.getElementById('ageInput').value;
-                    const nsfwSection = document.getElementById('nsfwPermissionSection');
-                    const warning = document.getElementById('ageWarning');
-                    if (age >= 18) {
-                        nsfwSection.classList.remove('d-none');
-                        warning.classList.add('d-none');
-                    } else {
-                        nsfwSection.classList.add('d-none');
-                        warning.classList.remove('d-none');
-                        document.getElementById('ageCheck').checked = false;
-                    }
-                }
-
-                // Lógica de Visibilidade de Senha (Olho mágico)
-                const passwordInput = document.getElementById('passwordInput');
-                const togglePasswordBtn = document.getElementById('togglePasswordBtn');
-                const togglePasswordIcon = document.getElementById('togglePasswordIcon');
-                
-                togglePasswordBtn.addEventListener('click', function() {
-                    if (passwordInput.type === 'password') {
-                        passwordInput.type = 'text';
-                        togglePasswordIcon.classList.remove('bi-eye');
-                        togglePasswordIcon.classList.add('bi-eye-slash');
-                    } else {
-                        passwordInput.type = 'password';
-                        togglePasswordIcon.classList.remove('bi-eye-slash');
-                        togglePasswordIcon.classList.add('bi-eye');
-                    }
-                    passwordInput.focus();
-                });
-
-                // Auto-hiding da senha ao perder o foco (blur)
-                passwordInput.addEventListener('blur', function() {
-                    setTimeout(() => {
-                        if (document.activeElement !== passwordInput && document.activeElement !== togglePasswordBtn) {
-                            passwordInput.type = 'password';
-                            togglePasswordIcon.classList.remove('bi-eye-slash');
-                            togglePasswordIcon.classList.add('bi-eye');
-                        }
-                    }, 100);
-                });
-
-                // Validação de Dupla Senha
-                const confirmPasswordInput = document.getElementById('confirmPasswordInput');
-                const passwordMismatchWarning = document.getElementById('passwordMismatchWarning');
-                const registerForm = document.querySelector('form');
-
-                function checkPasswordMatch() {
-                    if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-                        passwordMismatchWarning.classList.remove('d-none');
-                        confirmPasswordInput.classList.add('is-invalid');
-                        return false;
-                    } else {
-                        passwordMismatchWarning.classList.add('d-none');
-                        confirmPasswordInput.classList.remove('is-invalid');
-                        return true;
-                    }
-                }
-
-                passwordInput.addEventListener('input', checkPasswordMatch);
-                confirmPasswordInput.addEventListener('input', checkPasswordMatch);
-
-                registerForm.addEventListener('submit', function(e) {
-                    if (!checkPasswordMatch()) {
-                        e.preventDefault();
-                    }
-                });
-                </script>
-
-                <!-- Modal Termos -->
-                <div class="modal fade" id="termsModal" tabindex="-1">
-                    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                        <div class="modal-content bg-dark text-white border-secondary">
-                            <div class="modal-header border-secondary z-2 glass-card rounded-bottom-0 pb-3 pt-4">
-                                <div>
-                                    <h4 class="modal-title neon-text fw-bold">Termos de Uso e Serviços</h4>
-                                    <p class="mb-0 text-white-50">Ecossistema FurryCore Network</p>
-                                </div>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body p-4" style="line-height: 1.7;">
-                                <h5 class="fw-bold text-info mt-2">1. Aceitação dos Termos</h5>
-                                <p class="text-white-50">Ao criar sua conta, acessar a Rede Social PawSteps, utilizar o Portal CGRF, ou comprar em nossa FurryCore Shop, você concorda de forma irrevogável com todas as diretrizes a seguir. O uso continuado da plataforma configura o aceite de atualizações futuras nestes termos.</p>
-
-                                <h5 class="fw-bold text-info mt-4">2. Privacidade e LGPD</h5>
-                                <p class="text-white-50">Levamos a proteção dos seus dados a sério, em conformidade com as diretrizes de proteção de dados. Seus PII (Personally Identifiable Information) como nome legal de registro no Portal CGRF ou documentos, são restritos. Somente você e os administradores autorizados têm acesso à sua identidade real, que pode ser ofuscada do perfil público utilizando as solicitações de Privacidade presentes no Portal.</p>
-                                <p class="text-white-50">A rede social monitora apenas o seu "Nome de Exibição" e seu log de conexão ofuscado (raio de 100m) em conformidade legal.</p>
-
-                                <h5 class="fw-bold text-info mt-4">3. Classificação e Controle de Conteúdo (+18 / NSFW)</h5>
-                                <p class="text-white-50">O ecossistema divide rigorosamente conteúdos "SFW" (Safe for Work) e "NSFW" (Not Safe for Work).
-                                <br>- <strong>Menores de Idade:</strong> É expressamente proibida a criação e o consumo de mídia de cunho sexualmente explícito, extremamente violento ou abusivo.
-                                <br>- <strong>Habilitação de +18:</strong> Adultos podem decidir voluntariamente se desejam o destrava de material restrito, sendo necessário validação real de idade.
-                                <br>- O upload malicioso ou categorização incorreta de mídia adulta resultará no encerramento da conta e, possivelmente, banimento do CNF do titular.</p>
-
-                                <h5 class="fw-bold text-info mt-4">4. Regras de Cidadania e Respeito (PawSteps)</h5>
-                                <p class="text-white-50">Atente-se às regras de convivência. Nenhum comportamento abusivo, seja cyberbullying, doxing, perseguição a artistas e furries, assédio direcionado ou campanhas de ódio contra parcelas da comunidade, será tolerado de nenhuma forma. A FurryCore Network atua como zona neutra e segura para a socialização furry.</p>
-
-                                <h5 class="fw-bold text-info mt-4">5. Segurança Cibernética</h5>
-                                <p class="text-white-50">É de responsabilidade do usuário proteger suas credenciais. É recomendado ligar a autenticação de múltiplos fatores (MFA). A equipe jamais pedirá sua senha fora da plataforma oficial. Se qualquer brecha na sua conta incitar invasões ou dano à integridade do banco de dados, o usuário pode ser responsabilizado e sua documentação da CGRF suspensa por investigação de comprometimento (Breach Investigation).</p>
-                            </div>
-                            <div class="modal-footer border-secondary z-2 glass-card rounded-top-0 pt-3 pb-3">
-                                <button type="button" class="btn btn-outline-info w-100" data-bs-dismiss="modal">Eu Li e Concordo</button>
-                            </div>
-                        </div>
+                <div class="col-12">
+                    <div class="d-flex align-items-center gap-3 p-3" style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);">
+                        <input type="checkbox" name="is_plus18" id="plus18" class="form-check-input" style="width:20px;height:20px;cursor:pointer;">
+                        <label for="plus18" class="small text-mid" style="cursor:pointer;">Tenho 18 anos ou mais (necessário para conteúdo NSFW)</label>
                     </div>
                 </div>
-                
-                <button type="submit" class="neon-btn w-100 py-3 fs-5 mb-4">{{ t('register_btn') }}</button>
-                
-                <div class="text-center">
-                    <p class="text-white-50 small">Já tem uma conta? / Already register? <a href="{{ url_for('login_social') }}" class="text-info text-decoration-none">{{ t('nav_login') }}</a></p>
+                <div class="col-12 mt-2">
+                    <div id="passStrength" class="mb-2" style="height:3px;border-radius:2px;background:var(--border);overflow:hidden;">
+                        <div id="passBar" style="height:100%;width:0%;transition:0.3s;border-radius:2px;"></div>
+                    </div>
+                    <button type="submit" class="neon-btn w-100 py-3">Criar Conta</button>
                 </div>
-            </form>
+            </div>
+        </form>
+        <div class="text-center mt-3">
+            <p class="text-low small">Já tem conta? <a href="{{ url_for('login_social') }}" class="text-accent fw-bold">Entrar</a></p>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('regPass').addEventListener('input', function() {
+    const bar = document.getElementById('passBar');
+    const v = this.value;
+    let s = 0;
+    if(v.length >= 6) s++;
+    if(v.length >= 10) s++;
+    if(/[A-Z]/.test(v)) s++;
+    if(/[0-9]/.test(v)) s++;
+    if(/[^A-Za-z0-9]/.test(v)) s++;
+    const w = (s/5)*100;
+    const colors = ['#ef4444','#f59e0b','#f59e0b','#22c55e','#00e5ff'];
+    bar.style.width = w+'%';
+    bar.style.background = colors[s-1] || '#ef4444';
+});
+</script>
 {% endblock %}
