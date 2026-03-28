@@ -13,16 +13,16 @@ def _get_db_path(app_name):
 def create_pre_account_social(email, display_name):
     social_db = _get_db_path("pawsteps")
     if not os.path.exists(social_db):
-        return False
+        return None
 
     try:
         conn = sqlite3.connect(social_db)
         cursor = conn.cursor()
 
-        exists = cursor.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        exists = cursor.execute("SELECT username FROM users WHERE email = ?", (email,)).fetchone()
         if exists:
             conn.close()
-            return True
+            return exists[0]
 
         username = email.split("@")[0].replace(".", "").replace("_", "").replace(" ", "").lower()
 
@@ -38,10 +38,10 @@ def create_pre_account_social(email, display_name):
         )
         conn.commit()
         conn.close()
-        return True
+        return username
     except Exception as e:
         print(f"[CROSS-DB ERROR] Failed to pre-create social account: {e}")
-        return False
+        return None
 
 
 def sync_social_account(old_email, new_email, status=None, password_hash=None):

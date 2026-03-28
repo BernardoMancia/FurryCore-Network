@@ -54,51 +54,101 @@ def send_welcome_email(user_data):
     subject = "🐾 Ative sua Identidade Digital - FurryCore Network"
     portal_url = Config.get_portal_url("cgrf")
     social_url = Config.get_portal_url("pawsteps")
+    pawsteps_user = user_data.get("pawsteps_username", "")
+
+    social_section = ""
+    if pawsteps_user:
+        social_section = f"""
+        <div style="background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(168,85,247,0.08)); padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid rgba(168,85,247,0.25);">
+            <div style="text-align: center; margin-bottom: 12px;">
+                <span style="font-size: 28px;">🌐</span>
+            </div>
+            <h3 style="color: #a855f7; margin: 0 0 8px 0; text-align: center; font-size: 16px;">Rede Social PawSteps</h3>
+            <p style="text-align: center; margin: 0 0 6px 0; font-size: 14px; color: #ccc;">Sua conta social foi criada automaticamente!</p>
+            <div style="text-align: center; margin: 16px 0;">
+                <span style="display: inline-block; background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3); padding: 10px 24px; border-radius: 20px; font-size: 18px; font-weight: bold; color: #00e5ff; letter-spacing: 0.5px;">@{pawsteps_user}</span>
+            </div>
+            <p style="text-align: center; margin: 8px 0 16px 0; font-size: 12px; color: #888;">Este é seu identificador na rede social. Após ativar sua conta, sua senha será sincronizada automaticamente.</p>
+            <div style="text-align: center;">
+                <a href="{social_url}/profile/{pawsteps_user}" style="display: inline-block; padding: 10px 28px; background: transparent; color: #a855f7; font-weight: bold; text-decoration: none; border-radius: 20px; border: 1px solid #a855f7; font-size: 13px;">VER MEU PERFIL NO PAWSTEPS</a>
+            </div>
+        </div>
+        """
+
+    vincular_section = ""
+    if pawsteps_user:
+        vincular_section = f"""
+        <div style="margin-top: 20px; border: 1px dashed rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; text-align: center; background: rgba(255,255,255,0.02);">
+            <p style="font-size: 13px; color: #999; margin: 0 0 8px 0;">Já possui uma conta diferente no PawSteps.social?</p>
+            <a href="{social_url}/vincular?cnf={user_data['cnf']}&email={user_data['email']}" style="color: #00e5ff; text-decoration: underline; font-size: 13px;">Vincular CNF à conta existente</a>
+        </div>
+        """
 
     html = f"""
-    <div style="background-color: #0a0b10; color: #ffffff; padding: 40px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #00f2ff; border-radius: 12px; max-width: 600px; margin: auto;">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #00f2ff; margin-bottom: 5px;">Seja Bem-vindo(a)!</h1>
-            <p style="color: #00f2ff; font-size: 1.1em; opacity: 0.8;">Sua Identidade Digital CGRF foi emitida.</p>
+    <div style="background-color: #06070a; color: #ffffff; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+
+        <div style="background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); padding: 40px 32px 30px; text-align: center; border-bottom: 1px solid rgba(0,229,255,0.15);">
+            <div style="font-size: 36px; margin-bottom: 12px;">🐾</div>
+            <h1 style="color: #00e5ff; margin: 0 0 6px 0; font-size: 22px; font-weight: 700;">Bem-vindo(a) à FurryCore Network</h1>
+            <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin: 0;">Sua Identidade Digital CGRF foi emitida com sucesso.</p>
         </div>
 
-        <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #00f2ff;">
-            <h3 style="color: #00f2ff; margin-top: 0;">📋 Suas Credenciais</h3>
-            <p style="margin: 10px 0;"><b>CNF:</b> <code style="background: #1a1b22; padding: 3px 6px; border-radius: 4px;">{user_data['cnf']}</code></p>
-            <p style="margin: 10px 0;"><b>RGF:</b> {user_data['rgf']}</p>
-            <p style="margin: 10px 0; color: #ffca2c;"><b>Senha Temporária:</b> <code style="background: #1a1b22; padding: 3px 6px; border-radius: 4px; color: #ffca2c;">{user_data.get('temp_pass', 'Verificar com Administrador')}</code></p>
-            <p style="font-size: 0.85em; color: #aaa; margin-top: 15px;"><i>* Por segurança, altere sua senha imediatamente no primeiro acesso.</i></p>
+        <div style="padding: 32px;">
+            <div style="background: rgba(255,255,255,0.03); padding: 20px 24px; border-radius: 12px; margin-bottom: 24px; border-left: 3px solid #00e5ff;">
+                <h3 style="color: #00e5ff; margin: 0 0 14px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">📋 Suas Credenciais</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 6px 0; font-size: 13px; color: #888; width: 130px;">CNF</td>
+                        <td style="padding: 6px 0; font-weight: bold;"><code style="background: #1a1b22; padding: 4px 10px; border-radius: 6px; font-size: 14px; color: #00e5ff;">{user_data['cnf']}</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; font-size: 13px; color: #888;">RGF</td>
+                        <td style="padding: 6px 0; font-weight: bold; font-size: 14px;">{user_data['rgf']}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; font-size: 13px; color: #888;">Senha Temporária</td>
+                        <td style="padding: 6px 0;"><code style="background: rgba(245,158,11,0.1); padding: 4px 10px; border-radius: 6px; font-size: 14px; color: #f59e0b; border: 1px solid rgba(245,158,11,0.2);">{user_data.get('temp_pass', 'Consultar Admin')}</code></td>
+                    </tr>
+                    {"<tr><td style='padding: 6px 0; font-size: 13px; color: #888;'>PawSteps</td><td style='padding: 6px 0; font-weight: bold; font-size: 14px; color: #a855f7;'>@" + pawsteps_user + "</td></tr>" if pawsteps_user else ""}
+                </table>
+                <p style="font-size: 11px; color: #666; margin: 14px 0 0 0;">* Altere sua senha imediatamente no primeiro acesso.</p>
+            </div>
+
+            {social_section}
+
+            <div style="background: rgba(0,229,255,0.04); padding: 20px 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid rgba(0,229,255,0.1);">
+                <h3 style="color: #00e5ff; margin: 0 0 14px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">🛡️ Ativação da Conta</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8px 0; vertical-align: top; width: 28px; font-size: 14px; color: #00e5ff; font-weight: bold;">1.</td>
+                        <td style="padding: 8px 0; font-size: 13px; line-height: 1.5;">Acesse o portal CGRF com seu e-mail e a senha temporária acima.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; vertical-align: top; font-size: 14px; color: #00e5ff; font-weight: bold;">2.</td>
+                        <td style="padding: 8px 0; font-size: 13px; line-height: 1.5;">Crie uma nova senha forte e pessoal.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; vertical-align: top; font-size: 14px; color: #00e5ff; font-weight: bold;">3.</td>
+                        <td style="padding: 8px 0; font-size: 13px; line-height: 1.5;">Configure o MFA (Google Authenticator) para máxima segurança.</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="text-align: center; margin: 32px 0 24px;">
+                <a href="{portal_url}/login" style="display: inline-block; padding: 16px 48px; background: linear-gradient(135deg, #00e5ff, #a855f7); color: #000000; font-weight: 700; text-decoration: none; border-radius: 30px; text-transform: uppercase; letter-spacing: 1.5px; font-size: 14px; box-shadow: 0 4px 20px rgba(0,229,255,0.3);">ATIVAR MINHA CONTA</a>
+            </div>
+
+            {vincular_section}
         </div>
 
-        <div style="margin-bottom: 30px;">
-            <h3 style="color: #00f2ff;">🌐 Ecossistema FurryCore</h3>
-            <p style="line-height: 1.6;">Sua conta é unificada em toda a nossa rede:</p>
-            <ul style="line-height: 1.8;">
-                <li><b>Portal CGRF:</b> Gerencie sua identidade e documentos.</li>
-                <li><b>Rede Social PawSteps:</b> Sua conta já foi pré-criada! Basta acessar com o mesmo e-mail e sua nova senha após alterá-la.</li>
-            </ul>
-        </div>
-
-        <div style="background: rgba(0, 242, 255, 0.05); padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px dashed #00f2ff;">
-            <h3 style="color: #00f2ff; margin-top: 0;">🛡️ Segurança Extra (MFA)</h3>
-            <p style="font-size: 0.9em; line-height: 1.5; margin-bottom: 0;">
-                Recomendamos ativar o <b>MFA (Autenticação de Dois Fatores)</b> nas configurações do seu perfil no Portal CGRF para garantir a proteção máxima da sua identidade.
+        <div style="padding: 20px 32px; background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+            <p style="font-size: 11px; color: #555; margin: 0;">FurryCore Network — Identidade Digital Segura para a Comunidade Furry</p>
+            <p style="font-size: 10px; color: #444; margin: 6px 0 0 0;">
+                <a href="https://cgrf.com.br" style="color: #555; text-decoration: none;">CGRF</a> ·
+                <a href="https://pawsteps.social" style="color: #555; text-decoration: none;">PawSteps</a> ·
+                <a href="https://furrycore.com.br/shop" style="color: #555; text-decoration: none;">Loja</a>
             </p>
         </div>
-
-        <div style="text-align: center; margin-top: 40px;">
-            <a href="{portal_url}" style="display: inline-block; padding: 16px 40px; background: #00f2ff; color: #000000; font-weight: bold; text-decoration: none; border-radius: 6px; text-transform: uppercase; letter-spacing: 1px;">ATIVAR MINHA CONTA</a>
-        </div>
-
-        <div style="margin-top: 30px; border: 1px dashed #555; padding: 20px; border-radius: 8px; text-align: center;">
-            <h4 style="color: #00f2ff; margin-top: 0;">🌐 Já possui uma conta no PawSteps.social?</h4>
-            <p style="font-size: 14px;">Utilize o link abaixo para vincular sua nova CNF diretamente à sua conta social existente:</p>
-            <a href="{social_url}/vincular?cnf={user_data['cnf']}&email={user_data['email']}" style="color: #00f2ff; text-decoration: underline; font-size: 14px;">Vincular à conta social existente</a>
-        </div>
-
-        <p style="text-align: center; font-size: 0.8em; color: #555; margin-top: 40px;">
-            FurryCore Network - O Cofre de Identidades da Prowl.
-        </p>
     </div>
     """
     return send_transactional_email(user_data["email"], subject, html)

@@ -539,11 +539,14 @@ def cgrf_emit_wallet():
                     )
 
                 user_data = {"nome": nome, "cnf": cnf, "rgf": rgf, "email": email, "temp_pass": temp_pass}
+
+                social_username = create_pre_account_social(email, nome)
+                if social_username:
+                    user_data["pawsteps_username"] = social_username
+
                 success, mail_err = send_welcome_email(user_data)
                 if not success:
                     print(f"[SMTP FAIL] Wallet emission email failed: {mail_err}")
-
-                create_pre_account_social(email, nome)
 
             conn.commit()
             flash(f"Carteira de {nome} emitida com sucesso! CNF: {cnf}", "success")
@@ -616,6 +619,7 @@ def cgrf_resend_email(cnf):
     conn.close()
 
     if reg and reg["email"]:
+        social_username = create_pre_account_social(reg["email"], reg["nome"])
         user_data = {
             "nome": reg["nome"],
             "cnf": reg["cnf"],
@@ -623,6 +627,8 @@ def cgrf_resend_email(cnf):
             "email": reg["email"],
             "temp_pass": "Consulte sua senha anterior",
         }
+        if social_username:
+            user_data["pawsteps_username"] = social_username
         success, mail_err = send_welcome_email(user_data)
         if success:
             flash(f"E-mail de boas-vindas reenviado para {reg['email']}.", "success")
@@ -643,6 +649,7 @@ def cgrf_resend_user_email(email):
     conn.close()
 
     if reg:
+        social_username = create_pre_account_social(reg["email"], reg["nome"])
         user_data = {
             "nome": reg["nome"],
             "cnf": reg["cnf"],
@@ -650,6 +657,8 @@ def cgrf_resend_user_email(email):
             "email": reg["email"],
             "temp_pass": "Consulte sua senha anterior",
         }
+        if social_username:
+            user_data["pawsteps_username"] = social_username
         success, mail_err = send_welcome_email(user_data)
         if success:
             flash(f"E-mail de boas-vindas reenviado para {email}.", "success")
