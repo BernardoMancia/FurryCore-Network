@@ -1,47 +1,57 @@
 {% extends "shop_base.html" %}
 
 {% block content %}
-<div class="row mb-5">
-    <div class="col-md-8">
-        <h1 class="fw-800 display-4" style="font-family: 'Outfit';">Sua Identidade Furry, <span style="color: var(--accent-neon);">Em Suas Mãos.</span></h1>
-        <p class="lead text-white-50">Adquira sua carteira física oficial CGRF com tecnologia QR Code e acabamento premium.</p>
-    </div>
+<div class="hero-shop">
+    <h1>Sua Identidade Furry, Em Suas Mãos.</h1>
+    <p>Adquira sua carteira física oficial CGRF com tecnologia QR Code e acabamento premium.</p>
 </div>
 
-<div class="row g-4">
+<div class="product-grid">
     {% for p in products %}
-    <div class="col-md-4">
-        <div class="product-card h-100 p-3 d-flex flex-column">
-            <div class="rounded-3 overflow-hidden mb-3" style="height: 200px; background: rgba(0,243,255,0.05);">
-                {% if p.image_url %}
-                <img src="{{ p.image_url }}" class="img-fluid w-100 h-100 object-fit-cover">
-                {% else %}
-                <div class="w-100 h-100 d-flex align-items-center justify-content-center">
-                    <i class="bi bi-card-heading display-1 text-white-10"></i>
-                </div>
-                {% endif %}
-            </div>
-            
-            <h4 class="fw-bold">{{ p.name }}</h4>
-            <p class="small text-white-50 flex-grow-1">{{ p.description }}</p>
-            
-            <div class="d-flex justify-content-between align-items-end mt-3">
-                <div class="price-tag">R$ {{ "%.2f"|format(p.price) }}</div>
-                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn-shop text-decoration-none">Ver Detalhes</a>
-            </div>
+    <div class="product-card">
+        <div class="card-img">
+            {% if p.image_url %}
+            <img src="{{ p.image_url }}" alt="{{ p.name }}">
+            {% else %}
+            <i class="bi bi-card-heading placeholder-icon"></i>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <h4>{{ p.name }}</h4>
+            <p class="description">{{ p.description }}</p>
+        </div>
+        <div class="card-footer">
+            <div class="price-tag">R$ {{ "%.2f"|format(p.price) }}</div>
+            <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn-shop">
+                <i class="bi bi-eye"></i> Ver Detalhes
+            </a>
         </div>
     </div>
     {% endfor %}
 </div>
 
-<div class="mt-5 p-4 rounded-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-    <div class="row align-items-center">
-        <div class="col-md-2 text-center">
-            <i class="bi bi-truck display-4 text-info"></i>
+<div class="shipping-banner">
+    <div class="d-flex flex-column flex-md-row align-items-center gap-3 gap-md-4">
+        <div class="icon-box flex-shrink-0">
+            <i class="bi bi-truck"></i>
         </div>
-        <div class="col-md-10">
-            <h5 class="fw-bold">Envio para todo o Brasil</h5>
-            <p class="small text-white-50 mb-0">Utilizamos os Correios e transportadoras parceiras para garantir que sua CGRF chegue com segurança e rapidez. Consulte o frete na página do produto!</p>
+        <div class="text-center text-md-start">
+            <h5 class="fw-bold mb-1">Envio para todo o Brasil</h5>
+            <p class="small text-white-50 mb-0">Utilizamos os Correios e transportadoras parceiras para garantir que sua CGRF chegue com segurança e rapidez.</p>
+        </div>
+        <div class="d-flex gap-3 flex-shrink-0 mt-2 mt-md-0">
+            <div class="text-center">
+                <div class="icon-box mx-auto mb-1" style="width: 40px; height: 40px; font-size: 1rem; border-radius: 10px;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <span class="x-small text-white-50" style="font-size: 0.7rem;">Seguro</span>
+            </div>
+            <div class="text-center">
+                <div class="icon-box mx-auto mb-1" style="width: 40px; height: 40px; font-size: 1rem; border-radius: 10px; background: rgba(188,19,254,0.08); border-color: rgba(188,19,254,0.15); color: #bc13fe;">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <span class="x-small text-white-50" style="font-size: 0.7rem;">Rastreável</span>
+            </div>
         </div>
     </div>
 </div>

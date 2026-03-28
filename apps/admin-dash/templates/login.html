@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login | FurryCore</title>
+    <title>Admin Login | FurryCore Network</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #06070a;
-            --cyber-blue: #00f2ff;
+            --bg: #020205;
             --accent: #00f2ff;
-            --cyber-purple: #bc13fe;
+            --purple: #bc13fe;
             --glass: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.08);
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: var(--bg);
             color: #fff;
@@ -24,78 +25,244 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background: radial-gradient(circle at center, #0f172a 0%, #06070a 100%);
+            position: relative;
+        }
+        .cyber-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .cyber-bg .mesh {
+            position: absolute;
+            width: 140%; height: 140%;
+            top: -20%; left: -20%;
+            background:
+                radial-gradient(circle at 30% 40%, rgba(0, 242, 255, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(188, 19, 254, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(0, 242, 255, 0.15) 0%, transparent 60%);
+            filter: blur(60px);
+            animation: meshRotate 25s linear infinite;
+        }
+        .cyber-bg .grid-lines {
+            position: absolute;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.08) 1px, transparent 1px);
+            background-size: 80px 80px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: gridScroll 6s linear infinite;
+            opacity: 0.4;
+        }
+        .cyber-bg::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.15) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        @keyframes meshRotate {
+            0% { transform: rotate(0deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1.1); }
+        }
+        @keyframes gridScroll {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(80px); }
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            padding: 0 20px;
         }
         .login-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
+            background: rgba(6, 7, 10, 0.85);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid rgba(0, 242, 255, 0.15);
             border-radius: 24px;
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.05);
+            padding: 48px 40px;
+            box-shadow:
+                0 0 80px rgba(0, 242, 255, 0.08),
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+            animation: cardFloat 6s ease-in-out infinite;
         }
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .shield-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, rgba(0,242,255,0.15), rgba(188,19,254,0.15));
+            border: 1px solid rgba(0,242,255,0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: var(--accent);
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+        @keyframes iconPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,242,255,0.1); }
+            50% { box-shadow: 0 0 40px rgba(0,242,255,0.25); }
+        }
+
         .neon-title {
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
-            background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple));
+            font-size: 1.6rem;
+            background: linear-gradient(45deg, var(--accent), var(--purple));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 6px;
         }
-        .form-control {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+            margin-bottom: 32px;
+        }
+
+        .form-floating { margin-bottom: 20px; }
+        .form-floating .form-control {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
             color: white;
-            border-radius: 12px;
-            padding: 12px;
+            border-radius: 14px;
+            height: 56px;
+            padding: 16px;
+            font-size: 0.95rem;
+            transition: 0.3s;
         }
-        .form-control:focus {
-            background: rgba(255,255,255,0.08);
-            border-color: var(--cyber-blue);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        .form-floating .form-control:focus {
+            background: rgba(255,255,255,0.06);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
             color: white;
         }
+        .form-floating label {
+            color: rgba(255,255,255,0.4);
+            padding: 16px;
+        }
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+            color: var(--accent);
+            opacity: 0.8;
+        }
+
         .btn-cyber {
-            background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple));
+            background: linear-gradient(135deg, var(--accent), var(--purple));
             border: none;
             color: white;
             font-weight: 700;
-            padding: 12px;
-            border-radius: 12px;
+            font-size: 1rem;
+            padding: 14px;
+            border-radius: 14px;
             width: 100%;
-            transition: 0.3s;
+            transition: 0.4s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
         }
+        .btn-cyber::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.6s;
+        }
+        .btn-cyber:hover::before { left: 100%; }
         .btn-cyber:hover {
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4), 0 0 60px rgba(188,19,254,0.2);
             transform: translateY(-2px);
+        }
+
+        .alert {
+            background: rgba(220, 53, 69, 0.15);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #ff6b7a;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .version-tag {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.2);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 575.98px) {
+            .login-card { padding: 36px 28px; border-radius: 20px; }
+            .neon-title { font-size: 1.3rem; }
+            .shield-icon { width: 52px; height: 52px; font-size: 1.4rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .cyber-bg .mesh, .cyber-bg .grid-lines, .login-card, .shield-icon { animation: none; }
+            .btn-cyber::before { display: none; }
         }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h2 class="neon-title">Admin Dashboard</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} small py-2">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        <form method="POST">
-            <div class="mb-3">
-                <label class="form-label small text-white-50">Usuário</label>
-                <input type="text" name="username" class="form-control" required placeholder="Luke_Arwolf">
+    <div class="cyber-bg">
+        <div class="mesh"></div>
+        <div class="grid-lines"></div>
+    </div>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="shield-icon">
+                <i class="bi bi-shield-lock-fill"></i>
             </div>
-            <div class="mb-4">
-                <label class="form-label small text-white-50">Senha</label>
-                <input type="password" name="password" class="form-control" required placeholder="••••••••">
-            </div>
-            <button type="submit" class="btn btn-cyber">ACESSAR SISTEMA</button>
-        </form>
+            <h2 class="neon-title">Admin Dashboard</h2>
+            <p class="subtitle">Acesso restrito ao painel de controle</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert py-2 px-3 mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-floating">
+                    <input type="text" name="username" class="form-control" id="username" placeholder=" " required autocomplete="username">
+                    <label for="username"><i class="bi bi-person me-2"></i>Usuário</label>
+                </div>
+                <div class="form-floating">
+                    <input type="password" name="password" class="form-control" id="password" placeholder=" " required autocomplete="current-password">
+                    <label for="password"><i class="bi bi-key me-2"></i>Senha</label>
+                </div>
+                <button type="submit" class="btn btn-cyber mt-2">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Acessar Sistema
+                </button>
+            </form>
+            <div class="version-tag">FurryCore Network &bull; Admin v2.0</div>
+        </div>
     </div>
 </body>
 </html>

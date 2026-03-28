@@ -1,23 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Login - CGRF 2.0{% endblock %}
+{% block title %}Login - Portal CGRF{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="glass-card">
-            <h2 class="neon-text text-center mb-4">Acesso ao Portal</h2>
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="glass-card p-4 p-md-5">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-4 mb-3"
+                     style="width: 60px; height: 60px; background: linear-gradient(135deg, rgba(0,242,255,0.1), rgba(188,19,254,0.1)); border: 1px solid rgba(0,242,255,0.2);">
+                    <i class="bi bi-person-badge fs-3" style="color: var(--accent);"></i>
+                </div>
+                <h2 class="neon-text fw-bold mb-1">Acesso ao Portal</h2>
+                <p class="text-white-50 small">Entre com suas credenciais do CGRF</p>
+            </div>
+
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
-                    <label class="form-label">E-mail</label>
-                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" required>
+                    <label class="form-label small text-white-50 fw-bold">
+                        <i class="bi bi-envelope me-1"></i>E-mail
+                    </label>
+                    <input type="email" name="email" class="form-control py-3" required
+                           placeholder="seu@email.com" autocomplete="email">
                 </div>
                 <div class="mb-4">
-                    <label class="form-label">Senha</label>
-                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required>
+                    <label class="form-label small text-white-50 fw-bold">
+                        <i class="bi bi-key me-1"></i>Senha
+                    </label>
+                    <input type="password" name="password" class="form-control py-3" required
+                           placeholder="••••••••" autocomplete="current-password">
                 </div>
-                <button type="submit" class="btn btn-neon w-100">Entrar</button>
+                <button type="submit" class="btn-neon w-100 py-3 fw-bold" style="font-size: 1rem;">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                </button>
             </form>
         </div>
     </div>

@@ -1,27 +1,89 @@
 {% extends "base.html" %}
 
-{% block title %}Início - FurryCore Network{% endblock %}
+{% block title %}Início - Portal CGRF{% endblock %}
 
 {% block content %}
-<div class="row min-vh-75 align-items-center justify-content-center">
-    <div class="col-md-8 text-center">
-        <h1 class="display-4 neon-text fw-bold mb-2">Portal CGRF</h1>
-        <p class="text-secondary fs-5 mb-5">Portal de Transparência e Governança de Identidades</p>
-        
-        <div class="glass-card p-4 mb-5">
-            <h4 class="mb-4 small text-uppercase tracking-wider text-secondary">Consulta Pública de Registro</h4>
-            <form method="POST" class="row g-2 justify-content-center">
+<div class="row min-vh-75 align-items-center justify-content-center py-5">
+    <div class="col-lg-8 text-center">
+        <div class="mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-4 mb-3"
+                 style="width: 80px; height: 80px; background: linear-gradient(135deg, rgba(0,242,255,0.1), rgba(188,19,254,0.1)); border: 1px solid rgba(0,242,255,0.15);">
+                <i class="bi bi-shield-check display-4" style="color: var(--accent);"></i>
+            </div>
+        </div>
+        <h1 class="display-3 neon-text fw-bold mb-3" style="font-family: 'Outfit';">Portal CGRF</h1>
+        <p class="text-white-50 fs-5 mb-5">Portal de Transparência e Governança de Identidades Digitais</p>
+
+        <div class="glass-card p-4 p-md-5 mx-auto" style="max-width: 700px;">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
+                <div style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, rgba(0,242,255,0.3));"></div>
+                <span class="small text-uppercase text-white-50 fw-bold" style="letter-spacing: 3px;">Consulta Pública</span>
+                <div style="height: 1px; flex: 1; background: linear-gradient(90deg, rgba(0,242,255,0.3), transparent);"></div>
+            </div>
+
+            <form method="POST" class="row g-3 justify-content-center">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="col-md-8">
-                    <input type="text" name="cnf" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Digite o CNF (Ex: 000.00.0000-XX)" required>
+                <div class="col-12 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text border-0" style="background: rgba(0,242,255,0.08); color: var(--accent);">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="cnf" class="form-control form-control-lg"
+                               placeholder="Digite o CNF ou Nome" required
+                               style="border-left: none !important;">
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-neon btn-lg w-100">Consultar</button>
+                <div class="col-12 col-md-4">
+                    <button type="submit" class="btn-neon w-100 py-3 fw-bold" style="font-size: 1rem;">
+                        <i class="bi bi-shield-check me-2"></i>Consultar
+                    </button>
                 </div>
             </form>
+
+            <p class="text-white-50 small mt-4 mb-0 text-center">
+                <i class="bi bi-lock-fill me-1"></i>
+                Dados protegidos pela LGPD — Lei nº 13.709/2018
+            </p>
         </div>
 
-        <!-- Removido botão redundante conforme pedido -->
+        <div class="row g-4 mt-5 justify-content-center">
+            <div class="col-6 col-md-3">
+                <div class="text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-2"
+                         style="width: 48px; height: 48px; background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.15);">
+                        <i class="bi bi-fingerprint fs-4" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="small text-white-50">CNF Único</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-2"
+                         style="width: 48px; height: 48px; background: rgba(188,19,254,0.08); border: 1px solid rgba(188,19,254,0.15);">
+                        <i class="bi bi-qr-code fs-4" style="color: var(--purple);"></i>
+                    </div>
+                    <div class="small text-white-50">QR Code</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-2"
+                         style="width: 48px; height: 48px; background: rgba(57,255,20,0.08); border: 1px solid rgba(57,255,20,0.15);">
+                        <i class="bi bi-shield-lock fs-4" style="color: #39ff14;"></i>
+                    </div>
+                    <div class="small text-white-50">LGPD</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-2"
+                         style="width: 48px; height: 48px; background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.15);">
+                        <i class="bi bi-globe fs-4" style="color: #ffd700;"></i>
+                    </div>
+                    <div class="small text-white-50">Multilingue</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

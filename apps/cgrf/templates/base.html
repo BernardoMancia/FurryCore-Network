@@ -3,118 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}FurryCore Network - Registro CGRF{% endblock %}</title>
-    <!-- Bootstrap 5 CSS -->
+    <title>{% block title %}Portal CGRF - FurryCore Network{% endblock %}</title>
+    <meta name="description" content="Portal CGRF - Cadastro Geral de Registros Furry. Consulte e gerencie sua identidade digital.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0a0b10;
-            --accent-neon: #00f2ff;
+            --bg-color: #020205;
+            --accent: #00f2ff;
+            --purple: #bc13fe;
             --glass-bg: rgba(255, 255, 255, 0.03);
-            --border-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.08);
         }
         body {
             background-color: var(--bg-color);
             color: #fff;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
         }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(0,242,255,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(188,19,254,0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(2, 2, 5, 0.85);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border-bottom: 1px solid rgba(0,242,255,0.1);
+            padding: 0;
+        }
+        .top-nav .container { padding-top: 12px; padding-bottom: 12px; }
+        .nav-brand {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+            background: linear-gradient(45deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        .nav-brand:hover { text-shadow: 0 0 20px rgba(0,242,255,0.5); }
+        .nav-brand .shield-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, rgba(0,242,255,0.15), rgba(188,19,254,0.15));
+            border: 1px solid rgba(0,242,255,0.2);
+            border-radius: 8px;
+            margin-right: 10px;
+            -webkit-text-fill-color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .nav-menu .nav-link {
+            color: rgba(255,255,255,0.6);
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+        .nav-menu .nav-link:hover {
+            color: var(--accent);
+            background: rgba(0,242,255,0.08);
+        }
+        .nav-menu .nav-link.text-neon { color: var(--accent); }
+        .btn-neon-sm {
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 8px 20px;
+            border-radius: 10px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+        .btn-neon-sm:hover {
+            box-shadow: 0 0 20px rgba(0,242,255,0.3);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            min-height: calc(100vh - 60px);
+        }
+
         .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid rgba(0,242,255,0.1);
+            border-radius: 20px;
             padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: 0.3s;
         }
+        .glass-card:hover {
+            border-color: rgba(0,242,255,0.2);
+            box-shadow: 0 8px 40px rgba(0,242,255,0.05);
+        }
+
         .neon-text {
-            color: var(--accent-neon);
-            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .btn-neon {
             background: transparent;
-            border: 1px solid var(--accent-neon);
-            color: var(--accent-neon);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-weight: 700;
+            padding: 10px 28px;
+            border-radius: 12px;
             transition: 0.3s;
         }
         .btn-neon:hover {
-            background: var(--accent-neon);
+            background: var(--accent);
             color: #000;
-            box-shadow: 0 0 20px var(--accent-neon);
+            box-shadow: 0 0 25px rgba(0,242,255,0.3);
+        }
+
+        .form-control {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+        .form-control:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 15px rgba(0,242,255,0.15) !important;
+        }
+
+        .toast-container .toast {
+            background: rgba(6, 7, 10, 0.95) !important;
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        @media (max-width: 767.98px) {
+            .glass-card { padding: 1.2rem; border-radius: 16px; }
+            .neon-text { font-size: 1.8rem !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body::before { animation: none; }
         }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-glass mb-4">
-        <div class="container">
-            <a class="navbar-brand neon-text fw-bold" href="{{ url_for('index') }}">Portal CGRF</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+    <nav class="top-nav">
+        <div class="container d-flex align-items-center justify-content-between">
+            <a class="nav-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <span class="shield-icon"><i class="bi bi-shield-check"></i></span>
+                Portal CGRF
+            </a>
+
+            <button class="navbar-toggler d-lg-none border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse" aria-label="Menu">
+                <i class="bi bi-list fs-4"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">{{ t('nav_home') }}</a>
-                    </li>
+
+            <div class="collapse navbar-collapse d-lg-flex justify-content-end" id="navCollapse">
+                <div class="nav-menu d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-1 gap-lg-2 mt-3 mt-lg-0">
+                    <a class="nav-link" href="{{ url_for('index') }}">{{ t('nav_home') }}</a>
+
                     {% if current_user.is_authenticated %}
                         {% if current_user.cnf_vinculado %}
-                        <li class="nav-item">
-                            <a class="nav-link text-neon fw-bold" href="{{ url_for('perfil', cnf=current_user.cnf_vinculado) }}">
-                                <i class="bi bi-wallet2"></i> {{ t('nav_wallet') }}
-                            </a>
-                        </li>
+                        <a class="nav-link text-neon fw-bold" href="{{ url_for('perfil', cnf=current_user.cnf_vinculado) }}">
+                            <i class="bi bi-wallet2 me-1"></i>{{ t('nav_wallet') }}
+                        </a>
                         {% endif %}
-                        {% if current_user.cargo == 'ADMIN' or current_user.cargo == 'ANALISTA' %}
-                        <li class="nav-item">
-                            <a class="nav-link text-neon" href="{{ url_for('admin_registros') }}">{{ t('nav_records') }}</a>
-                        </li>
-                         <li class="nav-item">
-                            <a class="nav-link text-warning" href="{{ url_for('admin_usuarios') }}">{{ t('nav_users') }}</a>
-                        </li>
+                        {% if current_user.cargo in ['ADMIN', 'ANALISTA'] %}
+                        <a class="nav-link" href="{{ url_for('admin_registros') }}">{{ t('nav_records') }}</a>
+                        <a class="nav-link" href="{{ url_for('admin_usuarios') }}">{{ t('nav_users') }}</a>
+                        {% endif %}
                         {% if current_user.cargo == 'ADMIN' %}
-                        <li class="nav-item">
-                            <a class="nav-link text-info" href="{{ url_for('admin_privacidade') }}">{{ t('nav_privacy') }}</a>
-                        </li>
+                        <a class="nav-link" href="{{ url_for('admin_privacidade') }}">{{ t('nav_privacy') }}</a>
                         {% endif %}
-                        {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link text-danger" href="{{ url_for('logout') }}">{{ t('nav_logout') }}</a>
-                        </li>
+                        <a class="nav-link text-danger" href="{{ url_for('logout') }}">{{ t('nav_logout') }}</a>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link btn-neon px-3 ms-lg-2" href="{{ url_for('login') }}">{{ t('nav_login') }}</a>
-                        </li>
+                        <a class="btn-neon-sm" href="{{ url_for('login') }}">{{ t('nav_login') }}</a>
                     {% endif %}
-                    <li class="nav-item d-flex align-items-center ms-lg-4 gap-2 mt-2 mt-lg-0">
-                        <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'pt' else 'text-white-50' }} small">PT</a>
+
+                    <div class="d-flex align-items-center gap-2 ms-lg-3 mt-2 mt-lg-0">
+                        <a href="{{ url_for('set_language', lang='pt') }}" class="text-decoration-none small {{ 'text-info fw-bold' if current_lang == 'pt' else 'text-white-50' }}">PT</a>
                         <span class="text-white-50 small">|</span>
-                        <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'en' else 'text-white-50' }} small">EN</a>
+                        <a href="{{ url_for('set_language', lang='en') }}" class="text-decoration-none small {{ 'text-info fw-bold' if current_lang == 'en' else 'text-white-50' }}">EN</a>
                         <span class="text-white-50 small">|</span>
-                        <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none {{ 'text-info fw-bold' if current_lang == 'es' else 'text-white-50' }} small">ES</a>
-                    </li>
-                </ul>
+                        <a href="{{ url_for('set_language', lang='es') }}" class="text-decoration-none small {{ 'text-info fw-bold' if current_lang == 'es' else 'text-white-50' }}">ES</a>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
-    <div class="container">
-        {% block content %}{% endblock %}
+
+    <div class="content-wrapper">
+        <div class="container py-4">
+            {% block content %}{% endblock %}
+        </div>
     </div>
 
-    <!-- Toast Notification System -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-            <div class="toast align-items-center text-white bg-{{ 'danger' if category == 'error' else 'success' }} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast align-items-center border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true"
+                 style="min-width: 280px;">
               <div class="d-flex">
-                <div class="toast-body">
-                  {{ message }}
+                <div class="toast-body d-flex align-items-center gap-2">
+                    <i class="bi {{ 'bi-check-circle-fill text-success' if category == 'success' else 'bi-exclamation-triangle-fill text-danger' if category == 'error' else 'bi-info-circle-fill text-info' }} fs-5"></i>
+                    <span class="text-white">{{ message }}</span>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="progress" style="height: 2px; border-radius: 0 0 14px 14px;">
+                  <div class="progress-bar {{ 'bg-success' if category == 'success' else 'bg-danger' if category == 'error' else 'bg-info' }}"
+                       style="width: 100%; transition: width 5s linear;"></div>
               </div>
             </div>
             {% endfor %}
@@ -122,14 +249,17 @@
         {% endwith %}
     </div>
 
-    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
-            var toastList = toastElList.map(function (toastEl) {
-              return new bootstrap.Toast(toastEl, { delay: 5000 }).show()
-            })
+            document.querySelectorAll('.toast').forEach(function(el) {
+                var t = new bootstrap.Toast(el, { delay: 5000 });
+                t.show();
+                var bar = el.querySelector('.progress-bar');
+                if (bar) {
+                    requestAnimationFrame(function() { bar.style.width = '0%'; });
+                }
+            });
         });
     </script>
     {% block scripts %}{% endblock %}

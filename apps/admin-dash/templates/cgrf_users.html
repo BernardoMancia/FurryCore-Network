@@ -17,6 +17,7 @@
         <div class="cyber-card">
             <h5 class="fw-bold mb-4 text-info">Novo Usuário CGRF</h5>
             <form action="/cgrf/users" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
                     <label class="form-label small text-white-50 uppercase fw-bold">E-mail</label>
                     <input type="email" name="email" class="form-control" placeholder="usuario@provedor.com" required>

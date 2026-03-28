@@ -40,9 +40,12 @@
                             </td>
                             <td class="text-center">
                                 {% if admin.id != current_user.id %}
-                                <a href="/admins/delete/{{ admin.id }}" class="btn btn-outline-danger btn-sm border-0" onclick="return confirm('Remover este admin global?')">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </a>
+                                <form action="/admins/delete/{{ admin.id }}" method="POST" class="d-inline" onsubmit="return confirm('Remover este admin global?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm border-0">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </form>
                                 {% else %}
                                 <span class="badge-cyber border-info text-info py-1">VOCÊ</span>
                                 {% endif %}
@@ -92,6 +95,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="/admins/add" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label small text-white-50 uppercase fw-bold">Nome de Usuário</label>

@@ -39,6 +39,7 @@
 
 <div class="cyber-card p-4">
     <form action="/cgrf/emit" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row g-4">
             <div class="col-md-3 text-center border-end border-secondary border-opacity-25 pe-4">
                 <label class="form-label small text-info uppercase fw-bold mb-3">Foto Oficial (3x4)</label>
