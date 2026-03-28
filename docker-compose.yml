@@ -8,6 +8,7 @@ services:
     restart: always
     expose:
       - "20000"
+    env_file: .env
     environment:
       - PORT=20000
     healthcheck:
@@ -27,6 +28,7 @@ services:
     restart: always
     expose:
       - "20001"
+    env_file: .env
     volumes:
       - ./apps/pawsteps/database:/app/database
       - ./apps/pawsteps/static/uploads:/app/static/uploads
@@ -51,6 +53,7 @@ services:
     restart: always
     expose:
       - "20002"
+    env_file: .env
     volumes:
       - ./apps/cgrf/database:/app/database
       - ./apps/pawsteps/database:/app/shared_data/pawsteps
@@ -75,6 +78,7 @@ services:
     restart: always
     expose:
       - "20003"
+    env_file: .env
     volumes:
       - ./apps/shop/database:/app/database
       - ./apps/cgrf/database:/app/shared_data/cgrf
